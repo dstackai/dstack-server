@@ -22,6 +22,7 @@ var isValidUserName = function isValidUserName(userName) {
   };
 };
 var isEmail = function isEmail(value) {
+  if (!value) return true;
   return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(value);
 };
 var isRequired = function isRequired(value) {
@@ -37,7 +38,7 @@ var isValidEmail = function isValidEmail(mail) {
   var errors = {
     invalidEmailAddress: 'invalidEmailAddress'
   };
-  if (!isEmail(mail)) return {
+  if (mail && !isEmail(mail)) return {
     isValid: false,
     error: errors.invalidEmailAddress
   };

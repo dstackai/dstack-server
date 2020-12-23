@@ -1,0 +1,111 @@
+@import "styles/variables.css";
+@import "styles/media.css";
+.users {
+
+}
+.header {
+    display: flex;
+}
+.note {
+    flex-grow: 1;
+    min-width: 0;
+    flex-basis: 0;
+    font-size: 14px;
+    line-height: 17px;
+    color: var(--color-dark-gray);
+}
+.button {
+    margin-left: 20px;
+}
+.table {
+    margin-top: 3px;
+    max-width: 680px
+}
+.head {
+    border-bottom: 1px solid rgba(180, 184, 199, .3);
+    .cell {
+        color: #303440;
+        opacity: 0.6;
+    }
+}
+.row {
+    display: flex;
+    height: 38px;
+    transition: background-color .3s ease-out;
+    &:hover {
+        background-color: rgba(180, 184, 199, 0.1);
+        & .cell {
+            & .controls {
+                opacity: 1;
+            }
+        }
+    }
+}
+.cell {
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    font-size: 14px;
+    line-height: 17px;
+    color: var(--color-dark-gray);
+    box-sizing: border-box;
+    &:nth-child(1) {
+        width: 235px
+    }
+    &:nth-child(2) {
+        width: 242px
+    }
+    &:nth-child(3) {
+        width: 203px
+    }
+    & .text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    &.name {
+        & .avatar {
+            flex-shrink: 0;
+        }
+        & .text {
+            margin-left: 6px;
+        }
+        & .you {
+            flex-shrink: 0;
+            margin-left: 4px;
+            color: var(--color-light-gray);
+        }
+    }
+    &.email {
+
+    }
+    &.access {
+        & .dropdown {
+            flex-shrink: 0;
+        }
+        & .dropdownButton {
+            white-space: nowrap;
+            font-size: 14px;
+            padding: 0 !important;
+            outline: none;
+            & :global(.mdi) {
+                padding-left: 3px;
+            }
+        }
+        & .controls {
+            display: flex;
+            margin-left: auto;
+            transition: opacity .3s ease-out;
+            opacity: 0;
+        }
+        & .control {
+            font-size: 14px;
+            padding: 0 !important;
+            width: 24px !important;
+            min-width: 24px;
+            height: 24px !important;
+            outline: none;
+        }
+    }
+}
+

@@ -22,4 +22,6 @@ export default {
 
     // settings
     settings: () => '/settings',
+    accountSettings: () => '/settings/account',
+    usersSettings: () => '/settings/users',
 };

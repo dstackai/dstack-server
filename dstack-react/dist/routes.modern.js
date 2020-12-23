@@ -1,85 +1,21 @@
 var routes = {
-  notFound: function notFound() {
-    return '/404';
-  },
-  auth: function auth() {
-    return '/auth';
-  },
-  authLogin: function authLogin() {
-    return '/auth/login';
-  },
-  verifyUser: function verifyUser() {
-    return '/auth/verify';
-  },
-  authSignUp: function authSignUp() {
-    return '/auth/signup';
-  },
-  authForgetPassword: function authForgetPassword() {
-    return '/auth/forget-password';
-  },
-  authResetPassword: function authResetPassword() {
-    return '/auth/reset-password';
-  },
-  confirmEmailMessage: function confirmEmailMessage() {
-    return '/auth/confirm-message';
-  },
-  stacks: function stacks(user) {
-    if (user === void 0) {
-      user = ':user';
-    }
-
-    return "/" + user;
-  },
-  stackDetails: function stackDetails(user, id) {
-    if (user === void 0) {
-      user = ':user';
-    }
-
-    if (id === void 0) {
-      id = ':stack';
-    }
-
-    return "/" + user + "/" + id + (id === ':stack' ? '+' : '');
-  },
-  reports: function reports(user) {
-    if (user === void 0) {
-      user = ':user';
-    }
-
-    return "/" + user + "/d";
-  },
-  reportsDetails: function reportsDetails(user, id) {
-    if (user === void 0) {
-      user = ':user';
-    }
-
-    if (id === void 0) {
-      id = ':id';
-    }
-
-    return "/" + user + "/d/" + id;
-  },
-  jobs: function jobs(user) {
-    if (user === void 0) {
-      user = ':user';
-    }
-
-    return "/" + user + "/j";
-  },
-  jobsDetails: function jobsDetails(user, id) {
-    if (user === void 0) {
-      user = ':user';
-    }
-
-    if (id === void 0) {
-      id = ':id';
-    }
-
-    return "/" + user + "/j/" + id;
-  },
-  settings: function settings() {
-    return '/settings';
-  }
+  notFound: () => '/404',
+  auth: () => '/auth',
+  authLogin: () => '/auth/login',
+  verifyUser: () => '/auth/verify',
+  authSignUp: () => '/auth/signup',
+  authForgetPassword: () => '/auth/forget-password',
+  authResetPassword: () => '/auth/reset-password',
+  confirmEmailMessage: () => '/auth/confirm-message',
+  stacks: (user = ':user') => `/${user}`,
+  stackDetails: (user = ':user', id = ':stack') => `/${user}/${id}` + (id === ':stack' ? '+' : ''),
+  reports: (user = ':user') => `/${user}/d`,
+  reportsDetails: (user = ':user', id = ':id') => `/${user}/d/${id}`,
+  jobs: (user = ':user') => `/${user}/j`,
+  jobsDetails: (user = ':user', id = ':id') => `/${user}/j/${id}`,
+  settings: () => '/settings',
+  accountSettings: () => '/settings/account',
+  usersSettings: () => '/settings/users'
 };
 
 export default routes;

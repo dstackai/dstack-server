@@ -246,6 +246,8 @@ var config = {
   SIGN_UP_URL: '/users/register',
   RESET_PASSWORD_URL: '/users/reset',
   UPDATE_PASSWORD_URL: '/users/update/password',
+  ADMIN_USERS_LIST: '/users/admin/list',
+  ADMIN_USERS_CREATE: '/users/admin/create',
   USER_DATA_URL: '/users/remember',
   CONFIG_INFO_URL: '/config/info',
   UPDATE_TOKEN_URL: '/users/update/token',

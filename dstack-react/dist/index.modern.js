@@ -27,6 +27,215 @@ import 'prismjs/themes/prism.css';
 import { useDrag, useDrop } from 'react-dnd';
 export { DndProvider } from 'react-dnd';
 
+var actionsTypes = {
+  FETCH_CURRENT_USER: 'app/user/FETCH',
+  FETCH_CURRENT_USER_SUCCESS: 'app/user/FETCH_SUCCESS',
+  FETCH_CURRENT_USER_FAIL: 'app/user/FETCH_FAIL',
+  FETCH_CONFIG_INFO: 'app/config/FETCH',
+  FETCH_CONFIG_INFO_SUCCESS: 'app/config/FETCH_SUCCESS',
+  FETCH_CONFIG_INFO_FAIL: 'app/config/FETCH_FAIL',
+  START_PROGRESS: 'app/START_PROGRESS',
+  SET_PROGRESS: 'app/SET_PROGRESS',
+  COMPLETE_PROGRESS: 'app/COMPLETE_PROGRESS',
+  RESET_PROGRESS: 'app/RESET_PROGRESS'
+};
+
+const initialState = {
+  currentUser: {
+    loading: false,
+    data: null
+  },
+  configInfo: {
+    loading: false,
+    data: null
+  },
+  appProgress: {
+    active: null,
+    value: null
+  }
+};
+const reducer = (state = initialState, action) => {
+  switch (action.type) {
+    case actionsTypes.FETCH_CURRENT_USER:
+      return { ...state,
+        currentUser: { ...state.currentUser,
+          loading: true
+        }
+      };
+
+    case actionsTypes.FETCH_CURRENT_USER_SUCCESS:
+      return { ...state,
+        currentUser: { ...state.currentUser,
+          data: action.payload,
+          loading: false
+        }
+      };
+
+    case actionsTypes.FETCH_CURRENT_USER_FAIL:
+      return { ...state,
+        currentUser: { ...state.currentUser,
+          loading: false
+        }
+      };
+
+    case actionsTypes.FETCH_CONFIG_INFO:
+      return { ...state,
+        configInfo: { ...state.configInfo,
+          loading: true
+        }
+      };
+
+    case actionsTypes.FETCH_CONFIG_INFO_SUCCESS:
+      return { ...state,
+        configInfo: { ...state.configInfo,
+          data: action.payload,
+          loading: false
+        }
+      };
+
+    case actionsTypes.FETCH_CONFIG_INFO_FAIL:
+      return { ...state,
+        configInfo: { ...state.configInfo,
+          loading: false
+        }
+      };
+
+    case actionsTypes.START_PROGRESS:
+      return { ...state,
+        appProgress: { ...state.appProgress,
+          active: true,
+          value: null
+        }
+      };
+
+    case actionsTypes.SET_PROGRESS:
+      return { ...state,
+        appProgress: { ...state.appProgress,
+          value: action.payload
+        }
+      };
+
+    case actionsTypes.COMPLETE_PROGRESS:
+      return { ...state,
+        appProgress: { ...state.appProgress,
+          active: false,
+          value: null
+        }
+      };
+
+    case actionsTypes.RESET_PROGRESS:
+      return { ...state,
+        appProgress: { ...state.appProgress,
+          active: null,
+          value: null
+        }
+      };
+
+    default:
+      return state;
+  }
+};
+const StateContext = createContext();
+const AppStoreProvider = ({
+  children,
+  apiUrl
+}) => /*#__PURE__*/React__default.createElement(StateContext.Provider, {
+  value: useReducer(reducer, { ...initialState,
+    apiUrl
+  })
+}, children);
+const useAppStore = () => useContext(StateContext);
+
+var config = {
+  DOCS_URL: 'http://docs.dstack.ai',
+  LOGIN_URL: '/users/login',
+  VERIFY_EMAIL_URL: '/users/verify',
+  SUPPORT_URL: '/support/submit',
+  SIGN_UP_URL: '/users/register',
+  RESET_PASSWORD_URL: '/users/reset',
+  UPDATE_PASSWORD_URL: '/users/update/password',
+  ADMIN_USERS_LIST: '/users/admin/list',
+  ADMIN_USERS_CREATE: '/users/admin/create',
+  USER_DATA_URL: '/users/remember',
+  CONFIG_INFO_URL: '/config/info',
+  UPDATE_TOKEN_URL: '/users/update/token',
+  UPDATE_SETTINGS_URL: '/users/update/settings',
+  CHECK_USER: userName => `/users/exists/${userName}`,
+  STACKS_LIST: userName => `/stacks/${userName}`,
+  DELETE_STACK: () => '/stacks/delete',
+  STACK_DETAILS: (userName, stack) => `/stacks/${userName}/${stack}`,
+  STACK_FRAME: (userName, stack, frameId) => `/frames/${userName}/${stack}/${frameId}`,
+  STACK_ATTACHMENT: (stack, frameId, id) => `/attachs/${stack}/${frameId}/${id}`,
+  STACK_UPDATE: '/stacks/update',
+  STACK_PUSH: '/stacks/push',
+  APPS_EXECUTE: '/apps/execute',
+  APPS_POLL: '/apps/poll',
+  DASHBOARD_LIST: userName => `/dashboards/${userName}`,
+  DASHBOARD_DETAILS: (userName, id) => `/dashboards/${userName}/${id}`,
+  DASHBOARD_CREATE: '/dashboards/create',
+  DASHBOARD_UPDATE: '/dashboards/update',
+  DASHBOARD_DELETE: '/dashboards/delete',
+  DASHBOARD_CARDS_INSERT: '/dashboards/cards/insert',
+  DASHBOARD_CARDS_UPDATE: '/dashboards/cards/update',
+  DASHBOARD_CARDS_DELETE: '/dashboards/cards/delete',
+  JOB_LIST: userName => `/jobs/${userName}`,
+  JOB_DETAILS: (userName, id) => `/jobs/${userName}/${id}`,
+  JOB_CREATE: '/jobs/create',
+  JOB_UPDATE: '/jobs/update',
+  JOB_DELETE: '/jobs/delete',
+  JOB_RUN: '/jobs/run',
+  JOB_STOP: '/jobs/stop',
+  PERMISSIONS_ADD: '/permissions/add',
+  PERMISSIONS_DELETE: '/permissions/delete',
+  DISCORD_URL: 'https://discord.gg/8xfhEYa',
+  TWITTER_URL: 'https://twitter.com/dstackai',
+  GITHUB_URL: 'https://github.com/dstackai',
+  BLOG_URL: 'https://blog.dstack.ai',
+  TOKEN_STORAGE_KEY: 'token'
+};
+const reportModelPythonCode = `import dstack as ds
+from sklearn.linear_model import LogisticRegression
+
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+ds.push("my_model", model, "My first linear model")`;
+const reportPlotPythonCode = `import matplotlib.pyplot as plt
+import dstack as ds
+
+fig = plt.figure()
+plt.plot([1, 2, 3, 4], [1, 4, 9, 16])
+
+ds.push_frame("my_plot", fig, "My first plot")`;
+
+const apiFabric = ({
+  apiUrl
+} = {}) => {
+  const CancelToken = axios.CancelToken;
+  const instance = axios.create({
+    baseURL: apiUrl,
+    crossDomain: true
+  });
+  instance.cancelToken = CancelToken;
+  instance.interceptors.request.use(requestConfig => {
+    const token = localStorage.getItem(config.TOKEN_STORAGE_KEY);
+    requestConfig.headers.Authorization = token ? `Bearer ${token}` : '';
+    return requestConfig;
+  });
+  instance.interceptors.response.use(response => {
+    return response;
+  }, error => {
+    if (get(error, 'response.status', null) === 401) {
+      return Promise.reject(error.response);
+    } else if (get(error, 'response.status', null) === 400) {
+      return Promise.reject(error.response);
+    } else {
+      return Promise.reject(error);
+    }
+  });
+  return instance;
+};
+
 function _extends() {
   _extends = Object.assign || function (target) {
     for (var i = 1; i < arguments.length; i++) {
@@ -43,272 +252,6 @@ function _extends() {
   };
 
   return _extends.apply(this, arguments);
-}
-
-function _inheritsLoose(subClass, superClass) {
-  subClass.prototype = Object.create(superClass.prototype);
-  subClass.prototype.constructor = subClass;
-  subClass.__proto__ = superClass;
-}
-
-function _objectDestructuringEmpty(obj) {
-  if (obj == null) throw new TypeError("Cannot destructure undefined");
-}
-
-function _objectWithoutPropertiesLoose(source, excluded) {
-  if (source == null) return {};
-  var target = {};
-  var sourceKeys = Object.keys(source);
-  var key, i;
-
-  for (i = 0; i < sourceKeys.length; i++) {
-    key = sourceKeys[i];
-    if (excluded.indexOf(key) >= 0) continue;
-    target[key] = source[key];
-  }
-
-  return target;
-}
-
-var actionsTypes = {
-  FETCH_CURRENT_USER: 'app/user/FETCH',
-  FETCH_CURRENT_USER_SUCCESS: 'app/user/FETCH_SUCCESS',
-  FETCH_CURRENT_USER_FAIL: 'app/user/FETCH_FAIL',
-  FETCH_CONFIG_INFO: 'app/config/FETCH',
-  FETCH_CONFIG_INFO_SUCCESS: 'app/config/FETCH_SUCCESS',
-  FETCH_CONFIG_INFO_FAIL: 'app/config/FETCH_FAIL',
-  START_PROGRESS: 'app/START_PROGRESS',
-  SET_PROGRESS: 'app/SET_PROGRESS',
-  COMPLETE_PROGRESS: 'app/COMPLETE_PROGRESS',
-  RESET_PROGRESS: 'app/RESET_PROGRESS'
-};
-
-var initialState = {
-  currentUser: {
-    loading: false,
-    data: null
-  },
-  configInfo: {
-    loading: false,
-    data: null
-  },
-  appProgress: {
-    active: null,
-    value: null
-  }
-};
-var reducer = function reducer(state, action) {
-  if (state === void 0) {
-    state = initialState;
-  }
-
-  switch (action.type) {
-    case actionsTypes.FETCH_CURRENT_USER:
-      return _extends({}, state, {
-        currentUser: _extends({}, state.currentUser, {
-          loading: true
-        })
-      });
-
-    case actionsTypes.FETCH_CURRENT_USER_SUCCESS:
-      return _extends({}, state, {
-        currentUser: _extends({}, state.currentUser, {
-          data: action.payload,
-          loading: false
-        })
-      });
-
-    case actionsTypes.FETCH_CURRENT_USER_FAIL:
-      return _extends({}, state, {
-        currentUser: _extends({}, state.currentUser, {
-          loading: false
-        })
-      });
-
-    case actionsTypes.FETCH_CONFIG_INFO:
-      return _extends({}, state, {
-        configInfo: _extends({}, state.configInfo, {
-          loading: true
-        })
-      });
-
-    case actionsTypes.FETCH_CONFIG_INFO_SUCCESS:
-      return _extends({}, state, {
-        configInfo: _extends({}, state.configInfo, {
-          data: action.payload,
-          loading: false
-        })
-      });
-
-    case actionsTypes.FETCH_CONFIG_INFO_FAIL:
-      return _extends({}, state, {
-        configInfo: _extends({}, state.configInfo, {
-          loading: false
-        })
-      });
-
-    case actionsTypes.START_PROGRESS:
-      return _extends({}, state, {
-        appProgress: _extends({}, state.appProgress, {
-          active: true,
-          value: null
-        })
-      });
-
-    case actionsTypes.SET_PROGRESS:
-      return _extends({}, state, {
-        appProgress: _extends({}, state.appProgress, {
-          value: action.payload
-        })
-      });
-
-    case actionsTypes.COMPLETE_PROGRESS:
-      return _extends({}, state, {
-        appProgress: _extends({}, state.appProgress, {
-          active: false,
-          value: null
-        })
-      });
-
-    case actionsTypes.RESET_PROGRESS:
-      return _extends({}, state, {
-        appProgress: _extends({}, state.appProgress, {
-          active: null,
-          value: null
-        })
-      });
-
-    default:
-      return state;
-  }
-};
-var StateContext = createContext();
-var AppStoreProvider = function AppStoreProvider(_ref) {
-  var children = _ref.children,
-      apiUrl = _ref.apiUrl;
-  return /*#__PURE__*/React__default.createElement(StateContext.Provider, {
-    value: useReducer(reducer, _extends({}, initialState, {
-      apiUrl: apiUrl
-    }))
-  }, children);
-};
-var useAppStore = function useAppStore() {
-  return useContext(StateContext);
-};
-
-var config = {
-  DOCS_URL: 'http://docs.dstack.ai',
-  LOGIN_URL: '/users/login',
-  VERIFY_EMAIL_URL: '/users/verify',
-  SUPPORT_URL: '/support/submit',
-  SIGN_UP_URL: '/users/register',
-  RESET_PASSWORD_URL: '/users/reset',
-  UPDATE_PASSWORD_URL: '/users/update/password',
-  USER_DATA_URL: '/users/remember',
-  CONFIG_INFO_URL: '/config/info',
-  UPDATE_TOKEN_URL: '/users/update/token',
-  UPDATE_SETTINGS_URL: '/users/update/settings',
-  CHECK_USER: function CHECK_USER(userName) {
-    return "/users/exists/" + userName;
-  },
-  STACKS_LIST: function STACKS_LIST(userName) {
-    return "/stacks/" + userName;
-  },
-  DELETE_STACK: function DELETE_STACK() {
-    return '/stacks/delete';
-  },
-  STACK_DETAILS: function STACK_DETAILS(userName, stack) {
-    return "/stacks/" + userName + "/" + stack;
-  },
-  STACK_FRAME: function STACK_FRAME(userName, stack, frameId) {
-    return "/frames/" + userName + "/" + stack + "/" + frameId;
-  },
-  STACK_ATTACHMENT: function STACK_ATTACHMENT(stack, frameId, id) {
-    return "/attachs/" + stack + "/" + frameId + "/" + id;
-  },
-  STACK_UPDATE: '/stacks/update',
-  STACK_PUSH: '/stacks/push',
-  APPS_EXECUTE: '/apps/execute',
-  APPS_POLL: '/apps/poll',
-  DASHBOARD_LIST: function DASHBOARD_LIST(userName) {
-    return "/dashboards/" + userName;
-  },
-  DASHBOARD_DETAILS: function DASHBOARD_DETAILS(userName, id) {
-    return "/dashboards/" + userName + "/" + id;
-  },
-  DASHBOARD_CREATE: '/dashboards/create',
-  DASHBOARD_UPDATE: '/dashboards/update',
-  DASHBOARD_DELETE: '/dashboards/delete',
-  DASHBOARD_CARDS_INSERT: '/dashboards/cards/insert',
-  DASHBOARD_CARDS_UPDATE: '/dashboards/cards/update',
-  DASHBOARD_CARDS_DELETE: '/dashboards/cards/delete',
-  JOB_LIST: function JOB_LIST(userName) {
-    return "/jobs/" + userName;
-  },
-  JOB_DETAILS: function JOB_DETAILS(userName, id) {
-    return "/jobs/" + userName + "/" + id;
-  },
-  JOB_CREATE: '/jobs/create',
-  JOB_UPDATE: '/jobs/update',
-  JOB_DELETE: '/jobs/delete',
-  JOB_RUN: '/jobs/run',
-  JOB_STOP: '/jobs/stop',
-  PERMISSIONS_ADD: '/permissions/add',
-  PERMISSIONS_DELETE: '/permissions/delete',
-  DISCORD_URL: 'https://discord.gg/8xfhEYa',
-  TWITTER_URL: 'https://twitter.com/dstackai',
-  GITHUB_URL: 'https://github.com/dstackai',
-  BLOG_URL: 'https://blog.dstack.ai',
-  TOKEN_STORAGE_KEY: 'token'
-};
-var reportModelPythonCode = "import dstack as ds\nfrom sklearn.linear_model import LogisticRegression\n\nmodel = LogisticRegression()\nmodel.fit(X_train, y_train)\n\nds.push(\"my_model\", model, \"My first linear model\")";
-var reportPlotPythonCode = "import matplotlib.pyplot as plt\nimport dstack as ds\n\nfig = plt.figure()\nplt.plot([1, 2, 3, 4], [1, 4, 9, 16])\n\nds.push_frame(\"my_plot\", fig, \"My first plot\")";
-
-var apiFabric = function apiFabric(_temp) {
-  var _ref = _temp === void 0 ? {} : _temp,
-      apiUrl = _ref.apiUrl;
-
-  var CancelToken = axios.CancelToken;
-  var instance = axios.create({
-    baseURL: apiUrl,
-    crossDomain: true
-  });
-  instance.cancelToken = CancelToken;
-  instance.interceptors.request.use(function (requestConfig) {
-    var token = localStorage.getItem(config.TOKEN_STORAGE_KEY);
-    requestConfig.headers.Authorization = token ? "Bearer " + token : '';
-    return requestConfig;
-  });
-  instance.interceptors.response.use(function (response) {
-    return response;
-  }, function (error) {
-    if (get(error, 'response.status', null) === 401) {
-      return Promise.reject(error.response);
-    } else if (get(error, 'response.status', null) === 400) {
-      return Promise.reject(error.response);
-    } else {
-      return Promise.reject(error);
-    }
-  });
-  return instance;
-};
-
-function _extends$1() {
-  _extends$1 = Object.assign || function (target) {
-    for (var i = 1; i < arguments.length; i++) {
-      var source = arguments[i];
-
-      for (var key in source) {
-        if (Object.prototype.hasOwnProperty.call(source, key)) {
-          target[key] = source[key];
-        }
-      }
-    }
-
-    return target;
-  };
-
-  return _extends$1.apply(this, arguments);
 }
 
 var _ref = /*#__PURE__*/createElement("rect", {
@@ -348,7 +291,7 @@ var _ref3 = /*#__PURE__*/createElement("g", {
 }));
 
 function SvgLock(props) {
-  return /*#__PURE__*/createElement("svg", _extends$1({
+  return /*#__PURE__*/createElement("svg", _extends({
     width: 85,
     height: 104,
     viewBox: "0 0 85 104",
@@ -356,10 +299,11 @@ function SvgLock(props) {
   }, props), _ref, _ref2, _ref3);
 }
 
-var css = {"forbidden":"_3PN84","message":"_2i8KH"};
+var css = {"forbidden":"_style-module__forbidden__3PN84","message":"_style-module__message__2i8KH"};
 
-var AccessForbidden = function AccessForbidden(_ref) {
-  var children = _ref.children;
+const AccessForbidden = ({
+  children
+}) => {
   return /*#__PURE__*/React__default.createElement("div", {
     className: css.forbidden
   }, /*#__PURE__*/React__default.createElement(SvgLock, {
@@ -371,66 +315,63 @@ var AccessForbidden = function AccessForbidden(_ref) {
   }, children));
 };
 
-var css$1 = {"avatar":"_3xvkT"};
+var css$1 = {"avatar":"_styles-module__avatar__3xvkT"};
 
-var Avatar = forwardRef(function (_ref, ref) {
-  var className = _ref.className,
-      name = _ref.name,
-      _ref$color = _ref.color,
-      color = _ref$color === void 0 ? 'violet' : _ref$color,
-      _ref$size = _ref.size,
-      size = _ref$size === void 0 ? 'normal' : _ref$size,
-      withBorder = _ref.withBorder,
-      onClick = _ref.onClick;
+const Avatar = forwardRef(({
+  className,
+  name,
+  color: _color = 'violet',
+  size: _size = 'normal',
+  withBorder,
+  onClick
+}, ref) => {
   return /*#__PURE__*/React__default.createElement("div", {
     ref: ref,
-    className: cx(css$1.avatar, className, color, size, {
+    className: cx(css$1.avatar, className, _color, _size, {
       border: withBorder
     }),
     onClick: onClick
   }, name.slice(0, 2));
 });
 
-var css$2 = {"back":"_1MuhU"};
+var css$2 = {"back":"_styles-module__back__1MuhU"};
 
-var BackButton = function BackButton(_ref) {
-  var _ref$Component = _ref.Component,
-      Component = _ref$Component === void 0 ? 'button' : _ref$Component,
-      children = _ref.children,
-      className = _ref.className,
-      props = _objectWithoutPropertiesLoose(_ref, ["Component", "children", "className"]);
-
-  return /*#__PURE__*/React__default.createElement(Component, _extends({
+const BackButton = ({
+  Component: _Component = 'button',
+  children,
+  className,
+  ...props
+}) => {
+  return /*#__PURE__*/React__default.createElement(_Component, Object.assign({
     className: cx(css$2.back, className)
   }, props), /*#__PURE__*/React__default.createElement("span", {
     className: "mdi mdi-arrow-left"
   }), children);
 };
 
-var css$3 = {"button":"_2lKoS","spinner":"_31PPt"};
+var css$3 = {"button":"_style-module__button__2lKoS","spinner":"_style-module__spinner__31PPt"};
 
-var css$4 = {"spinner":"_3XhrC","spinner-animation":"_2UA3s"};
+var css$4 = {"spinner":"_styles-module__spinner__3XhrC","spinner-animation":"_styles-module__spinner-animation__2UA3s"};
 
-var COLORS = {
+const COLORS = {
   white: '#fff',
   blue: '#507CD0'
 };
 
-var Spinner = function Spinner(_ref) {
-  var _ref$size = _ref.size,
-      size = _ref$size === void 0 ? 22 : _ref$size,
-      _ref$color = _ref.color,
-      color = _ref$color === void 0 ? 'white' : _ref$color,
-      isShown = _ref.isShown,
-      className = _ref.className,
-      align = _ref.align;
+const Spinner = ({
+  size: _size = 22,
+  color: _color = 'white',
+  isShown,
+  className,
+  align
+}) => {
   return /*#__PURE__*/React__default.createElement("div", {
     className: cx(css$4.spinner, className, align, {
       show: isShown
     })
   }, /*#__PURE__*/React__default.createElement("svg", {
-    width: size,
-    height: size,
+    width: _size,
+    height: _size,
     viewBox: "0 0 22 22",
     fill: "none",
     xmlns: "http://www.w3.org/2000/svg"
@@ -445,34 +386,29 @@ var Spinner = function Spinner(_ref) {
     y2: "13",
     gradientUnits: "userSpaceOnUse"
   }, /*#__PURE__*/React__default.createElement("stop", {
-    stopColor: COLORS[color]
+    stopColor: COLORS[_color]
   }), /*#__PURE__*/React__default.createElement("stop", {
     offset: "1",
-    stopColor: COLORS[color],
+    stopColor: COLORS[_color],
     stopOpacity: "0.2"
   })))));
 };
 
-var Button = forwardRef(function (_ref, ref) {
-  var _ref$Component = _ref.Component,
-      Component = _ref$Component === void 0 ? 'button' : _ref$Component,
-      children = _ref.children,
-      className = _ref.className,
-      _ref$size = _ref.size,
-      size = _ref$size === void 0 ? 'normal' : _ref$size,
-      _ref$color = _ref.color,
-      color = _ref$color === void 0 ? 'default' : _ref$color,
-      _ref$variant = _ref.variant,
-      variant = _ref$variant === void 0 ? 'default' : _ref$variant,
-      _ref$fullWidth = _ref.fullWidth,
-      fullWidth = _ref$fullWidth === void 0 ? false : _ref$fullWidth,
-      isShowSpinner = _ref.isShowSpinner,
-      props = _objectWithoutPropertiesLoose(_ref, ["Component", "children", "className", "size", "color", "variant", "fullWidth", "isShowSpinner"]);
-
-  return /*#__PURE__*/React__default.createElement(Component, _extends({
+const Button = forwardRef(({
+  Component: _Component = 'button',
+  children,
+  className,
+  size: _size = 'normal',
+  color: _color = 'default',
+  variant: _variant = 'default',
+  fullWidth: _fullWidth = false,
+  isShowSpinner,
+  ...props
+}, ref) => {
+  return /*#__PURE__*/React__default.createElement(_Component, Object.assign({
     ref: ref,
-    className: cx(css$3.button, size, "color-" + color, "variant-" + variant, className, {
-      'full-width': fullWidth
+    className: cx(css$3.button, _size, `color-${_color}`, `variant-${_variant}`, className, {
+      'full-width': _fullWidth
     })
   }, props), isShowSpinner && /*#__PURE__*/React__default.createElement(Spinner, {
     className: css$3.spinner,
@@ -481,27 +417,25 @@ var Button = forwardRef(function (_ref, ref) {
   }), children);
 });
 
-var css$5 = {"checkbox":"_3lqFk","toggle-label":"_1aLAG","label":"_2PZb-","wrapper":"_2Vufp","mark":"_2Pb2f"};
+var css$5 = {"checkbox":"_styles-module__checkbox__3lqFk","toggle-label":"_styles-module__toggle-label__1aLAG","label":"_styles-module__label__2PZb-","wrapper":"_styles-module__wrapper__2Vufp","mark":"_styles-module__mark__2Pb2f"};
 
-var CheckboxField = function CheckboxField(_ref) {
-  var className = _ref.className,
-      value = _ref.value,
-      disabled = _ref.disabled,
-      _ref$appearance = _ref.appearance,
-      appearance = _ref$appearance === void 0 ? 'checkbox' : _ref$appearance,
-      _ref$align = _ref.align,
-      align = _ref$align === void 0 ? 'left' : _ref$align,
-      label = _ref.label,
-      onLabel = _ref.onLabel,
-      offLabel = _ref.offLabel,
-      children = _ref.children,
-      props = _objectWithoutPropertiesLoose(_ref, ["className", "value", "disabled", "appearance", "align", "label", "onLabel", "offLabel", "children"]);
-
+const CheckboxField = ({
+  className,
+  value,
+  disabled,
+  appearance: _appearance = 'checkbox',
+  align: _align = 'left',
+  label,
+  onLabel,
+  offLabel,
+  children,
+  ...props
+}) => {
   return /*#__PURE__*/React__default.createElement("label", {
-    className: cx(css$5.checkbox, className, appearance, align, {
-      disabled: disabled
+    className: cx(css$5.checkbox, className, _appearance, _align, {
+      disabled
     })
-  }, /*#__PURE__*/React__default.createElement("div", null, /*#__PURE__*/React__default.createElement("input", _extends({
+  }, /*#__PURE__*/React__default.createElement("div", null, /*#__PURE__*/React__default.createElement("input", Object.assign({
     type: "checkbox",
     checked: value
   }, props)), offLabel && /*#__PURE__*/React__default.createElement("span", {
@@ -525,28 +459,24 @@ var CheckboxField = function CheckboxField(_ref) {
   }, label)), children);
 };
 
-var css$6 = {"copy":"_3J5hd","message":"_3RWnQ","button":"_2YqEb","icon":"_25GMO"};
+var css$6 = {"copy":"_styles-module__copy__3J5hd","message":"_styles-module__message__3RWnQ","button":"_styles-module__button__2YqEb","icon":"_styles-module__icon__25GMO"};
 
-var Copy = function Copy(_ref) {
-  var children = _ref.children,
-      className = _ref.className,
-      copyText = _ref.copyText,
-      successMessage = _ref.successMessage,
-      buttonTitle = _ref.buttonTitle;
+const Copy = ({
+  children,
+  className,
+  copyText,
+  successMessage,
+  buttonTitle
+}) => {
+  const {
+    t
+  } = useTranslation();
+  const [isShowMessage, setIsShowMessage] = useState(false);
 
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var _useState = useState(false),
-      isShowMessage = _useState[0],
-      setIsShowMessage = _useState[1];
-
-  var onCLick = function onCLick() {
+  const onCLick = () => {
     copy(copyText);
     setIsShowMessage(true);
-    setTimeout(function () {
-      return setIsShowMessage(false);
-    }, 3000);
+    setTimeout(() => setIsShowMessage(false), 3000);
   };
 
   return /*#__PURE__*/React__default.createElement("div", {
@@ -565,19 +495,19 @@ var Copy = function Copy(_ref) {
   }, successMessage ? successMessage : t('copied')));
 };
 
-var css$7 = {"code":"_3gARj","copy":"_m44gX","icon":"_ZmZbg"};
+var css$7 = {"code":"_styles-module__code__3gARj","copy":"_styles-module__copy__m44gX","icon":"_styles-module__icon__ZmZbg"};
 
-var CodeViewer = function CodeViewer(_ref) {
-  var className = _ref.className,
-      language = _ref.language,
-      children = _ref.children,
-      fontSize = _ref.fontSize;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
+const CodeViewer = ({
+  className,
+  language,
+  children,
+  fontSize
+}) => {
+  const {
+    t
+  } = useTranslation();
   return /*#__PURE__*/React__default.createElement("div", {
-    className: cx(css$7.code, className, fontSize && "font-size-" + fontSize)
+    className: cx(css$7.code, className, fontSize && `font-size-${fontSize}`)
   }, /*#__PURE__*/React__default.createElement(Highlight, {
     language: language
   }, children), /*#__PURE__*/React__default.createElement(Copy, {
@@ -587,29 +517,24 @@ var CodeViewer = function CodeViewer(_ref) {
   }));
 };
 
-var css$8 = {"dropdown":"_1qRCw","button":"_fzNEm","menu":"_AJ1Y3","item":"_3lbfY"};
+var css$8 = {"dropdown":"_styles-module__dropdown__1qRCw","button":"_styles-module__button__fzNEm","menu":"_styles-module__menu__AJ1Y3","item":"_styles-module__item__3lbfY"};
 
-var Dropdown = function Dropdown(_ref) {
-  var className = _ref.className,
-      buttonClassName = _ref.buttonClassName,
-      children = _ref.children,
-      items = _ref.items;
-
-  var _useState = useState(false),
-      isShow = _useState[0],
-      setIsShow = _useState[1];
-
-  var buttonRef = useRef(null);
-  var dropdownRef = useRef(null);
-  useEffect(function () {
+const Dropdown = ({
+  className,
+  buttonClassName,
+  children,
+  items
+}) => {
+  const [isShow, setIsShow] = useState(false);
+  const buttonRef = useRef(null);
+  const dropdownRef = useRef(null);
+  useEffect(() => {
     document.body.addEventListener('click', outlineClickHandle);
-    return function () {
-      return document.body.removeEventListener('click', outlineClickHandle);
-    };
+    return () => document.body.removeEventListener('click', outlineClickHandle);
   });
 
-  var outlineClickHandle = function outlineClickHandle(event) {
-    var targetElement = event.target;
+  const outlineClickHandle = event => {
+    let targetElement = event.target;
 
     do {
       if (targetElement === buttonRef.current || targetElement === dropdownRef.current) return;
@@ -619,21 +544,19 @@ var Dropdown = function Dropdown(_ref) {
     if (isShow) setIsShow(false);
   };
 
-  var onCLickButton = function onCLickButton(event) {
+  const onCLickButton = event => {
     clickStopPropagation(event);
     setIsShow(!isShow);
   };
 
-  var clickStopPropagation = function clickStopPropagation(event) {
+  const clickStopPropagation = event => {
     event.stopPropagation();
     event.preventDefault();
   };
 
-  var onCLickItem = function onCLickItem(item) {
-    return function () {
-      setIsShow(!isShow);
-      if (item.onClick) item.onClick();
-    };
+  const onCLickItem = item => () => {
+    setIsShow(!isShow);
+    if (item.onClick) item.onClick();
   };
 
   return /*#__PURE__*/React__default.createElement("div", {
@@ -652,13 +575,11 @@ var Dropdown = function Dropdown(_ref) {
       className: cx(css$8.menu, 'show'),
       ref: dropdownRef,
       onClick: clickStopPropagation
-    }, items.map(function (i, index) {
-      return /*#__PURE__*/React__default.createElement("div", {
-        key: index,
-        className: css$8.item,
-        onClick: onCLickItem(i)
-      }, i.title);
-    }))
+    }, items.map((i, index) => /*#__PURE__*/React__default.createElement("div", {
+      key: index,
+      className: css$8.item,
+      onClick: onCLickItem(i)
+    }, i.title)))
   }, children ? React__default.cloneElement(children, {
     onClick: onCLickButton,
     ref: buttonRef
@@ -671,10 +592,10 @@ var Dropdown = function Dropdown(_ref) {
   }))));
 };
 
-var unicodeBase64Decode = function unicodeBase64Decode(text) {
+const unicodeBase64Decode = text => {
   try {
-    var decodeData = window.atob(text);
-    return decodeURIComponent(Array.prototype.map.call(decodeData, function (c) {
+    const decodeData = window.atob(text);
+    return decodeURIComponent(Array.prototype.map.call(decodeData, c => {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
   } catch (e) {
@@ -682,20 +603,20 @@ var unicodeBase64Decode = function unicodeBase64Decode(text) {
   }
 };
 
-var formatBytes = function formatBytes(bytes, decimals) {
+const formatBytes = (bytes, decimals) => {
   if (bytes === 0) return '0 Bytes';
-  var k = 1024;
-  var dm = decimals <= 0 ? 0 : decimals || 2;
-  var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-  var i = Math.floor(Math.log(bytes) / Math.log(k));
+  let k = 1024;
+  let dm = decimals <= 0 ? 0 : decimals || 2;
+  let sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  let i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 };
 
-var parseStackParams = (function (attachments, tab) {
-  var fields = {};
+var parseStackParams = ((attachments, tab) => {
+  const fields = {};
   if (!attachments || !attachments.length) return;
-  attachments.forEach(function (i) {
-    Object.keys(i.params).forEach(function (key) {
+  attachments.forEach(i => {
+    Object.keys(i.params).forEach(key => {
       var _i$params$tab$value, _i$params$tab$key;
 
       if (tab && ((_i$params$tab$value = i.params[tab.value]) === null || _i$params$tab$value === void 0 ? void 0 : _i$params$tab$value.type) !== 'tab' && ((_i$params$tab$key = i.params[tab.key]) === null || _i$params$tab$key === void 0 ? void 0 : _i$params$tab$key.title) !== tab.value) return;
@@ -705,20 +626,16 @@ var parseStackParams = (function (attachments, tab) {
       };
     });
   });
-  Object.keys(fields).forEach(function (key) {
+  Object.keys(fields).forEach(key => {
     fields[key].options = uniq(fields[key].options);
     fields[key].label = key;
 
     if (typeof fields[key].options[0] === 'string') {
       fields[key].type = 'select';
-      fields[key].options = fields[key].options.filter(function (a, b) {
-        return fields[key].options.indexOf(a) === b;
-      }).map(function (i) {
-        return {
-          label: i,
-          value: i
-        };
-      });
+      fields[key].options = fields[key].options.filter((a, b) => fields[key].options.indexOf(a) === b).map(i => ({
+        label: i,
+        value: i
+      }));
     }
 
     if (typeof fields[key].options[0] === 'boolean') {
@@ -726,34 +643,28 @@ var parseStackParams = (function (attachments, tab) {
     }
 
     if (typeof fields[key].options[0] === 'number') {
-      var options = fields[key].options;
+      const options = fields[key].options;
       fields[key].type = 'slider';
       fields[key].min = Math.min.apply(null, options);
       fields[key].max = Math.max.apply(null, options);
       fields[key].options = {};
-      options.filter(function (a, b) {
-        return options.indexOf(a) === b;
-      }).forEach(function (i) {
-        return fields[key].options[i] = i;
-      });
+      options.filter((a, b) => options.indexOf(a) === b).forEach(i => fields[key].options[i] = i);
     }
   });
   return fields;
 });
 
-var parseStackTabs = (function (attachments) {
-  var tabs = [];
+var parseStackTabs = (attachments => {
+  const tabs = [];
   if (!attachments || !attachments.length) return [];
-  attachments.forEach(function (i) {
-    Object.keys(i.params).forEach(function (key) {
+  attachments.forEach(i => {
+    Object.keys(i.params).forEach(key => {
       if (i.params[key] instanceof Object && i.params[key].type === 'tab') {
-        var tab = i.params[key].title || key;
-        if (!tabs.find(function (i) {
-          return i.value === tab;
-        })) tabs.push({
+        const tab = i.params[key].title || key;
+        if (!tabs.find(i => i.value === tab)) tabs.push({
           label: tab,
           value: tab,
-          key: key
+          key
         });
       }
     });
@@ -761,23 +672,23 @@ var parseStackTabs = (function (attachments) {
   return tabs;
 });
 
-var getFormattedDuration = (function (duration) {
+var getFormattedDuration = (duration => {
   if (duration < 1000) return '0sec';
-  var string = '';
-  var momentDuration = moment.duration(duration);
-  var hours = momentDuration.hours();
-  var minutes = momentDuration.minutes();
-  var seconds = momentDuration.seconds();
-  if (hours) string += moment.duration(hours, 'hours').as('hours') + "h";
-  if (minutes) string += " " + moment.duration(minutes, 'minutes').as('minutes') + "min";
-  if (seconds) string += " " + moment.duration(seconds, 'seconds').asSeconds() + "sec";
+  let string = '';
+  const momentDuration = moment.duration(duration);
+  const hours = momentDuration.hours();
+  const minutes = momentDuration.minutes();
+  const seconds = momentDuration.seconds();
+  if (hours) string += `${moment.duration(hours, 'hours').as('hours')}h`;
+  if (minutes) string += ` ${moment.duration(minutes, 'minutes').as('minutes')}min`;
+  if (seconds) string += ` ${moment.duration(seconds, 'seconds').asSeconds()}sec`;
   return string;
 });
 
-var getStackCategory = (function (_ref) {
-  var application = _ref.application,
-      contentType = _ref.contentType;
-
+var getStackCategory = (({
+  application,
+  contentType
+}) => {
   switch (true) {
     case contentType === 'image/svg+xml':
     case contentType === 'image/png':
@@ -802,89 +713,50 @@ var getStackCategory = (function (_ref) {
   }
 });
 
-var fileToBase64 = function fileToBase64(file) {
+const fileToBase64 = async file => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+
+  reader.onload = () => resolve(reader.result.split(',')[1]);
+
+  reader.onerror = error => reject(error);
+});
+
+const fetcher = async (url, responseDataFormat = data => data) => {
+  const token = localStorage.getItem(config.TOKEN_STORAGE_KEY);
+
   try {
-    return Promise.resolve(new Promise(function (resolve, reject) {
-      var reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onload = function () {
-        return resolve(reader.result.split(',')[1]);
-      };
-
-      reader.onerror = function (error) {
-        return reject(error);
-      };
-    }));
+    const request = await axios({
+      url: url,
+      headers: {
+        Authorization: token ? `Bearer ${token}` : ''
+      }
+    });
+    return responseDataFormat(request.data);
   } catch (e) {
-    return Promise.reject(e);
+    let errorBody = null;
+    let status = null;
+
+    try {
+      errorBody = JSON.parse(get(e, 'request.response'));
+    } catch (e) {
+      console.log(e);
+    }
+
+    try {
+      status = get(e, 'request.status');
+    } catch (e) {
+      console.log(e);
+    }
+
+    const error = new Error('An error occurred while fetching the data.');
+    error.info = errorBody;
+    error.status = status;
+    throw error;
   }
 };
 
-// A type of promise-like that resolves synchronously and supports only one observer
-
-const _iteratorSymbol = /*#__PURE__*/ typeof Symbol !== "undefined" ? (Symbol.iterator || (Symbol.iterator = Symbol("Symbol.iterator"))) : "@@iterator";
-
-const _asyncIteratorSymbol = /*#__PURE__*/ typeof Symbol !== "undefined" ? (Symbol.asyncIterator || (Symbol.asyncIterator = Symbol("Symbol.asyncIterator"))) : "@@asyncIterator";
-
-// Asynchronously call a function and send errors to recovery continuation
-function _catch(body, recover) {
-	try {
-		var result = body();
-	} catch(e) {
-		return recover(e);
-	}
-	if (result && result.then) {
-		return result.then(void 0, recover);
-	}
-	return result;
-}
-
-var fetcher = function fetcher(url, responseDataFormat) {
-  if (responseDataFormat === void 0) {
-    responseDataFormat = function responseDataFormat(data) {
-      return data;
-    };
-  }
-
-  try {
-    var token = localStorage.getItem(config.TOKEN_STORAGE_KEY);
-    return Promise.resolve(_catch(function () {
-      return Promise.resolve(axios({
-        url: url,
-        headers: {
-          Authorization: token ? "Bearer " + token : ''
-        }
-      })).then(function (request) {
-        return responseDataFormat(request.data);
-      });
-    }, function (e) {
-      var errorBody = null;
-      var status = null;
-
-      try {
-        errorBody = JSON.parse(get(e, 'request.response'));
-      } catch (e) {
-        console.log(e);
-      }
-
-      try {
-        status = get(e, 'request.status');
-      } catch (e) {
-        console.log(e);
-      }
-
-      var error = new Error('An error occurred while fetching the data.');
-      error.info = errorBody;
-      error.status = status;
-      throw error;
-    }));
-  } catch (e) {
-    return Promise.reject(e);
-  }
-};
-
-var typeMap = {
+const typeMap = {
   'TextFieldView': 'text',
   'LongTextFieldView': 'textarea',
   'ComboBoxView': 'select',
@@ -892,33 +764,29 @@ var typeMap = {
   'CheckBoxView': 'checkbox',
   'ApplyView': 'apply'
 };
-var parseStackViews = (function (views) {
-  var fields = {};
-  views.forEach(function (view, index) {
+var parseStackViews = (views => {
+  const fields = {};
+  views.forEach((view, index) => {
     fields[index] = {
       label: view.label,
-      type: typeMap[(view["long"] ? 'Long' : '') + view.type],
+      type: typeMap[(view.long ? 'Long' : '') + view.type],
       value: view.data,
       disabled: !view.enabled
     };
     if (view.type === 'CheckBoxView') fields[index].value = view.selected;
 
     if (view.type === 'ComboBoxView') {
-      fields[index].options = view.titles.map(function (title, i) {
-        return {
-          label: title,
-          value: i
-        };
-      });
+      fields[index].options = view.titles.map((title, i) => ({
+        label: title,
+        value: i
+      }));
       fields[index].value = view.selected;
       fields[index].multiple = view.multiple;
     }
 
     if (view.type === 'SliderView') {
       fields[index].options = {};
-      view.data.forEach(function (item) {
-        return fields[index].options[item] = item;
-      });
+      view.data.forEach(item => fields[index].options[item] = item);
       fields[index].min = Math.min.apply(null, view.data);
       fields[index].max = Math.max.apply(null, view.data);
       fields[index].value = view.data[view.selected];
@@ -927,90 +795,76 @@ var parseStackViews = (function (views) {
   return fields;
 });
 
-var isSignedIn = function isSignedIn() {
-  var token = localStorage.getItem(config.TOKEN_STORAGE_KEY);
+const isSignedIn = () => {
+  const token = localStorage.getItem(config.TOKEN_STORAGE_KEY);
   return Boolean(token && token.length);
 };
 
-var css$9 = {"dnd":"_3uYii","fileWrapper":"_1GUx_","file":"_2LG6L","fileExtend":"_3w6--","fileSection":"_B8y5t","fileName":"_3Juxo","fileSize":"_3G6N8","fileRemove":"_16dzP","placeholder":"_Wr_Zp","button":"_14ku1","loading":"_2KndP","progressBar":"_DHbC1","progress":"_2-dth","animate-stripes":"_1Iecq"};
+var css$9 = {"dnd":"_style-module__dnd__3uYii","fileWrapper":"_style-module__fileWrapper__1GUx_","file":"_style-module__file__2LG6L","fileExtend":"_style-module__fileExtend__3w6--","fileSection":"_style-module__fileSection__B8y5t","fileName":"_style-module__fileName__3Juxo","fileSize":"_style-module__fileSize__3G6N8","fileRemove":"_style-module__fileRemove__16dzP","placeholder":"_style-module__placeholder__Wr_Zp","button":"_style-module__button__14ku1","loading":"_style-module__loading__2KndP","progressBar":"_style-module__progressBar__DHbC1","progress":"_style-module__progress__2-dth","animate-stripes":"_style-module__animate-stripes__1Iecq"};
 
-var FileDragnDrop = function FileDragnDrop(_ref, ref) {
-  var formats = _ref.formats,
-      className = _ref.className,
-      loading = _ref.loading,
-      _ref$progressPercent = _ref.progressPercent,
-      progressPercent = _ref$progressPercent === void 0 ? null : _ref$progressPercent,
-      onChange = _ref.onChange;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var inputRef = useRef(null);
-
-  var _useState = useState(false),
-      active = _useState[0],
-      setActive = _useState[1];
-
-  var _useState2 = useState(),
-      selectedFile = _useState2[0],
-      setSelectedFile = _useState2[1];
-
-  var isDidMount = useRef(true);
-  useImperativeHandle(ref, function () {
-    return {
-      clear: function clear() {
-        return removeFile();
-      }
-    };
-  });
-  useEffect(function () {
+const FileDragnDrop = ({
+  formats,
+  className,
+  loading,
+  progressPercent: _progressPercent = null,
+  onChange
+}, ref) => {
+  const {
+    t
+  } = useTranslation();
+  const inputRef = useRef(null);
+  const [active, setActive] = useState(false);
+  const [selectedFile, setSelectedFile] = useState();
+  const isDidMount = useRef(true);
+  useImperativeHandle(ref, () => ({
+    clear: () => removeFile()
+  }));
+  useEffect(() => {
     if (!isDidMount.current) {
       if (onChange) onChange(selectedFile);
     } else isDidMount.current = false;
   }, [selectedFile]);
 
-  var onClick = function onClick(event) {
+  const onClick = event => {
     event.preventDefault();
     if (inputRef.current) inputRef.current.click();
   };
 
-  var preventStop = function preventStop(event) {
+  const preventStop = event => {
     event.preventDefault();
     event.stopPropagation();
   };
 
-  var onDrop = function onDrop(event) {
+  const onDrop = event => {
     preventStop(event);
     setActive(false);
-    var _event$dataTransfer$f = event.dataTransfer.files,
-        file = _event$dataTransfer$f[0];
+    const [file] = event.dataTransfer.files;
     if (file && checkAvailableExtension(file)) setSelectedFile(file);
   };
 
-  var onDragEnter = function onDragEnter(event) {
+  const onDragEnter = event => {
     preventStop(event);
     setActive(true);
   };
 
-  var onDragLeave = function onDragLeave(event) {
+  const onDragLeave = event => {
     preventStop(event);
     setActive(false);
   };
 
-  var onChangeInput = function onChangeInput(event) {
-    var _event$target$files = event.target.files,
-        file = _event$target$files[0];
+  const onChangeInput = event => {
+    const [file] = event.target.files;
     if (file && checkAvailableExtension(file)) setSelectedFile(file);
   };
 
-  var removeFile = function removeFile() {
+  const removeFile = () => {
     setSelectedFile(null);
   };
 
-  var checkAvailableExtension = function checkAvailableExtension(file) {
-    var ext = '.' + file.name.split('.').pop();
-    var isAvailable;
-    if (formats && formats.length) isAvailable = formats.some(function (format) {
+  const checkAvailableExtension = file => {
+    const ext = '.' + file.name.split('.').pop();
+    let isAvailable;
+    if (formats && formats.length) isAvailable = formats.some(format => {
       if (format === '.jpg' || format === '.jpeg') return ext === '.jpg' || ext === '.jpeg';else return format === ext;
     });else isAvailable = true;
     return isAvailable;
@@ -1018,16 +872,16 @@ var FileDragnDrop = function FileDragnDrop(_ref, ref) {
 
   if (loading) return /*#__PURE__*/React__default.createElement("div", {
     className: cx(css$9.dnd, className, {
-      active: active
+      active
     })
   }, /*#__PURE__*/React__default.createElement("div", {
     className: css$9.loading
-  }, t('Uploading'), "\u2026", typeof progressPercent === 'number' && progressPercent + "%"), typeof progressPercent === 'number' && /*#__PURE__*/React__default.createElement("div", {
+  }, t('Uploading'), "\u2026", typeof _progressPercent === 'number' && `${_progressPercent}%`), typeof _progressPercent === 'number' && /*#__PURE__*/React__default.createElement("div", {
     className: css$9.progressBar
   }, /*#__PURE__*/React__default.createElement("div", {
     className: css$9.progress,
     style: {
-      width: progressPercent + "%"
+      width: `${_progressPercent}%`
     }
   })));
   if (selectedFile) return /*#__PURE__*/React__default.createElement("div", {
@@ -1048,7 +902,7 @@ var FileDragnDrop = function FileDragnDrop(_ref, ref) {
   })));
   return /*#__PURE__*/React__default.createElement("div", {
     className: cx(css$9.dnd, className, {
-      active: active
+      active
     }),
     onDrop: onDrop,
     onDragEnter: onDragEnter,
@@ -1060,7 +914,7 @@ var FileDragnDrop = function FileDragnDrop(_ref, ref) {
     type: "file"
   }), /*#__PURE__*/React__default.createElement("div", {
     className: css$9.placeholder
-  }, t('dragHereAFile'), '', Boolean(formats) && "(" + formats.join(', ') + ")", ' ', t('or'), ' '), /*#__PURE__*/React__default.createElement(Button, {
+  }, t('dragHereAFile'), '', Boolean(formats) && `(${formats.join(', ')})`, ' ', t('or'), ' '), /*#__PURE__*/React__default.createElement(Button, {
     className: css$9.button,
     variant: "contained",
     color: "primary",
@@ -1071,11 +925,9 @@ var FileDragnDrop = function FileDragnDrop(_ref, ref) {
 
 var FileDragnDrop$1 = forwardRef(FileDragnDrop);
 
-var css$a = {"loader":"_18_Ho","text":"_3dZu_","stacks-pulse":"_350eA","grid":"_Uki0v","item":"_MvjKB","pic":"_Pc6fT","section":"_2EIKh"};
+var css$a = {"loader":"_styles-module__loader__18_Ho","text":"_styles-module__text__3dZu_","stacks-pulse":"_styles-module__stacks-pulse__350eA","grid":"_styles-module__grid__Uki0v","item":"_styles-module__item__MvjKB","pic":"_styles-module__pic__Pc6fT","section":"_styles-module__section__2EIKh"};
 
-var Loader = function Loader(_ref) {
-  _objectDestructuringEmpty(_ref);
-
+const Loader = ({}) => {
   return /*#__PURE__*/React__default.createElement("div", {
     className: css$a.loader
   }, /*#__PURE__*/React__default.createElement("div", {
@@ -1103,43 +955,37 @@ var Loader = function Loader(_ref) {
   }))));
 };
 
-var MarkdownRender = function MarkdownRender(props) {
-  var newProps = _extends({}, props, {
+const MarkdownRender = props => {
+  const newProps = { ...props,
     plugins: [RemarkMathPlugin],
-    renderers: _extends({}, props.renderers, {
-      math: function math(props) {
-        return /*#__PURE__*/React__default.createElement(MathJax.Node, {
-          formula: props.value
-        });
-      },
-      inlineMath: function inlineMath(props) {
-        return /*#__PURE__*/React__default.createElement(MathJax.Node, {
-          inline: true,
-          formula: props.value
-        });
-      }
-    })
-  });
-
+    renderers: { ...props.renderers,
+      math: props => /*#__PURE__*/React__default.createElement(MathJax.Node, {
+        formula: props.value
+      }),
+      inlineMath: props => /*#__PURE__*/React__default.createElement(MathJax.Node, {
+        inline: true,
+        formula: props.value
+      })
+    }
+  };
   return /*#__PURE__*/React__default.createElement(MathJax.Provider, {
     input: "tex"
   }, /*#__PURE__*/React__default.createElement(ReactMarkdown, newProps));
 };
 
-var css$b = {"modal":"_3FQ59","dialog":"_268e0","close":"_1Y7yz","title":"_knxNI"};
+var css$b = {"modal":"_styles-module__modal__3FQ59","dialog":"_styles-module__dialog__268e0","close":"_styles-module__close__1Y7yz","title":"_styles-module__title__knxNI"};
 
-var Modal = function Modal(_ref) {
-  var title = _ref.title,
-      className = _ref.className,
-      dialogClassName = _ref.dialogClassName,
-      _ref$size = _ref.size,
-      size = _ref$size === void 0 ? 'big' : _ref$size,
-      onClose = _ref.onClose,
-      isShow = _ref.isShow,
-      children = _ref.children,
-      withCloseButton = _ref.withCloseButton;
-
-  var onClickByLayer = function onClickByLayer(event) {
+const Modal = ({
+  title,
+  className,
+  dialogClassName,
+  size: _size = 'big',
+  onClose,
+  isShow,
+  children,
+  withCloseButton
+}) => {
+  const onClickByLayer = event => {
     if (event.currentTarget === event.target && onClose) onClose();
   };
 
@@ -1149,7 +995,7 @@ var Modal = function Modal(_ref) {
     }),
     onClick: onClickByLayer
   }, /*#__PURE__*/React__default.createElement("div", {
-    className: cx(css$b.dialog, size, dialogClassName)
+    className: cx(css$b.dialog, _size, dialogClassName)
   }, withCloseButton && /*#__PURE__*/React__default.createElement("span", {
     className: cx(css$b.close, 'mdi mdi-close'),
     onClick: onClose
@@ -1158,8 +1004,8 @@ var Modal = function Modal(_ref) {
   }, title), children)));
 };
 
-function _extends$2() {
-  _extends$2 = Object.assign || function (target) {
+function _extends$1() {
+  _extends$1 = Object.assign || function (target) {
     for (var i = 1; i < arguments.length; i++) {
       var source = arguments[i];
 
@@ -1173,7 +1019,7 @@ function _extends$2() {
     return target;
   };
 
-  return _extends$2.apply(this, arguments);
+  return _extends$1.apply(this, arguments);
 }
 
 var _ref$1 = /*#__PURE__*/createElement("path", {
@@ -1198,7 +1044,7 @@ var _ref4 = /*#__PURE__*/createElement("path", {
 });
 
 function Svg404(props) {
-  return /*#__PURE__*/createElement("svg", _extends$2({
+  return /*#__PURE__*/createElement("svg", _extends$1({
     width: 224,
     height: 77,
     viewBox: "0 0 224 77",
@@ -1206,14 +1052,14 @@ function Svg404(props) {
   }, props), _ref$1, _ref2$1, _ref3$1, _ref4);
 }
 
-var css$c = {"not-found":"_tAZyq","message":"_3Ok1U","help":"_Aa8x8"};
+var css$c = {"not-found":"_style-module__not-found__tAZyq","message":"_style-module__message__3Ok1U","help":"_style-module__help__Aa8x8"};
 
-var NotFound = function NotFound(_ref) {
-  var children = _ref.children;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
+const NotFound = ({
+  children
+}) => {
+  const {
+    t
+  } = useTranslation();
   return /*#__PURE__*/React__default.createElement("div", {
     className: css$c['not-found']
   }, /*#__PURE__*/React__default.createElement(Svg404, {
@@ -1241,36 +1087,30 @@ var NotFound = function NotFound(_ref) {
   }), "Discord")));
 };
 
-var usePrevious = (function (value) {
-  var ref = useRef(value);
-  useEffect(function () {
+var usePrevious = (value => {
+  const ref = useRef(value);
+  useEffect(() => {
     ref.current = value;
   }, [value]);
   return ref.current;
 });
 
-var css$d = {"bar":"_12oWc","progress":"_3JWjz"};
+var css$d = {"bar":"_styles-module__bar__12oWc","progress":"_styles-module__progress__3JWjz"};
 
-var ProgressBar = function ProgressBar(_ref) {
-  var className = _ref.className,
-      isActive = _ref.isActive,
-      globalProgress = _ref.progress;
-
-  var _useState = useState(0),
-      progress = _useState[0],
-      setProgress = _useState[1];
-
-  var _useState2 = useState(1000),
-      width = _useState2[0],
-      setWidth = _useState2[1];
-
-  var prevIsActive = usePrevious(isActive);
-  var step = useRef(0.01);
-  var currentProgress = useRef(0);
-  var requestFrame = useRef(null);
-  var isActiveRef = useRef(false);
-  var ref = useRef(null);
-  useEffect(function () {
+const ProgressBar = ({
+  className,
+  isActive,
+  progress: globalProgress
+}) => {
+  const [progress, setProgress] = useState(0);
+  const [width, setWidth] = useState(1000);
+  const prevIsActive = usePrevious(isActive);
+  const step = useRef(0.01);
+  const currentProgress = useRef(0);
+  const requestFrame = useRef(null);
+  const isActiveRef = useRef(false);
+  const ref = useRef(null);
+  useEffect(() => {
     isActiveRef.current = isActive;
 
     if (isActive) {
@@ -1282,9 +1122,7 @@ var ProgressBar = function ProgressBar(_ref) {
 
     if (prevIsActive === true && isActive === false) {
       setProgress(100);
-      setTimeout(function () {
-        return setProgress(0);
-      }, 800);
+      setTimeout(() => setProgress(0), 800);
     }
 
     if (isActive === null) {
@@ -1295,33 +1133,31 @@ var ProgressBar = function ProgressBar(_ref) {
       cancelAnimationFrame(requestFrame.current);
     }
   }, [isActive]);
-  useEffect(function () {
+  useEffect(() => {
     if (globalProgress !== null) setProgress(globalProgress);else {
       setProgress(0);
     }
   }, [globalProgress]);
-  useEffect(function () {
+  useEffect(() => {
     window.addEventListener('resize', onResize);
     if (ref.current) setWidth(ref.current.offsetWidth);
-    return function () {
-      return window.removeEventListener('resize', onResize);
-    };
+    return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  var calculateProgress = function calculateProgress() {
+  const calculateProgress = () => {
     currentProgress.current += step.current;
-    var progress = Math.round(Math.atan(currentProgress.current) / (Math.PI / 2) * 100 * 1000) / 1000;
+    const progress = Math.round(Math.atan(currentProgress.current) / (Math.PI / 2) * 100 * 1000) / 1000;
     setProgress(progress);
     if (progress > 70) step.current = 0.005;
     if (progress >= 100 || !isActiveRef.current) cancelAnimationFrame(requestFrame.current);
     if (isActiveRef.current) requestFrame.current = requestAnimationFrame(calculateProgress);
   };
 
-  var startCalculateProgress = function startCalculateProgress() {
+  const startCalculateProgress = () => {
     requestAnimationFrame(calculateProgress);
   };
 
-  var onResize = function onResize() {
+  const onResize = () => {
     if (ref.current) setWidth(ref.current.offsetWidth);
   };
 
@@ -1331,59 +1167,55 @@ var ProgressBar = function ProgressBar(_ref) {
   }, /*#__PURE__*/React__default.createElement("div", {
     className: css$d.progress,
     style: {
-      width: progress + "%",
-      backgroundSize: width + "px 5px"
+      width: `${progress}%`,
+      backgroundSize: `${width}px 5px`
     }
   }));
 };
 
-var css$e = {"field":"_3WCaE","input":"_9Tk5W","label":"_1mHtq","error":"_3jOrk"};
+var css$e = {"field":"_styles-module__field__3WCaE","input":"_styles-module__input__9Tk5W","label":"_styles-module__label__1mHtq","error":"_styles-module__error__3jOrk"};
 
-var TextField = function TextField(_ref) {
-  var label = _ref.label,
-      className = _ref.className,
-      _ref$size = _ref.size,
-      size = _ref$size === void 0 ? 'normal' : _ref$size,
-      _ref$errors = _ref.errors,
-      errors = _ref$errors === void 0 ? [] : _ref$errors,
-      props = _objectWithoutPropertiesLoose(_ref, ["label", "className", "size", "errors"]);
-
-  var hasErrors = Boolean(errors.length);
+const TextField = ({
+  label,
+  className,
+  size: _size = 'normal',
+  errors: _errors = [],
+  ...props
+}) => {
+  const hasErrors = Boolean(_errors.length);
   return /*#__PURE__*/React__default.createElement("div", {
-    className: cx(css$e.field, className, size, {
+    className: cx(css$e.field, className, _size, {
       disabled: props.disabled
     })
   }, /*#__PURE__*/React__default.createElement("label", null, label && /*#__PURE__*/React__default.createElement("div", {
     className: css$e.label
   }, label), /*#__PURE__*/React__default.createElement("div", {
     className: css$e.input
-  }, /*#__PURE__*/React__default.createElement("input", _extends({
+  }, /*#__PURE__*/React__default.createElement("input", Object.assign({
     className: cx({
       error: hasErrors
     })
   }, props))), hasErrors && /*#__PURE__*/React__default.createElement("div", {
     className: css$e.error
-  }, errors.join(', '))));
+  }, _errors.join(', '))));
 };
 
-var css$f = {"search":"_3s1gr","field":"_17rsB","clear":"_3oKZ5","button":"_3BfRl"};
+var css$f = {"search":"_styles-module__search__3s1gr","field":"_styles-module__field__17rsB","clear":"_styles-module__clear__3oKZ5","button":"_styles-module__button__3BfRl"};
 
-var SearchField = function SearchField(_ref) {
-  var className = _ref.className,
-      showEverything = _ref.showEverything,
-      isDark = _ref.isDark,
-      props = _objectWithoutPropertiesLoose(_ref, ["className", "showEverything", "isDark"]);
+const SearchField = ({
+  className,
+  showEverything,
+  isDark,
+  ...props
+}) => {
+  const [isShow, setIsShow] = useState(showEverything || props.value && props.value.length);
 
-  var _useState = useState(showEverything || props.value && props.value.length),
-      isShow = _useState[0],
-      setIsShow = _useState[1];
-
-  var clear = function clear() {
+  const clear = () => {
     if (props.onChange) props.onChange('');
     if (!showEverything) setIsShow(false);
   };
 
-  var onChangeHandle = function onChangeHandle(event) {
+  const onChangeHandle = event => {
     if (props.onChange) props.onChange(event.target.value);
   };
 
@@ -1391,7 +1223,7 @@ var SearchField = function SearchField(_ref) {
     className: cx(css$f.search, className, {
       'is-dark': isDark
     })
-  }, isShow && /*#__PURE__*/React__default.createElement(TextField, _extends({}, props, {
+  }, isShow && /*#__PURE__*/React__default.createElement(TextField, Object.assign({}, props, {
     onChange: onChangeHandle,
     className: css$f.field
   })), isShow && Boolean(props.value && props.value.length) && /*#__PURE__*/React__default.createElement("div", {
@@ -1405,73 +1237,63 @@ var SearchField = function SearchField(_ref) {
     className: "mdi mdi-magnify"
   })), !isShow && /*#__PURE__*/React__default.createElement("div", {
     className: css$f.button,
-    onClick: function onClick() {
-      return setIsShow(true);
-    }
+    onClick: () => setIsShow(true)
   }, /*#__PURE__*/React__default.createElement("span", {
     className: "mdi mdi-magnify"
   })));
 };
 
-var css$g = {"field":"_2jF9E","label":"_iehEi","rcSelectLoadingIcon":"_VtsrG","rcSelectDropdownSlideUpIn":"_27wr-","rcSelectDropdownSlideUpOut":"_1QVN6","rcSelectDropdownSlideDownIn":"_1vYLX","rcSelectDropdownSlideDownOut":"_1-lNh","select-field":"_1mUh_","select-field-selector":"_V9Ufm","select-field-arrow":"_c4k8s","mdi":"_2hNDK","select-field-selection-placeholder":"_2Vdv0","select-field-selection-search":"_3GdNa","select-field-selection-search-input":"_3BOaB","select-field-selection-item":"_2uDu7","select-field-item-option-checkbox":"_2K_G1","select-field-selection-item-remove":"_1k1IW","select-field-show-search":"_3EVnU","select-field-show-arrow":"_1xlmm","select-field-open":"__jEZ1","select-field-multiple":"_2YFSs","select-field-single":"_1n3qF","select-field-clear":"_Mg5xq","select-field-item-option-state":"_2yGkG","select-field-selection__choice-zoom":"_3NUb5","select-field-selection__choice-zoom-appear":"_ZO73y","select-field-selection__choice-zoom-leave":"_2i54q","select-field-dropdown":"_14ngc"};
+var css$g = {"field":"_styles-module__field__2jF9E","label":"_styles-module__label__iehEi","rcSelectLoadingIcon":"_styles-module__rcSelectLoadingIcon__VtsrG","rcSelectDropdownSlideUpIn":"_styles-module__rcSelectDropdownSlideUpIn__27wr-","rcSelectDropdownSlideUpOut":"_styles-module__rcSelectDropdownSlideUpOut__1QVN6","rcSelectDropdownSlideDownIn":"_styles-module__rcSelectDropdownSlideDownIn__1vYLX","rcSelectDropdownSlideDownOut":"_styles-module__rcSelectDropdownSlideDownOut__1-lNh","select-field":"_styles-module__select-field__1mUh_","select-field-selector":"_styles-module__select-field-selector__V9Ufm","select-field-arrow":"_styles-module__select-field-arrow__c4k8s","mdi":"_styles-module__mdi__2hNDK","select-field-selection-placeholder":"_styles-module__select-field-selection-placeholder__2Vdv0","select-field-selection-search":"_styles-module__select-field-selection-search__3GdNa","select-field-selection-search-input":"_styles-module__select-field-selection-search-input__3BOaB","select-field-selection-item":"_styles-module__select-field-selection-item__2uDu7","select-field-item-option-checkbox":"_styles-module__select-field-item-option-checkbox__2K_G1","select-field-selection-item-remove":"_styles-module__select-field-selection-item-remove__1k1IW","select-field-show-search":"_styles-module__select-field-show-search__3EVnU","select-field-show-arrow":"_styles-module__select-field-show-arrow__1xlmm","select-field-open":"_styles-module__select-field-open___jEZ1","select-field-multiple":"_styles-module__select-field-multiple__2YFSs","select-field-single":"_styles-module__select-field-single__1n3qF","select-field-clear":"_styles-module__select-field-clear__Mg5xq","select-field-item-option-state":"_styles-module__select-field-item-option-state__2yGkG","select-field-selection__choice-zoom":"_styles-module__select-field-selection__choice-zoom__3NUb5","select-field-selection__choice-zoom-appear":"_styles-module__select-field-selection__choice-zoom-appear__ZO73y","select-field-selection__choice-zoom-leave":"_styles-module__select-field-selection__choice-zoom-leave__2i54q","select-field-dropdown":"_styles-module__select-field-dropdown__14ngc"};
 
-var allValue = 'all';
+const allValue = 'all';
 
-var SelectField = function SelectField(_ref) {
-  var _ref$align = _ref.align,
-      align = _ref$align === void 0 ? 'left' : _ref$align,
-      label = _ref.label,
-      disabled = _ref.disabled,
-      placeholder = _ref.placeholder,
-      _ref$value = _ref.value,
-      propValue = _ref$value === void 0 ? [] : _ref$value,
-      className = _ref.className,
-      mode = _ref.mode,
-      onChange = _ref.onChange,
-      _ref$options = _ref.options,
-      options = _ref$options === void 0 ? [] : _ref$options,
-      _ref$showSearch = _ref.showSearch,
-      showSearch = _ref$showSearch === void 0 ? true : _ref$showSearch,
-      props = _objectWithoutPropertiesLoose(_ref, ["align", "label", "disabled", "placeholder", "value", "className", "mode", "onChange", "options", "showSearch"]);
-
-  var onChangeHandle = function onChangeHandle(value) {
-    if (Array.isArray(value) && value.indexOf(allValue) >= 0) if (value.length > options.length) value = [];else value = options.map(function (o) {
-      return o.value;
-    });
+const SelectField = ({
+  align: _align = 'left',
+  size: _size = 'normal',
+  label,
+  disabled,
+  placeholder,
+  value: propValue = [],
+  className,
+  mode,
+  onChange,
+  options: _options = [],
+  showSearch: _showSearch = true,
+  ...props
+}) => {
+  const onChangeHandle = value => {
+    if (Array.isArray(value) && value.indexOf(allValue) >= 0) if (value.length > _options.length) value = [];else value = _options.map(o => o.value);
     if (onChange) onChange(value);
   };
 
-  var onSelect = function onSelect() {};
+  const onSelect = () => {};
 
-  var onDeselect = function onDeselect() {};
+  const onDeselect = () => {};
 
-  var renderOptions = function renderOptions() {
-    return options.map(function (_ref2) {
-      var value = _ref2.value,
-          label = _ref2.label;
-      return /*#__PURE__*/React__default.createElement(Option, {
-        key: value,
-        value: value
-      }, mode === 'multiple' && /*#__PURE__*/React__default.createElement(CheckboxField, {
-        readOnly: true,
-        className: "select-field-item-option-checkbox",
-        value: propValue.indexOf(value) >= 0
-      }), /*#__PURE__*/React__default.createElement("span", {
-        className: "select-field-item-option-label"
-      }, label));
-    });
-  };
+  const renderOptions = () => _options.map(({
+    value,
+    label
+  }) => /*#__PURE__*/React__default.createElement(Option, {
+    key: value,
+    value: value
+  }, mode === 'multiple' && /*#__PURE__*/React__default.createElement(CheckboxField, {
+    readOnly: true,
+    className: "select-field-item-option-checkbox",
+    value: propValue.indexOf(value) >= 0
+  }), /*#__PURE__*/React__default.createElement("span", {
+    className: "select-field-item-option-label"
+  }, label)));
 
   return /*#__PURE__*/React__default.createElement("div", {
-    className: cx(css$g.field, className, align, {
-      disabled: disabled
+    className: cx(css$g.field, className, _size, _align, {
+      disabled
     })
-  }, /*#__PURE__*/React__default.createElement(Select, _extends({
+  }, /*#__PURE__*/React__default.createElement(Select, Object.assign({
     value: propValue,
     prefixCls: "select-field",
     mode: mode,
     showArrow: true,
-    showSearch: showSearch,
+    showSearch: _showSearch,
     onSelect: onSelect,
     onDeselect: onDeselect,
     placeholder: placeholder,
@@ -1479,13 +1301,13 @@ var SelectField = function SelectField(_ref) {
     inputIcon: /*#__PURE__*/React__default.createElement("span", {
       className: "mdi mdi-chevron-down"
     })
-  }, props), options.length && mode === 'multiple' && /*#__PURE__*/React__default.createElement(Option, {
+  }, props), _options.length && mode === 'multiple' && /*#__PURE__*/React__default.createElement(Option, {
     key: allValue,
     value: allValue
   }, /*#__PURE__*/React__default.createElement(CheckboxField, {
     readOnly: true,
     className: "select-field-item-option-checkbox",
-    value: propValue.length === options.length
+    value: propValue.length === _options.length
   }), /*#__PURE__*/React__default.createElement("span", {
     className: "select-field-item-option-label"
   }, "Select all")), mode === 'multiple' ? /*#__PURE__*/React__default.createElement(OptGroup, null, renderOptions()) : renderOptions()), label && /*#__PURE__*/React__default.createElement("label", {
@@ -1493,10 +1315,10 @@ var SelectField = function SelectField(_ref) {
   }, label));
 };
 
-var css$h = {"field":"_2_NXc","rcSliderTooltipZoomDownIn":"_2jvao","rcSliderTooltipZoomDownOut":"_2HgMB","slider":"_31Ylv","label":"_Zo_r8","rc-slider":"_1hLjI","rc-slider-rail":"_v9bxI","rc-slider-track":"__3emJ","rc-slider-handle":"_12sQ3","rc-slider-handle-dragging":"_2u63-","rc-slider-handle-click-focused":"_7xSSR","rc-slider-mark":"_1l2Qm","rc-slider-mark-text":"_2zf2c","rc-slider-mark-text-active":"_25tuh","rc-slider-step":"_3wC_L","rc-slider-dot":"_17-SM","rc-slider-dot-active":"_1eLwY","rc-slider-dot-reverse":"_Ewb1d","rc-slider-disabled":"_1YO43","rc-slider-vertical":"_12Juq","rc-slider-tooltip-zoom-down-enter":"_2a95b","rc-slider-tooltip-zoom-down-appear":"_2wvsD","rc-slider-tooltip-zoom-down-leave":"_3jMC3","rc-slider-tooltip-zoom-down-enter-active":"_1M8Be","rc-slider-tooltip-zoom-down-appear-active":"_3tu2z","rc-slider-tooltip-zoom-down-leave-active":"_P9_lk","rc-slider-tooltip":"_1PZK2","rc-slider-tooltip-hidden":"_2CvyB","rc-slider-tooltip-placement-top":"_qzmlA","rc-slider-tooltip-inner":"_27Bp4","rc-slider-tooltip-arrow":"_35-HY"};
+var css$h = {"field":"_styles-module__field__2_NXc","rcSliderTooltipZoomDownIn":"_styles-module__rcSliderTooltipZoomDownIn__2jvao","rcSliderTooltipZoomDownOut":"_styles-module__rcSliderTooltipZoomDownOut__2HgMB","slider":"_styles-module__slider__31Ylv","label":"_styles-module__label__Zo_r8","rc-slider":"_styles-module__rc-slider__1hLjI","rc-slider-rail":"_styles-module__rc-slider-rail__v9bxI","rc-slider-track":"_styles-module__rc-slider-track___3emJ","rc-slider-handle":"_styles-module__rc-slider-handle__12sQ3","rc-slider-handle-dragging":"_styles-module__rc-slider-handle-dragging__2u63-","rc-slider-handle-click-focused":"_styles-module__rc-slider-handle-click-focused__7xSSR","rc-slider-mark":"_styles-module__rc-slider-mark__1l2Qm","rc-slider-mark-text":"_styles-module__rc-slider-mark-text__2zf2c","rc-slider-mark-text-active":"_styles-module__rc-slider-mark-text-active__25tuh","rc-slider-step":"_styles-module__rc-slider-step__3wC_L","rc-slider-dot":"_styles-module__rc-slider-dot__17-SM","rc-slider-dot-active":"_styles-module__rc-slider-dot-active__1eLwY","rc-slider-dot-reverse":"_styles-module__rc-slider-dot-reverse__Ewb1d","rc-slider-disabled":"_styles-module__rc-slider-disabled__1YO43","rc-slider-vertical":"_styles-module__rc-slider-vertical__12Juq","rc-slider-tooltip-zoom-down-enter":"_styles-module__rc-slider-tooltip-zoom-down-enter__2a95b","rc-slider-tooltip-zoom-down-appear":"_styles-module__rc-slider-tooltip-zoom-down-appear__2wvsD","rc-slider-tooltip-zoom-down-leave":"_styles-module__rc-slider-tooltip-zoom-down-leave__3jMC3","rc-slider-tooltip-zoom-down-enter-active":"_styles-module__rc-slider-tooltip-zoom-down-enter-active__1M8Be","rc-slider-tooltip-zoom-down-appear-active":"_styles-module__rc-slider-tooltip-zoom-down-appear-active__3tu2z","rc-slider-tooltip-zoom-down-leave-active":"_styles-module__rc-slider-tooltip-zoom-down-leave-active__P9_lk","rc-slider-tooltip":"_styles-module__rc-slider-tooltip__1PZK2","rc-slider-tooltip-hidden":"_styles-module__rc-slider-tooltip-hidden__2CvyB","rc-slider-tooltip-placement-top":"_styles-module__rc-slider-tooltip-placement-top__qzmlA","rc-slider-tooltip-inner":"_styles-module__rc-slider-tooltip-inner__27Bp4","rc-slider-tooltip-arrow":"_styles-module__rc-slider-tooltip-arrow__35-HY"};
 
-var CustomHandle = function CustomHandle(props) {
-  var style = {
+const CustomHandle = props => {
+  const style = {
     left: props.offset + '%',
     transform: 'translateX(-50%)'
   };
@@ -1508,64 +1330,59 @@ var CustomHandle = function CustomHandle(props) {
   });
 };
 
-var SliderField = function SliderField(_ref) {
-  var className = _ref.className,
-      disabled = _ref.disabled,
-      label = _ref.label,
-      onChange = _ref.onChange,
-      name = _ref.name,
-      _ref$align = _ref.align,
-      align = _ref$align === void 0 ? 'left' : _ref$align,
-      props = _objectWithoutPropertiesLoose(_ref, ["className", "disabled", "label", "onChange", "name", "align"]);
-
-  var onChangeHandle = function onChangeHandle(value) {
+const SliderField = ({
+  className,
+  disabled,
+  label,
+  onChange,
+  name,
+  align: _align = 'left',
+  ...props
+}) => {
+  const onChangeHandle = value => {
     if (onChange) onChange({
       target: {
-        value: value,
-        name: name
+        value,
+        name
       }
     });
   };
 
   return /*#__PURE__*/React__default.createElement("div", {
-    className: cx(css$h.field, className, align, {
-      disabled: disabled
+    className: cx(css$h.field, className, _align, {
+      disabled
     })
   }, /*#__PURE__*/React__default.createElement("div", {
     className: css$h.slider
-  }, /*#__PURE__*/React__default.createElement(Slider, _extends({
+  }, /*#__PURE__*/React__default.createElement(Slider, Object.assign({
     onChange: onChangeHandle,
-    tipFormatter: function tipFormatter(value) {
-      return "$" + value;
-    },
+    tipFormatter: value => `$${value}`,
     handle: CustomHandle
   }, props))), label && /*#__PURE__*/React__default.createElement("span", {
     className: css$h.label
   }, label));
 };
 
-var css$i = {"field":"_3PgPN","textarea":"_2Ok_K","label":"_1qnsP","error":"_1C6bH"};
+var css$i = {"field":"_styles-module__field__3PgPN","textarea":"_styles-module__textarea__2Ok_K","label":"_styles-module__label__1qnsP","error":"_styles-module__error__1C6bH"};
 
-var TextAreaField = forwardRef(function (_ref, ref) {
-  var label = _ref.label,
-      className = _ref.className,
-      _ref$size = _ref.size,
-      size = _ref$size === void 0 ? 'normal' : _ref$size,
-      _ref$errors = _ref.errors,
-      errors = _ref$errors === void 0 ? [] : _ref$errors,
-      value = _ref.value,
-      props = _objectWithoutPropertiesLoose(_ref, ["label", "className", "size", "errors", "value"]);
-
-  var hasErrors = Boolean(errors.length);
+const TextAreaField = forwardRef(({
+  label,
+  className,
+  size: _size = 'normal',
+  errors: _errors = [],
+  value,
+  ...props
+}, ref) => {
+  const hasErrors = Boolean(_errors.length);
   return /*#__PURE__*/React__default.createElement("div", {
-    className: cx(css$i.field, className, size, {
+    className: cx(css$i.field, className, _size, {
       disabled: props.disabled
     })
   }, /*#__PURE__*/React__default.createElement("label", null, label && /*#__PURE__*/React__default.createElement("div", {
     className: css$i.label
   }, label), /*#__PURE__*/React__default.createElement("div", {
     className: css$i.textarea
-  }, /*#__PURE__*/React__default.createElement("textarea", _extends({
+  }, /*#__PURE__*/React__default.createElement("textarea", Object.assign({
     className: cx({
       error: hasErrors
     }),
@@ -1573,38 +1390,36 @@ var TextAreaField = forwardRef(function (_ref, ref) {
     ref: ref
   }, props))), hasErrors && /*#__PURE__*/React__default.createElement("div", {
     className: css$i.error
-  }, errors.join(', '))));
+  }, _errors.join(', '))));
 });
 
-var css$j = {"filters":"_kiZkv","sidebar":"_2hZRZ","field":"_3_9Ku","slider":"_3xe_A","switcher":"_8cgpK","buttons":"_1fRrD"};
+var css$j = {"filters":"_styles-module__filters__kiZkv","sidebar":"_styles-module__sidebar__2hZRZ","field":"_styles-module__field__3_9Ku","slider":"_styles-module__slider__3xe_A","switcher":"_styles-module__switcher__8cgpK","buttons":"_styles-module__buttons__1fRrD"};
 
-var StackFilters = function StackFilters(_ref) {
-  var _cx;
-
-  var className = _ref.className,
-      fields = _ref.fields,
-      form = _ref.form,
-      _onChange = _ref.onChange,
-      onApply = _ref.onApply,
-      isSidebar = _ref.isSidebar,
-      disabled = _ref.disabled;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
+const StackFilters = ({
+  className,
+  fields,
+  form,
+  onChange,
+  onApply,
+  isSidebar,
+  disabled
+}) => {
+  const {
+    t
+  } = useTranslation();
   if (!Object.keys(fields).length) return null;
   return /*#__PURE__*/React__default.createElement("div", {
-    className: cx(css$j.filters, (_cx = {}, _cx[css$j.sidebar] = isSidebar, _cx), className)
-  }, Object.keys(fields).map(function (key) {
+    className: cx(css$j.filters, {
+      [css$j.sidebar]: isSidebar
+    }, className)
+  }, Object.keys(fields).map(key => {
     switch (fields[key].type) {
       case 'text':
         return /*#__PURE__*/React__default.createElement(TextField, {
           size: "small",
-          key: "text-" + key,
+          key: `text-${key}`,
           className: cx(css$j.field, css$j.text),
-          onChange: function onChange(event) {
-            return _onChange(key, event.target.value);
-          },
+          onChange: event => onChange(key, event.target.value),
           label: fields[key].label,
           name: key,
           value: form[key],
@@ -1614,11 +1429,9 @@ var StackFilters = function StackFilters(_ref) {
       case 'textarea':
         return /*#__PURE__*/React__default.createElement(TextAreaField, {
           size: "small",
-          key: "text-" + key,
+          key: `text-${key}`,
           className: cx(css$j.field, css$j.text),
-          onChange: function onChange(event) {
-            return _onChange(key, event.target.value);
-          },
+          onChange: event => onChange(key, event.target.value),
           label: fields[key].label,
           name: key,
           value: form[key],
@@ -1627,12 +1440,11 @@ var StackFilters = function StackFilters(_ref) {
 
       case 'select':
         return /*#__PURE__*/React__default.createElement(SelectField, {
-          key: "select-" + key,
+          size: "small",
+          key: `select-${key}`,
           align: "bottom",
           className: cx(css$j.field, css$j.select),
-          onChange: function onChange(value) {
-            return _onChange(key, value);
-          },
+          onChange: value => onChange(key, value),
           label: fields[key].label,
           name: key,
           options: fields[key].options,
@@ -1644,9 +1456,9 @@ var StackFilters = function StackFilters(_ref) {
       case 'checkbox':
         return /*#__PURE__*/React__default.createElement(CheckboxField, {
           appearance: "switcher",
-          key: "checkbox-" + key,
+          key: `checkbox-${key}`,
           className: cx(css$j.field, css$j.switcher),
-          onChange: _onChange,
+          onChange: onChange,
           label: fields[key].label,
           name: key,
           value: form[key],
@@ -1655,9 +1467,9 @@ var StackFilters = function StackFilters(_ref) {
 
       case 'slider':
         return /*#__PURE__*/React__default.createElement(SliderField, {
-          key: "slider-" + key,
+          key: `slider-${key}`,
           className: cx(css$j.field, css$j.slider),
-          onChange: _onChange,
+          onChange: onChange,
           align: "right",
           label: fields[key].label,
           name: key,
@@ -1671,7 +1483,7 @@ var StackFilters = function StackFilters(_ref) {
 
       case 'apply':
         return /*#__PURE__*/React__default.createElement("div", {
-          key: "apply-" + key,
+          key: `apply-${key}`,
           className: cx(css$j.field, css$j.buttons)
         }, onApply && /*#__PURE__*/React__default.createElement(Button, {
           size: "small",
@@ -1687,151 +1499,146 @@ var StackFilters = function StackFilters(_ref) {
   }));
 };
 
-var css$k = {"field":"_2DYF1","hidden":"_3z5o2"};
+var css$k = {"field":"_styles-module__field__2DYF1","hidden":"_styles-module__hidden__3z5o2"};
 
-var StretchTitleField = function StretchTitleField(_ref) {
-  var propValue = _ref.value,
-      _ref$placeholder = _ref.placeholder,
-      placeholder = _ref$placeholder === void 0 ? '' : _ref$placeholder,
-      className = _ref.className,
-      onChangeProp = _ref.onChange,
-      props = _objectWithoutPropertiesLoose(_ref, ["value", "placeholder", "className", "onChange"]);
+const StretchTitleField = ({
+  value: propValue,
+  placeholder: _placeholder = '',
+  className,
+  onChange: onChangeProp,
+  ...props
+}) => {
+  const [value, set] = useState(propValue);
 
-  var _useState = useState(propValue),
-      value = _useState[0],
-      set = _useState[1];
-
-  var onChange = function onChange(event) {
+  const onChange = event => {
     if (onChangeProp) onChangeProp(event.target.value);
     set(event.target.value);
   };
 
-  useEffect(function () {
+  useEffect(() => {
     set(propValue);
   }, [propValue]);
   return /*#__PURE__*/React__default.createElement("div", {
     className: cx(css$k.field, className)
-  }, /*#__PURE__*/React__default.createElement("input", _extends({
+  }, /*#__PURE__*/React__default.createElement("input", Object.assign({
     type: "text",
-    placeholder: placeholder,
+    placeholder: _placeholder,
     value: value,
     onChange: onChange
   }, props)), /*#__PURE__*/React__default.createElement("div", {
     className: css$k.hidden
-  }, value && value.length ? value : placeholder));
+  }, value && value.length ? value : _placeholder));
 };
 
-var css$l = {"fieldWrap":"_vED3t","field":"_1XqN9","hidden":"_38Nis"};
+var css$l = {"fieldWrap":"_styles-module__fieldWrap__vED3t","field":"_styles-module__field__1XqN9","hidden":"_styles-module__hidden__38Nis"};
 
-var StretchTextAreaField = forwardRef(function (_ref, ref) {
-  var propValue = _ref.value,
-      _ref$placeholder = _ref.placeholder,
-      placeholder = _ref$placeholder === void 0 ? '' : _ref$placeholder,
-      className = _ref.className,
-      onChangeProp = _ref.onChange,
-      props = _objectWithoutPropertiesLoose(_ref, ["value", "placeholder", "className", "onChange"]);
+const StretchTextAreaField = forwardRef(({
+  value: propValue,
+  placeholder: _placeholder = '',
+  className,
+  onChange: onChangeProp,
+  ...props
+}, ref) => {
+  const [value, set] = useState(propValue);
 
-  var _useState = useState(propValue),
-      value = _useState[0],
-      set = _useState[1];
-
-  var onChange = function onChange(event) {
+  const onChange = event => {
     if (onChangeProp) onChangeProp(event.target.value);
     set(event.target.value);
   };
 
-  useEffect(function () {
+  useEffect(() => {
     set(propValue);
   }, [propValue]);
   return /*#__PURE__*/React__default.createElement("div", {
     className: css$l.fieldWrap
   }, /*#__PURE__*/React__default.createElement("div", {
     className: cx(css$l.field, className)
-  }, /*#__PURE__*/React__default.createElement("textarea", _extends({
+  }, /*#__PURE__*/React__default.createElement("textarea", Object.assign({
     rows: 1,
-    placeholder: placeholder,
+    placeholder: _placeholder,
     value: value,
     onChange: onChange,
     ref: ref
   }, props)), /*#__PURE__*/React__default.createElement("div", {
     className: css$l.hidden
-  }, value && value.length ? value : placeholder, '\n')));
+  }, value && value.length ? value : _placeholder, '\n')));
 });
 
-var css$m = {"tabs":"_-hQvT","tab":"_2dsXN","soon":"_2_DJa"};
+var css$m = {"tabs":"_styles-module__tabs__-hQvT","tab":"_styles-module__tab__2dsXN","soon":"_styles-module__soon__2_DJa"};
 
-var Tabs = function Tabs(_ref) {
-  var className = _ref.className,
-      value = _ref.value,
-      tabs = _ref.tabs,
-      onChange = _ref.onChange;
+const Tabs = ({
+  className,
+  value: currentTabValue,
+  tabs,
+  appearance: _appearance = 'transparent',
+  onChange,
+  tabComponent
+}) => {
+  const {
+    t
+  } = useTranslation();
 
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
+  const getOnClickTab = value => () => {
+    if (typeof onChange === 'function') onChange(value);
+  };
 
+  const Component = tabComponent ? tabComponent : 'div';
   return /*#__PURE__*/React__default.createElement("div", {
-    className: cx(css$m.tabs, className)
-  }, tabs.map(function (i, index) {
-    return /*#__PURE__*/React__default.createElement("div", {
-      key: index,
-      className: cx(css$m.tab, {
-        active: value === i.value
-      }),
-      onClick: function onClick() {
-        return onChange(i.value);
-      }
-    }, i.label, i.soon && /*#__PURE__*/React__default.createElement("span", {
-      className: css$m.soon
-    }, t('soon')));
-  }));
+    className: cx(css$m.tabs, _appearance, className)
+  }, tabs.map(({
+    value,
+    label,
+    soon,
+    ...rest
+  }, index) => /*#__PURE__*/React__default.createElement(Component, Object.assign({}, rest, {
+    key: index,
+    className: cx(css$m.tab, {
+      active: value && value === currentTabValue
+    }),
+    onClick: getOnClickTab(value)
+  }), label, soon && /*#__PURE__*/React__default.createElement("span", {
+    className: css$m.soon
+  }, t('soon')))));
 };
 
-var css$n = {"tooltip":"_rE8Jn"};
+var css$n = {"tooltip":"_style-module__tooltip__rE8Jn"};
 
-var Tooltip = function Tooltip(_ref) {
-  var children = _ref.children,
-      overlayContent = _ref.overlayContent,
-      _ref$arrowContent = _ref.arrowContent,
-      arrowContent = _ref$arrowContent === void 0 ? null : _ref$arrowContent,
-      _ref$placement = _ref.placement,
-      placement = _ref$placement === void 0 ? 'bottomLeft' : _ref$placement,
-      _ref$trigger = _ref.trigger,
-      trigger = _ref$trigger === void 0 ? ['hover'] : _ref$trigger,
-      _ref$overlayStyle = _ref.overlayStyle,
-      overlayStyle = _ref$overlayStyle === void 0 ? {
+const Tooltip = ({
+  children,
+  overlayContent,
+  arrowContent: _arrowContent = null,
+  placement: _placement = 'bottomLeft',
+  trigger: _trigger = ['hover'],
+  overlayStyle: _overlayStyle = {
     pointerEvents: 'none'
-  } : _ref$overlayStyle,
-      props = _objectWithoutPropertiesLoose(_ref, ["children", "overlayContent", "arrowContent", "placement", "trigger", "overlayStyle"]);
-
-  return /*#__PURE__*/React__default.createElement(RcTooltip, _extends({
-    overlayStyle: overlayStyle,
-    arrowContent: arrowContent,
-    placement: placement,
-    trigger: trigger,
+  },
+  ...props
+}) => {
+  return /*#__PURE__*/React__default.createElement(RcTooltip, Object.assign({
+    overlayStyle: _overlayStyle,
+    arrowContent: _arrowContent,
+    placement: _placement,
+    trigger: _trigger,
     overlay: /*#__PURE__*/React__default.createElement("div", {
       className: css$n.tooltip
     }, overlayContent)
   }, props), children);
 };
 
-var css$o = {"switcher":"_3NMzC"};
+var css$o = {"switcher":"_styles-module__switcher__3NMzC"};
 
-var ViewSwitcher = function ViewSwitcher(_ref) {
-  var _ref$value = _ref.value,
-      value = _ref$value === void 0 ? 'grid' : _ref$value,
-      onChange = _ref.onChange,
-      className = _ref.className;
+const ViewSwitcher = ({
+  value: _value = 'grid',
+  onChange,
+  className
+}) => {
+  const [stateValue, setStateValue] = useState(_value);
+  useEffect(() => {
+    if (_value !== stateValue) setStateValue(_value);
+  }, [_value]);
 
-  var _useState = useState(value),
-      stateValue = _useState[0],
-      setStateValue = _useState[1];
-
-  useEffect(function () {
-    if (value !== stateValue) setStateValue(value);
-  }, [value]);
-
-  var toggleValue = function toggleValue() {
-    var newValue = stateValue === 'grid' ? 'list' : 'grid';
+  const toggleValue = () => {
+    const newValue = stateValue === 'grid' ? 'list' : 'grid';
     setStateValue(newValue);
     if (onChange) onChange(newValue);
   };
@@ -1846,14 +1653,15 @@ var ViewSwitcher = function ViewSwitcher(_ref) {
   }));
 };
 
-var Yield = function Yield(_ref) {
-  var name = _ref.name,
-      className = _ref.className,
-      children = _ref.children;
+const Yield = ({
+  name,
+  className,
+  children
+}) => {
   if (!name) return null;
 
   if (children) {
-    var node = document && document.getElementById(name);
+    const node = document && document.getElementById(name);
     if (!node) return null;
     return /*#__PURE__*/React__default.createElement(Portal, {
       node: node
@@ -1866,34 +1674,26 @@ var Yield = function Yield(_ref) {
   });
 };
 
-var css$p = {"table":"_2TzH3"};
+var css$p = {"table":"_styles-module__table__2TzH3"};
 
-var Table = function Table(_ref) {
-  var data = _ref.data;
-  var captions = data[0],
-      rows = data.slice(1);
+const Table = ({
+  data
+}) => {
+  const [captions, ...rows] = data;
   return /*#__PURE__*/React__default.createElement("div", {
     className: css$p.table
-  }, /*#__PURE__*/React__default.createElement("table", null, /*#__PURE__*/React__default.createElement("thead", null, /*#__PURE__*/React__default.createElement("tr", null, captions.map(function (caption) {
-    return /*#__PURE__*/React__default.createElement("th", {
-      key: caption
-    }, caption);
-  }))), /*#__PURE__*/React__default.createElement("tbody", null, rows.map(function (row, index) {
-    return /*#__PURE__*/React__default.createElement("tr", {
-      key: index
-    }, row.map(function (cell, i) {
-      return /*#__PURE__*/React__default.createElement("td", {
-        key: i
-      }, cell);
-    }));
-  }))));
+  }, /*#__PURE__*/React__default.createElement("table", null, /*#__PURE__*/React__default.createElement("thead", null, /*#__PURE__*/React__default.createElement("tr", null, captions.map(caption => /*#__PURE__*/React__default.createElement("th", {
+    key: caption
+  }, caption)))), /*#__PURE__*/React__default.createElement("tbody", null, rows.map((row, index) => /*#__PURE__*/React__default.createElement("tr", {
+    key: index
+  }, row.map((cell, i) => /*#__PURE__*/React__default.createElement("td", {
+    key: i
+  }, cell)))))));
 };
 
-var isImageType = function isImageType(type) {
-  return /^image/.test(type);
-};
-var base64ToJSON = function base64ToJSON(base64) {
-  var parsedJSON;
+const isImageType = type => /^image/.test(type);
+const base64ToJSON = base64 => {
+  let parsedJSON;
 
   try {
     parsedJSON = JSON.parse(atob(base64));
@@ -1904,73 +1704,62 @@ var base64ToJSON = function base64ToJSON(base64) {
   return parsedJSON;
 };
 
-var css$q = {"view":"_1T-AH","text":"_6S5f-","message":"_1p-0w","description":"_VNtCL","code":"_26Ytj","footer":"_O3Gct"};
+var css$q = {"view":"_styles-module__view__1T-AH","text":"_styles-module__text__6S5f-","message":"_styles-module__message__1p-0w","description":"_styles-module__description__VNtCL","code":"_styles-module__code__26Ytj","footer":"_styles-module__footer__O3Gct"};
 
-var base64ImagePrefixes = {
+const base64ImagePrefixes = {
   'image/svg+xml': 'data:image/svg+xml;charset=utf-8;',
   'image/png': 'data:image/png;charset=utf-8;',
   'image/jpeg': 'data:image/jpeg;charset=utf-8;'
 };
 
-var View = function View(_ref) {
-  var frameId = _ref.frameId,
-      attachment = _ref.attachment,
-      fullAttachment = _ref.fullAttachment,
-      isList = _ref.isList,
-      className = _ref.className,
-      requestStatus = _ref.requestStatus,
-      stack = _ref.stack;
+const View = ({
+  frameId,
+  attachment,
+  fullAttachment,
+  isList,
+  className,
+  requestStatus,
+  stack
+}) => {
+  const {
+    t
+  } = useTranslation();
+  const viewRef = useRef();
+  const [tableScale, setTableScale] = useState(1);
+  const [viewWidth, setVieWidth] = useState(0);
+  const [noRender, setNoRender] = useState(false);
 
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var viewRef = useRef();
-
-  var _useState = useState(1),
-      tableScale = _useState[0],
-      setTableScale = _useState[1];
-
-  var _useState2 = useState(0),
-      viewWidth = _useState2[0],
-      setVieWidth = _useState2[1];
-
-  var _useState3 = useState(false),
-      noRender = _useState3[0],
-      setNoRender = _useState3[1];
-
-  var onResizeCard = function onResizeCard() {
+  const onResizeCard = () => {
     if (viewRef.current) {
-      var containerWidth = viewRef.current.parentElement.offsetWidth;
-
-      var _viewWidth = viewRef.current.offsetWidth / tableScale;
-
-      var newScale = containerWidth / _viewWidth;
+      const containerWidth = viewRef.current.parentElement.offsetWidth;
+      const viewWidth = viewRef.current.offsetWidth / tableScale;
+      let newScale = containerWidth / viewWidth;
       if (newScale > 1) newScale = 1;
       setTableScale(newScale);
       setVieWidth(containerWidth);
     }
   };
 
-  useEffect(function () {
+  useEffect(() => {
     if (window && isList) window.addEventListener('resize', onResizeCard);
-    return function () {
+    return () => {
       if (window && isList) window.removeEventListener('resize', onResizeCard);
     };
   }, []);
-  useEffect(function () {
+  useEffect(() => {
     if (noRender) {
       setNoRender(false);
     }
   }, [noRender]);
-  useEffect(function () {
+  useEffect(() => {
     if (attachment && attachment['application'] === 'plotly' && !noRender) {
       setNoRender(true);
     }
 
     if (attachment && attachment['application'] === 'bokeh') {
-      var Bokeh;
-      var json = base64ToJSON(attachment.data);
-      var version = get(attachment, 'settings.bokeh_version');
+      let Bokeh;
+      const json = base64ToJSON(attachment.data);
+      const version = get(attachment, 'settings.bokeh_version');
 
       if (version && parseInt(version.split('.')[0], 10) === 2) {
         Bokeh = window.Bokeh['2.2.1'];
@@ -1978,17 +1767,15 @@ var View = function View(_ref) {
         Bokeh = window.Bokeh;
       }
 
-      if (json && document.querySelector("#bokeh-" + frameId)) Bokeh.embed.embed_item(json, "bokeh-" + frameId);
+      if (json && document.querySelector(`#bokeh-${frameId}`)) Bokeh.embed.embed_item(json, `bokeh-${frameId}`);
     }
 
-    if (isList) setTimeout(function () {
-      return onResizeCard();
-    }, 10);
+    if (isList) setTimeout(() => onResizeCard(), 10);
   }, [attachment]);
 
-  var renderImage = function renderImage() {
+  const renderImage = () => {
     if (!attachment.preview) return /*#__PURE__*/React__default.createElement("img", {
-      src: base64ImagePrefixes[attachment['content_type']] + "base64," + attachment.data,
+      src: `${base64ImagePrefixes[attachment['content_type']]}base64,${attachment.data}`,
       alt: ""
     });else if (fullAttachment) {
       if (fullAttachment['download_url']) {
@@ -1997,18 +1784,18 @@ var View = function View(_ref) {
           alt: ""
         });
       } else return /*#__PURE__*/React__default.createElement("img", {
-        src: base64ImagePrefixes[attachment['content_type']] + "base64," + attachment.data,
+        src: `${base64ImagePrefixes[attachment['content_type']]}base64,${attachment.data}`,
         alt: ""
       });
     }
     return null;
   };
 
-  var renderCSV = function renderCSV() {
-    var decodeCSV = unicodeBase64Decode(attachment.data);
+  const renderCSV = () => {
+    const decodeCSV = unicodeBase64Decode(attachment.data);
 
     if (decodeCSV) {
-      var data = parse(decodeCSV);
+      const data = parse(decodeCSV);
       if (Array.isArray(data) && data.length) return /*#__PURE__*/React__default.createElement(Table, {
         data: data
       });
@@ -2019,8 +1806,8 @@ var View = function View(_ref) {
     }, t('notSupportedAttachment'));
   };
 
-  var renderPlotly = function renderPlotly() {
-    var json = base64ToJSON(attachment.data);
+  const renderPlotly = () => {
+    const json = base64ToJSON(attachment.data);
     if (!json) return null;
     json.layout.width = viewWidth;
     json.layout.margin = 0;
@@ -2028,7 +1815,7 @@ var View = function View(_ref) {
     if (json.config) json.config.responsive = true;else json.config = {
       responsive: true
     };
-    return /*#__PURE__*/React__default.createElement(Plot, _extends({}, json, {
+    return /*#__PURE__*/React__default.createElement(Plot, Object.assign({}, json, {
       style: {
         width: '100%',
         height: '100%'
@@ -2037,20 +1824,22 @@ var View = function View(_ref) {
     }));
   };
 
-  var renderMl = function renderMl() {
-    var pullPythonCode = function pullPythonCode(data) {
-      var a = ["'/" + stack + "'"];
-      var params = Object.keys(data.params);
+  const renderMl = () => {
+    const pullPythonCode = data => {
+      let a = [`\'/${stack}\'`];
+      let params = Object.keys(data.params);
 
       if (params.length > 0) {
-        var p = [];
-        params.forEach(function (key) {
-          if (isString(data.params[key])) p.push("'" + key + "': '" + data.params[key] + "'");else p.push("'" + key + "': " + data.params[key]);
+        let p = [];
+        params.forEach(key => {
+          if (isString(data.params[key])) p.push(`\'${key}\': \'${data.params[key]}\'`);else p.push(`\'${key}\': ${data.params[key]}`);
         });
         a.push('params={' + p.join(', ') + '}');
       }
 
-      return "import dstack as ds\n\nmodel = ds.pull(" + a.join(', ') + ")";
+      return `import dstack as ds
+
+model = ds.pull(${a.join(', ')})`;
     };
 
     return /*#__PURE__*/React__default.createElement("div", null, /*#__PURE__*/React__default.createElement("div", {
@@ -2068,13 +1857,11 @@ var View = function View(_ref) {
     }));
   };
 
-  var renderBokeh = function renderBokeh() {
-    return /*#__PURE__*/React__default.createElement("div", {
-      id: "bokeh-" + frameId
-    });
-  };
+  const renderBokeh = () => /*#__PURE__*/React__default.createElement("div", {
+    id: `bokeh-${frameId}`
+  });
 
-  var renderAttachment = function renderAttachment() {
+  const renderAttachment = () => {
     if (noRender) return null;
     if (requestStatus === 404 && isList) return /*#__PURE__*/React__default.createElement("div", {
       className: css$q.message
@@ -2124,41 +1911,37 @@ var View = function View(_ref) {
       'bokeh': attachment && attachment.data && attachment['application'] === 'bokeh'
     }),
     style: attachment && attachment['content_type'] === 'text/csv' ? {
-      transform: "scale(" + tableScale + ")"
+      transform: `scale(${tableScale})`
     } : {}
   }, renderAttachment());
 };
 
-var areEqual = function areEqual(prevProps, nextProps) {
+const areEqual = (prevProps, nextProps) => {
   return isEqual(prevProps.attachment, nextProps.attachment);
 };
 
 var View$1 = memo(View, areEqual);
 
-var useIntersectionObserver = (function (callBack, _ref, deps) {
-  var _ref$rootMargin = _ref.rootMargin,
-      rootMargin = _ref$rootMargin === void 0 ? '0px' : _ref$rootMargin,
-      _ref$threshold = _ref.threshold,
-      threshold = _ref$threshold === void 0 ? 0.01 : _ref$threshold,
-      _ref$root = _ref.root,
-      root = _ref$root === void 0 ? null : _ref$root;
-  var ref = useRef(null);
-  var intersectionCallback = useCallback(function (_ref2) {
-    var target = _ref2[0];
-
+var useIntersectionObserver = ((callBack, {
+  rootMargin: _rootMargin = '0px',
+  threshold: _threshold = 0.01,
+  root: _root = null
+}, deps) => {
+  const ref = useRef(null);
+  const intersectionCallback = useCallback(([target]) => {
     if (target.isIntersecting) {
       callBack();
     }
   }, deps);
-  useEffect(function () {
-    var options = {
-      root: root,
-      rootMargin: rootMargin,
-      threshold: threshold
+  useEffect(() => {
+    const options = {
+      root: _root,
+      rootMargin: _rootMargin,
+      threshold: _threshold
     };
-    var observer = new IntersectionObserver(intersectionCallback, options);
+    const observer = new IntersectionObserver(intersectionCallback, options);
     if (ref && ref.current) observer.observe(ref.current);
-    return function () {
+    return () => {
       if (ref.current) observer.unobserve(ref.current);
     };
   }, [ref, intersectionCallback]);
@@ -2171,205 +1954,184 @@ var actionsTypes$1 = {
   FETCH_FAIL: 'stacks/attachments/FETCH_FAIL'
 };
 
-var initialState$1 = {
+const initialState$1 = {
   data: {},
   errors: {},
   requestStatus: null
 };
-var reducer$1 = function reducer(state, action) {
-  var _extends2, _extends3, _extends4, _extends5, _extends6, _extends7;
-
-  if (state === void 0) {
-    state = initialState$1;
-  }
-
+const reducer$1 = (state = initialState$1, action) => {
   switch (action.type) {
     case actionsTypes$1.FETCH:
-      return _extends({}, state, {
-        data: _extends({}, state.data, (_extends3 = {}, _extends3[action.meta.frameId] = _extends({}, state.data[action.meta.frameId], (_extends2 = {}, _extends2[action.meta.id] = _extends({}, state.data[action.meta.frameId] ? state.data[action.meta.frameId][action.meta.id] : {}, {
-          loading: true,
-          requestStatus: null,
-          error: null
-        }), _extends2)), _extends3))
-      });
+      return { ...state,
+        data: { ...state.data,
+          [action.meta.frameId]: { ...state.data[action.meta.frameId],
+            [action.meta.id]: { ...(state.data[action.meta.frameId] ? state.data[action.meta.frameId][action.meta.id] : {}),
+              loading: true,
+              requestStatus: null,
+              error: null
+            }
+          }
+        }
+      };
 
     case actionsTypes$1.FETCH_SUCCESS:
-      return _extends({}, state, {
-        data: _extends({}, state.data, (_extends5 = {}, _extends5[action.meta.frameId] = _extends({}, state.data[action.meta.frameId], (_extends4 = {}, _extends4[action.meta.id] = _extends({}, action.payload, {
-          loading: false
-        }), _extends4)), _extends5))
-      });
+      return { ...state,
+        data: { ...state.data,
+          [action.meta.frameId]: { ...state.data[action.meta.frameId],
+            [action.meta.id]: { ...action.payload,
+              loading: false
+            }
+          }
+        }
+      };
 
     case actionsTypes$1.FETCH_FAIL:
-      return _extends({}, state, {
-        data: _extends({}, state.data, (_extends7 = {}, _extends7[action.meta.frameId] = _extends({}, state.data[action.meta.frameId], (_extends6 = {}, _extends6[action.meta.id] = {
-          error: action.payload.error,
-          requestStatus: action.payload.requestStatus,
-          loading: false
-        }, _extends6)), _extends7))
-      });
+      return { ...state,
+        data: { ...state.data,
+          [action.meta.frameId]: { ...state.data[action.meta.frameId],
+            [action.meta.id]: {
+              error: action.payload.error,
+              requestStatus: action.payload.requestStatus,
+              loading: false
+            }
+          }
+        }
+      };
 
     default:
       return state;
   }
 };
-var StateContext$1 = createContext();
-var StateProvider = function StateProvider(_ref) {
-  var children = _ref.children,
-      apiUrl = _ref.apiUrl;
-  return /*#__PURE__*/React__default.createElement(StateContext$1.Provider, {
-    value: useReducer(reducer$1, _extends({}, initialState$1, {
-      apiUrl: apiUrl
-    }))
-  }, children);
-};
-var useStateValue = function useStateValue() {
-  return useContext(StateContext$1);
-};
+const StateContext$1 = createContext();
+const StateProvider = ({
+  children,
+  apiUrl
+}) => /*#__PURE__*/React__default.createElement(StateContext$1.Provider, {
+  value: useReducer(reducer$1, { ...initialState$1,
+    apiUrl
+  })
+}, children);
+const useStateValue = () => useContext(StateContext$1);
 
-var actions = (function () {
-  var _useStateValue = useStateValue(),
-      apiUrl = _useStateValue[0].apiUrl,
-      dispatch = _useStateValue[1];
+var actions = (() => {
+  const [{
+    apiUrl
+  }, dispatch] = useStateValue();
 
-  var fetchAttachment = function fetchAttachment(stack, frameId, id, onSuccess) {
+  const fetchAttachment = async (stack, frameId, id, onSuccess) => {
+    const token = localStorage.getItem(config.TOKEN_STORAGE_KEY);
+    dispatch({
+      type: actionsTypes$1.FETCH,
+      meta: {
+        frameId,
+        id
+      }
+    });
+
     try {
-      var token = localStorage.getItem(config.TOKEN_STORAGE_KEY);
+      const request = await axios({
+        baseURL: apiUrl,
+        url: config.STACK_ATTACHMENT(stack, frameId, id),
+        headers: {
+          Authorization: token ? `Bearer ${token}` : ''
+        }
+      });
       dispatch({
-        type: actionsTypes$1.FETCH,
+        type: actionsTypes$1.FETCH_SUCCESS,
         meta: {
-          frameId: frameId,
-          id: id
-        }
+          frameId,
+          id
+        },
+        payload: request.data.attachment
       });
-
-      var _temp2 = _catch(function () {
-        return Promise.resolve(axios({
-          baseURL: apiUrl,
-          url: config.STACK_ATTACHMENT(stack, frameId, id),
-          headers: {
-            Authorization: token ? "Bearer " + token : ''
-          }
-        })).then(function (request) {
-          dispatch({
-            type: actionsTypes$1.FETCH_SUCCESS,
-            meta: {
-              frameId: frameId,
-              id: id
-            },
-            payload: request.data.attachment
-          });
-          if (onSuccess) onSuccess();
-        });
-      }, function (e) {
-        var error = 'Unknown error';
-
-        try {
-          error = JSON.parse(get(e, 'request.response')).message;
-        } catch (e) {
-          console.log(error);
-        }
-
-        dispatch({
-          type: actionsTypes$1.FETCH_FAIL,
-          meta: {
-            frameId: frameId,
-            id: id
-          },
-          payload: {
-            error: error
-          }
-        });
-      });
-
-      return Promise.resolve(_temp2 && _temp2.then ? _temp2.then(function () {}) : void 0);
+      if (onSuccess) onSuccess();
     } catch (e) {
-      return Promise.reject(e);
+      let error = 'Unknown error';
+
+      try {
+        error = JSON.parse(get(e, 'request.response')).message;
+      } catch (e) {
+        console.log(error);
+      }
+
+      dispatch({
+        type: actionsTypes$1.FETCH_FAIL,
+        meta: {
+          frameId,
+          id
+        },
+        payload: {
+          error
+        }
+      });
     }
   };
 
   return {
-    fetchAttachment: fetchAttachment
+    fetchAttachment
   };
 });
 
-var css$r = {"attachment":"_3NILI","loading-pulse":"_IhCO3","view":"_3UWqG","text":"_MOcaD"};
+var css$r = {"attachment":"_styles-module__attachment__3NILI","loading-pulse":"_styles-module__loading-pulse__IhCO3","view":"_styles-module__view__3UWqG","text":"_styles-module__text__MOcaD"};
 
-var Attachment = function Attachment(_ref) {
-  var id = _ref.id,
-      className = _ref.className,
-      frameId = _ref.frameId,
-      isList = _ref.isList,
-      withLoader = _ref.withLoader,
-      stack = _ref.stack,
-      customData = _ref.customData;
+const Attachment = ({
+  id,
+  className,
+  frameId,
+  isList,
+  withLoader,
+  stack,
+  customData
+}) => {
+  const {
+    fetchAttachment
+  } = actions();
+  const [{
+    data,
+    apiUrl
+  }] = useStateValue();
+  const attachment = get(data, `${frameId}.${id}`, {});
+  const {
+    loading,
+    error,
+    requestStatus
+  } = attachment;
+  const [loadingFullAttachment, setLoadingFullAttachment] = useState(false);
+  const [fullAttachment, setFullAttachment] = useState(null);
+  const prevAttachment = usePrevious(attachment);
 
-  var _actions = actions(),
-      fetchAttachment = _actions.fetchAttachment;
+  const fetchFullAttachment = async () => {
+    setLoadingFullAttachment(true);
 
-  var _useStateValue = useStateValue(),
-      _useStateValue$ = _useStateValue[0],
-      data = _useStateValue$.data,
-      apiUrl = _useStateValue$.apiUrl;
-
-  var attachment = get(data, frameId + "." + id, {});
-  var loading = attachment.loading,
-      error = attachment.error,
-      requestStatus = attachment.requestStatus;
-
-  var _useState = useState(false),
-      loadingFullAttachment = _useState[0],
-      setLoadingFullAttachment = _useState[1];
-
-  var _useState2 = useState(null),
-      fullAttachment = _useState2[0],
-      setFullAttachment = _useState2[1];
-
-  var prevAttachment = usePrevious(attachment);
-
-  var fetchFullAttachment = function fetchFullAttachment() {
     try {
-      var _temp3 = function _temp3() {
-        setLoadingFullAttachment(false);
-      };
-
-      setLoadingFullAttachment(true);
-
-      var _temp4 = _catch(function () {
-        var url = config.STACK_ATTACHMENT(stack, frameId, id) + '?download=true';
-        return Promise.resolve(axios({
-          baseUrl: apiUrl,
-          url: url
-        })).then(function (_ref2) {
-          var data = _ref2.data;
-          setFullAttachment(data.attachment);
-        });
-      }, function (e) {
-        console.log(e);
+      const url = config.STACK_ATTACHMENT(stack, frameId, id) + '?download=true';
+      const {
+        data
+      } = await axios({
+        baseUrl: apiUrl,
+        url
       });
-
-      return Promise.resolve(_temp4 && _temp4.then ? _temp4.then(_temp3) : _temp3(_temp4));
+      setFullAttachment(data.attachment);
     } catch (e) {
-      return Promise.reject(e);
+      console.log(e);
     }
+
+    setLoadingFullAttachment(false);
   };
 
-  useEffect(function () {
+  useEffect(() => {
     if (!customData && !isList && attachment && !isEqual(prevAttachment, attachment) && attachment.preview && isImageType(attachment['content_type'])) {
       fetchFullAttachment();
     }
   }, [data]);
-  useEffect(function () {
+  useEffect(() => {
     if (!customData && !isList && typeof id === 'number' && frameId && (!attachment.data && !error || (attachment === null || attachment === void 0 ? void 0 : attachment.index) !== id)) {
       fetchAttachment(stack, frameId, id);
     }
   }, [id, frameId]);
-
-  var _useIntersectionObser = useIntersectionObserver(function () {
+  const [ref] = useIntersectionObserver(() => {
     if (!customData && isList && !loading && (!attachment.data && !error || attachment.data && attachment.index !== id)) fetchAttachment(stack, frameId, id);
-  }, {}, [id, frameId, data]),
-      ref = _useIntersectionObser[0];
-
+  }, {}, [id, frameId, data]);
   return /*#__PURE__*/React__default.createElement("div", {
     ref: ref,
     className: cx(css$r.attachment, className, {
@@ -2386,35 +2148,33 @@ var Attachment = function Attachment(_ref) {
   }));
 };
 
-var css$s = {"list":"_FL7ja","avatar":"_37Kcf","count":"_11i1Z"};
+var css$s = {"list":"_styles-module__list__FL7ja","avatar":"_styles-module__avatar__37Kcf","count":"_styles-module__count__11i1Z"};
 
-var PermissionUsers = function PermissionUsers(_ref) {
-  var permissions = _ref.permissions,
-      className = _ref.className,
-      _ref$variant = _ref.variant,
-      variant = _ref$variant === void 0 ? 'details' : _ref$variant,
-      maxLength = _ref.maxLength,
-      owner = _ref.owner;
+const PermissionUsers = ({
+  permissions,
+  className,
+  variant: _variant = 'details',
+  maxLength,
+  owner
+}) => {
   if (!permissions || !permissions.length) return null;
   return /*#__PURE__*/React__default.createElement("div", {
-    className: cx(css$s.list, className, variant)
-  }, permissions.slice(0, maxLength).map(function (i, index) {
-    return /*#__PURE__*/React__default.createElement(Avatar, {
-      withBorder: true,
-      size: variant === 'list' ? 'list' : 'small',
-      key: index,
-      className: cx(css$s.avatar, {
-        owner: owner === i.user
-      }),
-      name: i.user || i.email
-    });
-  }), maxLength && maxLength < permissions.length && /*#__PURE__*/React__default.createElement("span", {
+    className: cx(css$s.list, className, _variant)
+  }, permissions.slice(0, maxLength).map((i, index) => /*#__PURE__*/React__default.createElement(Avatar, {
+    withBorder: true,
+    size: _variant === 'list' ? 'list' : 'small',
+    key: index,
+    className: cx(css$s.avatar, {
+      owner: owner === i.user
+    }),
+    name: i.user || i.email
+  })), maxLength && maxLength < permissions.length && /*#__PURE__*/React__default.createElement("span", {
     className: css$s.count
   }, "+", permissions.length - maxLength));
 };
 
-function _extends$3() {
-  _extends$3 = Object.assign || function (target) {
+function _extends$2() {
+  _extends$2 = Object.assign || function (target) {
     for (var i = 1; i < arguments.length; i++) {
       var source = arguments[i];
 
@@ -2428,7 +2188,7 @@ function _extends$3() {
     return target;
   };
 
-  return _extends$3.apply(this, arguments);
+  return _extends$2.apply(this, arguments);
 }
 
 var _ref$2 = /*#__PURE__*/createElement("g", {
@@ -2470,12 +2230,44 @@ var _ref$2 = /*#__PURE__*/createElement("g", {
 }));
 
 function SvgChart(props) {
-  return /*#__PURE__*/createElement("svg", _extends$3({
+  return /*#__PURE__*/createElement("svg", _extends$2({
     width: 22,
     height: 19,
     viewBox: "0 0 22 19",
     fill: "none"
   }, props), _ref$2);
+}
+
+function _extends$3() {
+  _extends$3 = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+
+    return target;
+  };
+
+  return _extends$3.apply(this, arguments);
+}
+
+var _ref$3 = /*#__PURE__*/createElement("path", {
+  fill: "#86A6DD",
+  d: "M18.797 6.34a3.38 3.38 0 00-2.944-4.026C14.835-.088 11.55-.492 10 1.671 8.45-.49 5.167-.089 4.149 2.314A3.38 3.38 0 001.204 6.34a3.375 3.375 0 00-.381 4.79c-2.022 2.721-.1 6.69 3.387 6.69 1.114 2.322 4.293 2.598 5.79.508 1.5 2.092 4.678 1.812 5.791-.509 3.479.008 5.41-3.967 3.387-6.69a3.375 3.375 0 00-.38-4.789zM7.177 18.461c-1.763 0-2.78-2.07-1.631-3.46a.63.63 0 10-.972-.802 3.378 3.378 0 00-.768 2.323c-2.39-.255-3.455-3.113-1.875-4.875.017.02.61-.828 1.875-.963-.021.409.032.822.163 1.222a.63.63 0 001.199-.392A2.116 2.116 0 016.52 8.848a.63.63 0 10-.392-1.198 3.42 3.42 0 00-.418.168 1.649 1.649 0 01.482-1.867.63.63 0 00-.804-.97 2.907 2.907 0 00-.71 3.608c-.425.47-.524.818-.56.818-.925 0-1.781.301-2.476.81a2.113 2.113 0 01.539-3.11.63.63 0 00.26-.746c-.463-1.297.41-2.823 2.083-2.823a.63.63 0 00.609-.47 2.115 2.115 0 014.157.544v12.735a2.116 2.116 0 01-2.114 2.114zm11.022-8.244a4.168 4.168 0 00-2.489-.81c-.142-.3-.319-.566-.547-.818a2.906 2.906 0 00-.71-3.609.63.63 0 10-.804.971c.56.464.733 1.224.482 1.867a3.423 3.423 0 00-.418-.168.63.63 0 10-.392 1.198 2.116 2.116 0 011.352 2.666.63.63 0 101.199.392c.13-.4.184-.813.163-1.222a2.941 2.941 0 012.623 2.919 2.94 2.94 0 01-2.623 2.918 3.377 3.377 0 00-.768-2.323.63.63 0 00-.972.804c1.146 1.386.133 3.46-1.63 3.46a2.116 2.116 0 01-2.114-2.115V3.612a2.115 2.115 0 014.157-.543.63.63 0 00.63.469c1.477-.055 2.566 1.413 2.062 2.823-.1.279.009.59.26.747a2.113 2.113 0 01.539 3.11z"
+});
+
+function SvgMl(props) {
+  return /*#__PURE__*/createElement("svg", _extends$3({
+    width: 20,
+    height: 20,
+    viewBox: "0 0 20 20",
+    fill: "none"
+  }, props), _ref$3);
 }
 
 function _extends$4() {
@@ -2494,38 +2286,6 @@ function _extends$4() {
   };
 
   return _extends$4.apply(this, arguments);
-}
-
-var _ref$3 = /*#__PURE__*/createElement("path", {
-  fill: "#86A6DD",
-  d: "M18.797 6.34a3.38 3.38 0 00-2.944-4.026C14.835-.088 11.55-.492 10 1.671 8.45-.49 5.167-.089 4.149 2.314A3.38 3.38 0 001.204 6.34a3.375 3.375 0 00-.381 4.79c-2.022 2.721-.1 6.69 3.387 6.69 1.114 2.322 4.293 2.598 5.79.508 1.5 2.092 4.678 1.812 5.791-.509 3.479.008 5.41-3.967 3.387-6.69a3.375 3.375 0 00-.38-4.789zM7.177 18.461c-1.763 0-2.78-2.07-1.631-3.46a.63.63 0 10-.972-.802 3.378 3.378 0 00-.768 2.323c-2.39-.255-3.455-3.113-1.875-4.875.017.02.61-.828 1.875-.963-.021.409.032.822.163 1.222a.63.63 0 001.199-.392A2.116 2.116 0 016.52 8.848a.63.63 0 10-.392-1.198 3.42 3.42 0 00-.418.168 1.649 1.649 0 01.482-1.867.63.63 0 00-.804-.97 2.907 2.907 0 00-.71 3.608c-.425.47-.524.818-.56.818-.925 0-1.781.301-2.476.81a2.113 2.113 0 01.539-3.11.63.63 0 00.26-.746c-.463-1.297.41-2.823 2.083-2.823a.63.63 0 00.609-.47 2.115 2.115 0 014.157.544v12.735a2.116 2.116 0 01-2.114 2.114zm11.022-8.244a4.168 4.168 0 00-2.489-.81c-.142-.3-.319-.566-.547-.818a2.906 2.906 0 00-.71-3.609.63.63 0 10-.804.971c.56.464.733 1.224.482 1.867a3.423 3.423 0 00-.418-.168.63.63 0 10-.392 1.198 2.116 2.116 0 011.352 2.666.63.63 0 101.199.392c.13-.4.184-.813.163-1.222a2.941 2.941 0 012.623 2.919 2.94 2.94 0 01-2.623 2.918 3.377 3.377 0 00-.768-2.323.63.63 0 00-.972.804c1.146 1.386.133 3.46-1.63 3.46a2.116 2.116 0 01-2.114-2.115V3.612a2.115 2.115 0 014.157-.543.63.63 0 00.63.469c1.477-.055 2.566 1.413 2.062 2.823-.1.279.009.59.26.747a2.113 2.113 0 01.539 3.11z"
-});
-
-function SvgMl(props) {
-  return /*#__PURE__*/createElement("svg", _extends$4({
-    width: 20,
-    height: 20,
-    viewBox: "0 0 20 20",
-    fill: "none"
-  }, props), _ref$3);
-}
-
-function _extends$5() {
-  _extends$5 = Object.assign || function (target) {
-    for (var i = 1; i < arguments.length; i++) {
-      var source = arguments[i];
-
-      for (var key in source) {
-        if (Object.prototype.hasOwnProperty.call(source, key)) {
-          target[key] = source[key];
-        }
-      }
-    }
-
-    return target;
-  };
-
-  return _extends$5.apply(this, arguments);
 }
 
 var _ref$4 = /*#__PURE__*/createElement("g", {
@@ -2574,7 +2334,7 @@ var _ref$4 = /*#__PURE__*/createElement("g", {
 }));
 
 function SvgTable(props) {
-  return /*#__PURE__*/createElement("svg", _extends$5({
+  return /*#__PURE__*/createElement("svg", _extends$4({
     width: 20,
     height: 21,
     viewBox: "0 0 20 21",
@@ -2582,8 +2342,8 @@ function SvgTable(props) {
   }, props), _ref$4);
 }
 
-function _extends$6() {
-  _extends$6 = Object.assign || function (target) {
+function _extends$5() {
+  _extends$5 = Object.assign || function (target) {
     for (var i = 1; i < arguments.length; i++) {
       var source = arguments[i];
 
@@ -2597,7 +2357,7 @@ function _extends$6() {
     return target;
   };
 
-  return _extends$6.apply(this, arguments);
+  return _extends$5.apply(this, arguments);
 }
 
 var _ref$5 = /*#__PURE__*/createElement("g", {
@@ -2616,7 +2376,7 @@ var _ref2$2 = /*#__PURE__*/createElement("defs", null, /*#__PURE__*/createElemen
 })));
 
 function SvgApp(props) {
-  return /*#__PURE__*/createElement("svg", _extends$6({
+  return /*#__PURE__*/createElement("svg", _extends$5({
     width: 20,
     height: 20,
     viewBox: "0 0 20 20",
@@ -2624,35 +2384,34 @@ function SvgApp(props) {
   }, props), _ref$5, _ref2$2);
 }
 
-var css$t = {"item":"_fLtf5","name":"_147V3","delete":"_2PoaL","icon":"_3yxhI","top":"_3aJqR","permissions":"_2SUP0","date":"_2c9og"};
+var css$t = {"item":"_styles-module__item__fLtf5","name":"_styles-module__name__147V3","delete":"_styles-module__delete__2PoaL","icon":"_styles-module__icon__3yxhI","top":"_styles-module__top__3aJqR","permissions":"_styles-module__permissions__2SUP0","date":"_styles-module__date__2c9og"};
 
-var Item = function Item(_ref) {
-  var className = _ref.className,
-      _ref$Component = _ref.Component,
-      Component = _ref$Component === void 0 ? 'div' : _ref$Component,
-      data = _ref.data,
-      deleteAction = _ref.deleteAction,
-      rest = _objectWithoutPropertiesLoose(_ref, ["className", "Component", "data", "deleteAction"]);
+const Item = ({
+  className,
+  Component: _Component = 'div',
+  data,
+  deleteAction,
+  ...rest
+}) => {
+  const {
+    t
+  } = useTranslation();
+  const ref = useRef(null);
 
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var ref = useRef(null);
-
-  var onClickDelete = function onClickDelete(event) {
+  const onClickDelete = event => {
     event.stopPropagation();
     event.preventDefault();
     deleteAction(data.name);
   };
 
-  var renderIcon = function renderIcon() {
+  const renderIcon = () => {
     var _data$head, _data$head$preview, _data$head2, _data$head2$preview;
 
-    var contentType = (_data$head = data.head) === null || _data$head === void 0 ? void 0 : (_data$head$preview = _data$head.preview) === null || _data$head$preview === void 0 ? void 0 : _data$head$preview.content_type;
-    var application = (_data$head2 = data.head) === null || _data$head2 === void 0 ? void 0 : (_data$head2$preview = _data$head2.preview) === null || _data$head2$preview === void 0 ? void 0 : _data$head2$preview.application;
-    var category = getStackCategory({
-      application: application,
-      contentType: contentType
+    const contentType = (_data$head = data.head) === null || _data$head === void 0 ? void 0 : (_data$head$preview = _data$head.preview) === null || _data$head$preview === void 0 ? void 0 : _data$head$preview.content_type;
+    const application = (_data$head2 = data.head) === null || _data$head2 === void 0 ? void 0 : (_data$head2$preview = _data$head2.preview) === null || _data$head2$preview === void 0 ? void 0 : _data$head2$preview.application;
+    const category = getStackCategory({
+      application,
+      contentType
     });
 
     switch (category) {
@@ -2673,7 +2432,7 @@ var Item = function Item(_ref) {
     }
   };
 
-  return /*#__PURE__*/React__default.createElement(Component, _extends({
+  return /*#__PURE__*/React__default.createElement(_Component, Object.assign({
     className: cx(css$t.item, className),
     ref: ref
   }, rest), /*#__PURE__*/React__default.createElement("div", {
@@ -2684,8 +2443,8 @@ var Item = function Item(_ref) {
     className: css$t.name,
     title: data.name
   }, data.name), /*#__PURE__*/React__default.createElement("span", {
-    className: "mdi mdi-lock" + (data["private"] ? '' : '-open')
-  }), data["private"] && /*#__PURE__*/React__default.createElement(PermissionUsers, {
+    className: `mdi mdi-lock${data.private ? '' : '-open'}`
+  }), data.private && /*#__PURE__*/React__default.createElement(PermissionUsers, {
     variant: "list",
     owner: data.user,
     className: css$t.permissions,
@@ -2694,135 +2453,67 @@ var Item = function Item(_ref) {
   })), data.head && /*#__PURE__*/React__default.createElement("div", {
     className: css$t.date
   }, t('updated'), " ", moment(data.head.timestamp).format('L')), deleteAction && /*#__PURE__*/React__default.createElement("span", {
-    className: css$t["delete"],
+    className: css$t.delete,
     onClick: onClickDelete
   }, /*#__PURE__*/React__default.createElement("span", {
     className: "mdi mdi-close"
   })));
 };
 
-var css$u = {"tabs":"_gaP0O","tab":"_vQ7S6"};
+var css$u = {"tabs":"_styles-module__tabs__gaP0O","tab":"_styles-module__tab__vQ7S6"};
 
-var Tabs$1 = function Tabs(_ref) {
-  var className = _ref.className,
-      value = _ref.value,
-      items = _ref.items,
-      onChange = _ref.onChange,
-      disabled = _ref.disabled;
+const Tabs$1 = ({
+  className,
+  value,
+  items,
+  onChange,
+  disabled
+}) => {
   return /*#__PURE__*/React__default.createElement("div", {
     className: cx(css$u.tabs, className)
-  }, items.map(function (i, index) {
-    return /*#__PURE__*/React__default.createElement("div", {
-      key: index,
-      className: cx(css$u.tab, {
-        active: value === i.value,
-        disabled: disabled || i.disabled
-      }),
-      onClick: function onClick() {
-        return onChange(i.value);
-      }
-    }, i.label);
-  }));
+  }, items.map((i, index) => /*#__PURE__*/React__default.createElement("div", {
+    key: index,
+    className: cx(css$u.tab, {
+      active: value === i.value,
+      disabled: disabled || i.disabled
+    }),
+    onClick: () => onChange(i.value)
+  }, i.label)));
 };
 
 var routes = {
-  notFound: function notFound() {
-    return '/404';
-  },
-  auth: function auth() {
-    return '/auth';
-  },
-  authLogin: function authLogin() {
-    return '/auth/login';
-  },
-  verifyUser: function verifyUser() {
-    return '/auth/verify';
-  },
-  authSignUp: function authSignUp() {
-    return '/auth/signup';
-  },
-  authForgetPassword: function authForgetPassword() {
-    return '/auth/forget-password';
-  },
-  authResetPassword: function authResetPassword() {
-    return '/auth/reset-password';
-  },
-  confirmEmailMessage: function confirmEmailMessage() {
-    return '/auth/confirm-message';
-  },
-  stacks: function stacks(user) {
-    if (user === void 0) {
-      user = ':user';
-    }
-
-    return "/" + user;
-  },
-  stackDetails: function stackDetails(user, id) {
-    if (user === void 0) {
-      user = ':user';
-    }
-
-    if (id === void 0) {
-      id = ':stack';
-    }
-
-    return "/" + user + "/" + id + (id === ':stack' ? '+' : '');
-  },
-  reports: function reports(user) {
-    if (user === void 0) {
-      user = ':user';
-    }
-
-    return "/" + user + "/d";
-  },
-  reportsDetails: function reportsDetails(user, id) {
-    if (user === void 0) {
-      user = ':user';
-    }
-
-    if (id === void 0) {
-      id = ':id';
-    }
-
-    return "/" + user + "/d/" + id;
-  },
-  jobs: function jobs(user) {
-    if (user === void 0) {
-      user = ':user';
-    }
-
-    return "/" + user + "/j";
-  },
-  jobsDetails: function jobsDetails(user, id) {
-    if (user === void 0) {
-      user = ':user';
-    }
-
-    if (id === void 0) {
-      id = ':id';
-    }
-
-    return "/" + user + "/j/" + id;
-  },
-  settings: function settings() {
-    return '/settings';
-  }
+  notFound: () => '/404',
+  auth: () => '/auth',
+  authLogin: () => '/auth/login',
+  verifyUser: () => '/auth/verify',
+  authSignUp: () => '/auth/signup',
+  authForgetPassword: () => '/auth/forget-password',
+  authResetPassword: () => '/auth/reset-password',
+  confirmEmailMessage: () => '/auth/confirm-message',
+  stacks: (user = ':user') => `/${user}`,
+  stackDetails: (user = ':user', id = ':stack') => `/${user}/${id}` + (id === ':stack' ? '+' : ''),
+  reports: (user = ':user') => `/${user}/d`,
+  reportsDetails: (user = ':user', id = ':id') => `/${user}/d/${id}`,
+  jobs: (user = ':user') => `/${user}/j`,
+  jobsDetails: (user = ':user', id = ':id') => `/${user}/j/${id}`,
+  settings: () => '/settings',
+  accountSettings: () => '/settings/account',
+  usersSettings: () => '/settings/users'
 };
 
-var css$v = {"list":"_3CcWo","header":"_3MHvB","title":"_2HbVV","headerSide":"_TN8Ts","search":"_3VlZv","uploadButton":"_35PkI","controls":"_ee5au","viewSwitcher":"_1boU7","sorting":"_1S_L9","sortingButton":"_1c0ym","message":"_3XJKG","text":"_1_wO5","tabs":"_DBGuk","itemList":"_1fksy","item":"_1RHsG","loadingItem":"_1uHPv","stacks-pulse":"_1qO_N","modal":"_1BJIQ","description":"_1U-iN","buttons":"_19NkE","button":"_3jLaw"};
+var css$v = {"list":"_styles-module__list__3CcWo","header":"_styles-module__header__3MHvB","title":"_styles-module__title__2HbVV","headerSide":"_styles-module__headerSide__TN8Ts","search":"_styles-module__search__3VlZv","uploadButton":"_styles-module__uploadButton__35PkI","controls":"_styles-module__controls__ee5au","viewSwitcher":"_styles-module__viewSwitcher__1boU7","sorting":"_styles-module__sorting__1S_L9","sortingButton":"_styles-module__sortingButton__1c0ym","message":"_styles-module__message__3XJKG","text":"_styles-module__text__1_wO5","tabs":"_styles-module__tabs__DBGuk","itemList":"_styles-module__itemList__1fksy","item":"_styles-module__item__1RHsG","loadingItem":"_styles-module__loadingItem__1uHPv","stacks-pulse":"_styles-module__stacks-pulse__1qO_N","modal":"_styles-module__modal__1BJIQ","description":"_styles-module__description__1U-iN","buttons":"_styles-module__buttons__19NkE","button":"_styles-module__button__3jLaw"};
 
-var List = function List(_ref) {
-  var _ref$data = _ref.data,
-      data = _ref$data === void 0 ? [] : _ref$data,
-      loading = _ref.loading,
-      deleteStack = _ref.deleteStack,
-      currentUser = _ref.currentUser,
-      user = _ref.user;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var tabsMap = {
+const List = ({
+  data: _data = [],
+  loading,
+  deleteStack,
+  currentUser,
+  user
+}) => {
+  const {
+    t
+  } = useTranslation();
+  const tabsMap = {
     chart: {
       label: t('chart_plural'),
       value: 'chart'
@@ -2840,114 +2531,81 @@ var List = function List(_ref) {
       value: 'app'
     }
   };
-
-  var _useState = useState([]),
-      tabs = _useState[0],
-      setTabs = _useState[1];
-
-  var _useState2 = useState(null),
-      activeTab = _useState2[0],
-      setActiveTab = _useState2[1];
-
-  var _useState3 = useState({}),
-      stacksByCategories = _useState3[0],
-      setStacksByCategories = _useState3[1];
-
-  var _useState4 = useState(null),
-      deletingStack = _useState4[0],
-      setDeletingStack = _useState4[1];
-
-  var _useState5 = useState(false),
-      isShowWelcomeModal = _useState5[0],
-      setIsShowWelcomeModal = _useState5[1];
-
-  var _useState6 = useState(''),
-      search = _useState6[0],
-      setSearch = _useState6[1];
-
-  var isInitialMount = useRef(true);
-
-  var _useState7 = useState(null),
-      sorting = _useState7[0],
-      setSorting = _useState7[1];
-
-  var sortingItems = {
+  const [tabs, setTabs] = useState([]);
+  const [activeTab, setActiveTab] = useState(null);
+  const [stacksByCategories, setStacksByCategories] = useState({});
+  const [deletingStack, setDeletingStack] = useState(null);
+  const [isShowWelcomeModal, setIsShowWelcomeModal] = useState(false);
+  const [search, setSearch] = useState('');
+  const isInitialMount = useRef(true);
+  const [sorting, setSorting] = useState(null);
+  const sortingItems = {
     lastSource: {
       title: t('lastChanged')
     }
   };
 
-  var showWelcomeModal = function showWelcomeModal() {
-    return setIsShowWelcomeModal(true);
-  };
+  const showWelcomeModal = () => setIsShowWelcomeModal(true);
 
-  var onChangeSearch = function onChangeSearch(value) {
-    return setSearch(value);
-  };
+  const onChangeSearch = value => setSearch(value);
 
-  var hideWelcomeModal = function hideWelcomeModal() {
+  const hideWelcomeModal = () => {
     localStorage.setItem('welcome-modal-is-showing', true);
     setIsShowWelcomeModal(false);
   };
 
-  useEffect(function () {
+  useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
     } else {
-      if (!localStorage.getItem('welcome-modal-is-showing') && !loading && !data.length) showWelcomeModal();
+      if (!localStorage.getItem('welcome-modal-is-showing') && !loading && !_data.length) showWelcomeModal();
     }
 
-    if (data && data.length) {
-      var _stacksByCategories = {};
-      var _tabs = [];
-      data.forEach(function (stack) {
+    if (_data && _data.length) {
+      const stacksByCategories = {};
+      const tabs = [];
+
+      _data.forEach(stack => {
         var _stack$head, _stack$head$preview, _stack$head2, _stack$head2$preview;
 
-        var category = getStackCategory({
+        const category = getStackCategory({
           application: (_stack$head = stack.head) === null || _stack$head === void 0 ? void 0 : (_stack$head$preview = _stack$head.preview) === null || _stack$head$preview === void 0 ? void 0 : _stack$head$preview.application,
           contentType: (_stack$head2 = stack.head) === null || _stack$head2 === void 0 ? void 0 : (_stack$head2$preview = _stack$head2.preview) === null || _stack$head2$preview === void 0 ? void 0 : _stack$head2$preview.content_type
         });
-        if (category && !_tabs.find(function (i) {
-          return i.value === tabsMap[category].value;
-        })) _tabs.push(tabsMap[category]);
-        if (Array.isArray(_stacksByCategories[category])) _stacksByCategories[category].push(stack);else _stacksByCategories[category] = [stack];
+        if (category && !tabs.find(i => i.value === tabsMap[category].value)) tabs.push(tabsMap[category]);
+        if (Array.isArray(stacksByCategories[category])) stacksByCategories[category].push(stack);else stacksByCategories[category] = [stack];
       });
-      setTabs(_tabs);
-      setStacksByCategories(_stacksByCategories);
-      if (!activeTab || !_tabs.find(function (i) {
-        return i.value === tabsMap[activeTab].value;
-      })) setActiveTab(_tabs[0].value);
-    }
-  }, [data]);
 
-  var deleteItem = function deleteItem() {
+      setTabs(tabs);
+      setStacksByCategories(stacksByCategories);
+      if (!activeTab || !tabs.find(i => i.value === tabsMap[activeTab].value)) setActiveTab(tabs[0].value);
+    }
+  }, [_data]);
+
+  const deleteItem = () => {
     deleteStack(deletingStack);
     hideDeleteConfirmation();
   };
 
-  var showDeleteConfirmation = function showDeleteConfirmation(name) {
+  const showDeleteConfirmation = name => {
     setDeletingStack(name);
   };
 
-  var hideDeleteConfirmation = function hideDeleteConfirmation() {
-    return setDeletingStack(null);
-  };
+  const hideDeleteConfirmation = () => setDeletingStack(null);
 
-  var getItems = function getItems() {
-    var filteredItems = [];
-    var items = [];
-    if (activeTab && stacksByCategories[activeTab]) items = stacksByCategories[activeTab];else items = data;
+  const getItems = () => {
+    let filteredItems = [];
+    let items = [];
+    if (activeTab && stacksByCategories[activeTab]) items = stacksByCategories[activeTab];else items = _data;
 
     if (items && items.length) {
-      if (search.length) filteredItems = items.filter(function (i) {
-        return i.name.indexOf(search) >= 0;
-      });else filteredItems = items;
+      if (search.length) filteredItems = items.filter(i => i.name.indexOf(search) >= 0);else filteredItems = items;
     }
 
     return filteredItems;
   };
 
-  var items = getItems();
+  const items = getItems();
   return /*#__PURE__*/React__default.createElement("div", {
     className: css$v.list
   }, /*#__PURE__*/React__default.createElement("div", {
@@ -2956,9 +2614,9 @@ var List = function List(_ref) {
     className: css$v.title
   }, currentUser === user ? t('stacks') : t('stacksOf', {
     name: user
-  })), Boolean(data.length) && /*#__PURE__*/React__default.createElement("div", {
+  })), Boolean(_data.length) && /*#__PURE__*/React__default.createElement("div", {
     className: css$v.headerSide
-  }, Boolean(data.length) && /*#__PURE__*/React__default.createElement(SearchField, {
+  }, Boolean(_data.length) && /*#__PURE__*/React__default.createElement(SearchField, {
     className: css$v.search,
     showEverything: true,
     isDark: true,
@@ -2966,30 +2624,24 @@ var List = function List(_ref) {
     size: "small",
     value: search,
     onChange: onChangeSearch
-  }))), !(!loading && !Boolean(data.length)) && false && /*#__PURE__*/React__default.createElement("div", {
+  }))), !(!loading && !Boolean(_data.length)) && false && /*#__PURE__*/React__default.createElement("div", {
     className: css$v.controls
   }, /*#__PURE__*/React__default.createElement(Dropdown, {
     className: css$v.sorting,
-    items: Object.keys(sortingItems).map(function (key) {
-      return {
-        title: sortingItems[key].title,
-        onClick: function onClick() {
-          return setSorting(key);
-        }
-      };
-    })
+    items: Object.keys(sortingItems).map(key => ({
+      title: sortingItems[key].title,
+      onClick: () => setSorting(key)
+    }))
   }, /*#__PURE__*/React__default.createElement("button", {
     className: css$v.sortingButton
   }, sorting ? sortingItems[sorting].title : t('sort'), /*#__PURE__*/React__default.createElement("span", {
     className: "mdi mdi-chevron-down"
-  })))), loading && !Boolean(data.length) && /*#__PURE__*/React__default.createElement("div", {
+  })))), loading && !Boolean(_data.length) && /*#__PURE__*/React__default.createElement("div", {
     className: cx(css$v.itemList)
-  }, new Array(12).fill({}).map(function (i, index) {
-    return /*#__PURE__*/React__default.createElement("div", {
-      key: index,
-      className: css$v.loadingItem
-    });
-  })), !loading && !data.length && /*#__PURE__*/React__default.createElement("div", {
+  }, new Array(12).fill({}).map((i, index) => /*#__PURE__*/React__default.createElement("div", {
+    key: index,
+    className: css$v.loadingItem
+  }))), !loading && !_data.length && /*#__PURE__*/React__default.createElement("div", {
     className: css$v.message
   }, user === currentUser ? t('youHaveNoStacksYet') : t('theUserHasNoStacksYetByName', {
     name: user
@@ -2997,21 +2649,17 @@ var List = function List(_ref) {
     className: css$v.tabs,
     items: tabs,
     value: activeTab,
-    onChange: function onChange(tab) {
-      return setActiveTab(tab);
-    }
-  }), Boolean(data.length && items.length) && /*#__PURE__*/React__default.createElement("div", {
+    onChange: tab => setActiveTab(tab)
+  }), Boolean(_data.length && items.length) && /*#__PURE__*/React__default.createElement("div", {
     className: css$v.itemList
-  }, items.map(function (item, index) {
-    return /*#__PURE__*/React__default.createElement(Item, {
-      className: css$v.item,
-      Component: Link,
-      key: index,
-      data: item,
-      to: routes.stackDetails(item.user, item.name),
-      deleteAction: currentUser === item.user && showDeleteConfirmation
-    });
-  })), Boolean(data.length && !items.length) && /*#__PURE__*/React__default.createElement("div", {
+  }, items.map((item, index) => /*#__PURE__*/React__default.createElement(Item, {
+    className: css$v.item,
+    Component: Link,
+    key: index,
+    data: item,
+    to: routes.stackDetails(item.user, item.name),
+    deleteAction: currentUser === item.user && showDeleteConfirmation
+  }))), Boolean(_data.length && !items.length) && /*#__PURE__*/React__default.createElement("div", {
     className: css$v.text
   }, t('noStacksAreFoundedMatchedTheSearchCriteria')), /*#__PURE__*/React__default.createElement(Modal, {
     isShow: Boolean(deletingStack),
@@ -3039,7 +2687,7 @@ var List = function List(_ref) {
     isShow: isShowWelcomeModal,
     onClose: hideWelcomeModal,
     size: "small",
-    title: t('welcomeToDStack') + "\uD83D\uDC4B",
+    title: `${t('welcomeToDStack')}👋`,
     className: css$v.modal
   }, /*#__PURE__*/React__default.createElement("div", {
     className: css$v.description
@@ -3053,31 +2701,33 @@ var List = function List(_ref) {
   }, t('getStarted')))));
 };
 
-var css$w = {"howto":"_3e8x1","tabs":"_2M-II","description":"_1cd6d","code":"_1VE_j","footer":"_1gsjy"};
+var css$w = {"howto":"_styles-module__howto__3e8x1","tabs":"_styles-module__tabs__2M-II","description":"_styles-module__description__1cd6d","code":"_styles-module__code__1VE_j","footer":"_styles-module__footer__1gsjy"};
 
-var pullPythonCode = function pullPythonCode(data) {
-  var a = ["'/" + data.stack + "'"];
-  var params = Object.keys(data.params);
+const pullPythonCode = data => {
+  let a = [`\'/${data.stack}\'`];
+  let params = Object.keys(data.params);
 
   if (params.length > 0) {
-    var p = [];
-    params.forEach(function (key) {
-      if (isString(data.params[key])) p.push("'" + key + "': '" + data.params[key] + "'");else p.push("'" + key + "': " + data.params[key]);
+    let p = [];
+    params.forEach(key => {
+      if (isString(data.params[key])) p.push(`\'${key}\': \'${data.params[key]}\'`);else p.push(`\'${key}\': ${data.params[key]}`);
     });
     a.push('params={' + p.join(', ') + '}');
   }
 
-  return "import dstack as ds\n\ndf = ds.pull(" + a.join(', ') + ")";
+  return `import dstack as ds
+
+df = ds.pull(${a.join(', ')})`;
 };
 
-var HowTo = function HowTo(_ref) {
-  var modalMode = _ref.modalMode,
-      data = _ref.data,
-      configurePythonCommand = _ref.configurePythonCommand;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
+const HowTo = ({
+  modalMode,
+  data,
+  configurePythonCommand
+}) => {
+  const {
+    t
+  } = useTranslation();
   return /*#__PURE__*/React__default.createElement("div", {
     className: css$w.howto
   }, !modalMode && /*#__PURE__*/React__default.createElement("div", {
@@ -3107,9 +2757,9 @@ var HowTo = function HowTo(_ref) {
   }));
 };
 
-var useOnClickOutside = (function (ref, handler) {
-  useEffect(function () {
-    var listener = function listener(event) {
+var useOnClickOutside = ((ref, handler) => {
+  useEffect(() => {
+    const listener = event => {
       if (!ref.current || ref.current.contains(event.target)) {
         return;
       }
@@ -3119,71 +2769,52 @@ var useOnClickOutside = (function (ref, handler) {
 
     document.addEventListener('mousedown', listener);
     document.addEventListener('touchstart', listener);
-    return function () {
+    return () => {
       document.removeEventListener('mousedown', listener);
       document.removeEventListener('touchstart', listener);
     };
   }, [ref, handler]);
 });
 
-var css$x = {"frames":"_3D3R4","frames-dropdown":"_3hapH","button":"_Tn4o_","name":"_YzOn7","label":"_Hg7hs","dropdown":"_16pcp","item":"_1q46l","mark":"_1h8Eq","info":"_2BnTD","modal":"_pk61B","description":"_2GOOp","buttons":"_3Ml-A"};
+var css$x = {"frames":"_styles-module__frames__3D3R4","frames-dropdown":"_styles-module__frames-dropdown__3hapH","button":"_styles-module__button__Tn4o_","name":"_styles-module__name__YzOn7","label":"_styles-module__label__Hg7hs","dropdown":"_styles-module__dropdown__16pcp","item":"_styles-module__item__1q46l","mark":"_styles-module__mark__1h8Eq","info":"_styles-module__info__2BnTD","modal":"_styles-module__modal__pk61B","description":"_styles-module__description__2GOOp","buttons":"_styles-module__buttons__3Ml-A"};
 
-var getFrameName = function getFrameName(frame) {
-  return moment(frame.timestamp).format('D MMM YYYY h:mm a');
-};
+const getFrameName = frame => moment(frame.timestamp).format('D MMM YYYY h:mm a');
 
-var Frames = function Frames(_ref) {
-  var frame = _ref.frame,
-      frames = _ref.frames,
-      headId = _ref.headId,
-      onChange = _ref.onChange,
-      onMarkAsHead = _ref.onMarkAsHead,
-      className = _ref.className;
+const Frames = ({
+  frame,
+  frames,
+  headId,
+  onChange,
+  onMarkAsHead,
+  className
+}) => {
+  const {
+    t
+  } = useTranslation();
+  const [isShowDropdown, setIsShowDropdown] = useState(false);
 
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
+  const toggleDropdown = () => setIsShowDropdown(!isShowDropdown);
 
-  var _useState = useState(false),
-      isShowDropdown = _useState[0],
-      setIsShowDropdown = _useState[1];
-
-  var toggleDropdown = function toggleDropdown() {
-    return setIsShowDropdown(!isShowDropdown);
-  };
-
-  var _useState2 = useState(null),
-      frameForMarkingAsHead = _useState2[0],
-      setFrameForMarkingAsHead = _useState2[1];
-
-  var dropdownRef = useRef(null);
-  useOnClickOutside(dropdownRef, function () {
-    return isShowDropdown && toggleDropdown();
-  });
+  const [frameForMarkingAsHead, setFrameForMarkingAsHead] = useState(null);
+  const dropdownRef = useRef(null);
+  useOnClickOutside(dropdownRef, () => isShowDropdown && toggleDropdown());
   if (!frames.length) return null;
-  var activeFrame = frames.find(function (f) {
-    return f.id === frame;
-  });
+  const activeFrame = frames.find(f => f.id === frame);
 
-  var onClickItem = function onClickItem(frameId) {
-    return function () {
-      toggleDropdown();
-      if (frame !== frameId && onChange) onChange(frameId);
-    };
+  const onClickItem = frameId => () => {
+    toggleDropdown();
+    if (frame !== frameId && onChange) onChange(frameId);
   };
 
-  var onClickMarkAsHead = function onClickMarkAsHead(frameId) {
-    return function (event) {
-      event.stopPropagation();
-      setFrameForMarkingAsHead(frameId);
-      toggleDropdown();
-    };
+  const onClickMarkAsHead = frameId => event => {
+    event.stopPropagation();
+    setFrameForMarkingAsHead(frameId);
+    toggleDropdown();
   };
 
-  var hideConfirmation = function hideConfirmation() {
-    return setFrameForMarkingAsHead(null);
-  };
+  const hideConfirmation = () => setFrameForMarkingAsHead(null);
 
-  var confirmMarkFrameAsHead = function confirmMarkFrameAsHead() {
+  const confirmMarkFrameAsHead = () => {
     if (onMarkAsHead) onMarkAsHead(frameForMarkingAsHead.id);
     setFrameForMarkingAsHead(null);
   };
@@ -3211,27 +2842,25 @@ var Frames = function Frames(_ref) {
     className: cx(css$x.dropdown, {
       show: isShowDropdown
     })
-  }, frames.map(function (f) {
-    return /*#__PURE__*/React__default.createElement(Tooltip, {
-      key: f.id,
-      placement: "rightTop",
-      trigger: Boolean(f.description) ? ['hover'] : [],
-      align: {
-        offset: [-20, -20]
-      },
-      onClick: onClickItem(f.id),
-      overlayContent: f.description
-    }, /*#__PURE__*/React__default.createElement("div", {
-      className: css$x.item
-    }, /*#__PURE__*/React__default.createElement("span", {
-      className: css$x.name
-    }, getFrameName(f)), headId === f.id && /*#__PURE__*/React__default.createElement("span", {
-      className: css$x.label
-    }, t('head')), headId !== f.id && /*#__PURE__*/React__default.createElement("div", {
-      className: css$x.mark,
-      onClick: onClickMarkAsHead(f)
-    }, t('markAsHead'))));
-  }))), activeFrame && activeFrame.description && /*#__PURE__*/React__default.createElement(Tooltip, {
+  }, frames.map(f => /*#__PURE__*/React__default.createElement(Tooltip, {
+    key: f.id,
+    placement: "rightTop",
+    trigger: Boolean(f.description) ? ['hover'] : [],
+    align: {
+      offset: [-20, -20]
+    },
+    onClick: onClickItem(f.id),
+    overlayContent: f.description
+  }, /*#__PURE__*/React__default.createElement("div", {
+    className: css$x.item
+  }, /*#__PURE__*/React__default.createElement("span", {
+    className: css$x.name
+  }, getFrameName(f)), headId === f.id && /*#__PURE__*/React__default.createElement("span", {
+    className: css$x.label
+  }, t('head')), headId !== f.id && /*#__PURE__*/React__default.createElement("div", {
+    className: css$x.mark,
+    onClick: onClickMarkAsHead(f)
+  }, t('markAsHead'))))))), activeFrame && activeFrame.description && /*#__PURE__*/React__default.createElement(Tooltip, {
     overlayContent: activeFrame.description
   }, /*#__PURE__*/React__default.createElement("div", {
     className: cx(css$x.info)
@@ -3262,29 +2891,30 @@ var Frames = function Frames(_ref) {
   }, t('cancel')))));
 };
 
-var useDebounce = (function (callback, depsOrDelay, deps) {
-  var delay = 300;
+var useDebounce = ((callback, depsOrDelay, deps) => {
+  let delay = 300;
   if (typeof depsOrDelay === 'number') delay = depsOrDelay;else deps = depsOrDelay;
   return useCallback(debounce(callback, delay), deps);
 });
 
-var isEmail = function isEmail(value) {
+const isEmail = value => {
+  if (!value) return true;
   return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(value);
 };
-var isRequired = function isRequired(value) {
+const isRequired = value => {
   return !(value === null || value === undefined || value === '');
 };
-var noSpaces = function noSpaces(value) {
+const noSpaces = value => {
   return /^[\S]*$/.test(value);
 };
-var isValidStackName = function isValidStackName(value) {
+const isValidStackName = value => {
   return /^[^\/]/.test(value) && /^[a-zA-Z0-9\/_]+$/.test(value);
 };
-var isValidEmail = function isValidEmail(mail) {
-  var errors = {
+const isValidEmail = mail => {
+  const errors = {
     invalidEmailAddress: 'invalidEmailAddress'
   };
-  if (!isEmail(mail)) return {
+  if (mail && !isEmail(mail)) return {
     isValid: false,
     error: errors.invalidEmailAddress
   };
@@ -3293,167 +2923,119 @@ var isValidEmail = function isValidEmail(mail) {
   };
 };
 
-var api = apiFabric();
-var useActions = (function () {
-  var _useAppStore = useAppStore(),
-      apiUrl = _useAppStore[0].apiUrl;
+const api = apiFabric();
+var useActions = (() => {
+  const [{
+    apiUrl
+  }] = useAppStore();
 
-  var checkUser = function checkUser(userName) {
-    return new Promise(function (resolve, reject) {
+  const checkUser = userName => {
+    return new Promise(async (resolve, reject) => {
       try {
-        var _temp2 = _catch(function () {
-          return Promise.resolve(api.get(apiUrl + config.CHECK_USER(userName))).then(function (request) {
-            resolve(request.data);
-          });
-        }, function (e) {
-          reject(e);
-        });
-
-        return Promise.resolve(_temp2 && _temp2.then ? _temp2.then(function () {}) : void 0);
+        const request = await api.get(apiUrl + config.CHECK_USER(userName));
+        resolve(request.data);
       } catch (e) {
-        return Promise.reject(e);
+        reject(e);
       }
     });
   };
 
-  var addPermissions = function addPermissions(_ref) {
-    var userName = _ref.userName,
-        instancePath = _ref.instancePath;
-    var params = {
+  const addPermissions = ({
+    userName,
+    instancePath
+  }) => {
+    const params = {
       path: instancePath
     };
     if (isValidEmail(userName).isValid) params.email = userName;else params.user = userName;
-    return new Promise(function (resolve, reject) {
+    return new Promise(async (resolve, reject) => {
       try {
-        var _temp4 = _catch(function () {
-          return Promise.resolve(api.post(apiUrl + config.PERMISSIONS_ADD, params)).then(function () {
-            resolve(params);
-          });
-        }, function (e) {
-          reject(e);
-        });
-
-        return Promise.resolve(_temp4 && _temp4.then ? _temp4.then(function () {}) : void 0);
+        await api.post(apiUrl + config.PERMISSIONS_ADD, params);
+        resolve(params);
       } catch (e) {
-        return Promise.reject(e);
+        reject(e);
       }
     });
   };
 
-  var removePermissions = function removePermissions(_ref2) {
-    var user = _ref2.user,
-        instancePath = _ref2.instancePath;
-
-    var params = _extends({
-      path: instancePath
-    }, user);
-
-    return new Promise(function (resolve, reject) {
+  const removePermissions = ({
+    user,
+    instancePath
+  }) => {
+    const params = {
+      path: instancePath,
+      ...user
+    };
+    return new Promise(async (resolve, reject) => {
       try {
-        var _temp6 = _catch(function () {
-          return Promise.resolve(api.post(apiUrl + config.PERMISSIONS_DELETE, params)).then(function () {
-            resolve();
-          });
-        }, function () {
-          reject();
-        });
-
-        return Promise.resolve(_temp6 && _temp6.then ? _temp6.then(function () {}) : void 0);
+        await api.post(apiUrl + config.PERMISSIONS_DELETE, params);
+        resolve();
       } catch (e) {
-        return Promise.reject(e);
+        reject();
       }
     });
   };
 
   return {
-    checkUser: checkUser,
-    addPermissions: addPermissions,
-    removePermissions: removePermissions
+    checkUser,
+    addPermissions,
+    removePermissions
   };
 });
 
-var css$y = {"desktopButton":"_2X9G0","mobileButton":"_3s7Ow","modal":"_I7l_L","dialog":"_2ieJ1","description":"_2kfzG","content":"_3zGyt","switcher":"_RKqmw","text-input":"_2_DXM","copylink":"_2NvuS","copy":"_2rv__","checkUserName":"_2UalE","checkUserMessage":"_1jlEB","users":"_2gjKq","user":"_3VlxR","user-pic":"_2PGqr","user-name":"_-pvaS","userPic":"_IWEUU","userName":"_2xAc9","userDelete":"_3QkG0","userMessage":"_1Bvl_","userMessageSuccess":"_1PzgS"};
+var css$y = {"desktopButton":"_styles-module__desktopButton__2X9G0","mobileButton":"_styles-module__mobileButton__3s7Ow","modal":"_styles-module__modal__I7l_L","dialog":"_styles-module__dialog__2ieJ1","description":"_styles-module__description__2kfzG","content":"_styles-module__content__3zGyt","switcher":"_styles-module__switcher__RKqmw","text-input":"_styles-module__text-input__2_DXM","copylink":"_styles-module__copylink__2NvuS","copy":"_styles-module__copy__2rv__","checkUserName":"_styles-module__checkUserName__2UalE","checkUserMessage":"_styles-module__checkUserMessage__1jlEB","users":"_styles-module__users__2gjKq","user":"_styles-module__user__3VlxR","user-pic":"_styles-module__user-pic__2PGqr","user-name":"_styles-module__user-name__-pvaS","userPic":"_styles-module__userPic__IWEUU","userName":"_styles-module__userName__2xAc9","userDelete":"_styles-module__userDelete__3QkG0","userMessage":"_styles-module__userMessage__1Bvl_","userMessageSuccess":"_styles-module__userMessageSuccess__1PzgS"};
 
-var Share = function Share(_ref) {
-  var className = _ref.className,
-      instancePath = _ref.instancePath,
-      _ref$defaultIsPrivate = _ref.defaultIsPrivate,
-      defaultIsPrivate = _ref$defaultIsPrivate === void 0 ? false : _ref$defaultIsPrivate,
-      _ref$defaultPermissio = _ref.defaultPermissions,
-      defaultPermissions = _ref$defaultPermissio === void 0 ? [] : _ref$defaultPermissio,
-      onUpdatePrivate = _ref.onUpdatePrivate,
-      _ref$urlParams = _ref.urlParams,
-      urlParams = _ref$urlParams === void 0 ? {} : _ref$urlParams,
-      onUpdatePermissions = _ref.onUpdatePermissions;
+const Share = ({
+  className,
+  instancePath,
+  defaultIsPrivate: _defaultIsPrivate = false,
+  defaultPermissions: _defaultPermissions = [],
+  onUpdatePrivate,
+  urlParams: _urlParams = {},
+  onUpdatePermissions
+}) => {
+  const [{
+    configInfo
+  }] = useAppStore();
+  const [userExists, setUserExists] = useState(null);
+  const [isEmail, setIsEmail] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(_defaultIsPrivate);
+  const [permissions, setPermissions] = useState(_defaultPermissions);
+  const [loading, setLoading] = useState(false);
+  const [isShowModal, setIsShowModal] = useState(false);
+  const [userName, setUserName] = useState('');
+  const {
+    checkUser,
+    addPermissions,
+    removePermissions
+  } = useActions();
+  const {
+    t
+  } = useTranslation();
 
-  var _useAppStore = useAppStore(),
-      configInfo = _useAppStore[0].configInfo;
+  const toggleModal = () => setIsShowModal(!isShowModal);
 
-  var _useState = useState(null),
-      userExists = _useState[0],
-      setUserExists = _useState[1];
-
-  var _useState2 = useState(false),
-      isEmail = _useState2[0],
-      setIsEmail = _useState2[1];
-
-  var _useState3 = useState(defaultIsPrivate),
-      isPrivate = _useState3[0],
-      setIsPrivate = _useState3[1];
-
-  var _useState4 = useState(defaultPermissions),
-      permissions = _useState4[0],
-      setPermissions = _useState4[1];
-
-  var _useState5 = useState(false),
-      loading = _useState5[0],
-      setLoading = _useState5[1];
-
-  var _useState6 = useState(false),
-      isShowModal = _useState6[0],
-      setIsShowModal = _useState6[1];
-
-  var _useState7 = useState(''),
-      userName = _useState7[0],
-      setUserName = _useState7[1];
-
-  var _useActions = useActions(),
-      checkUser = _useActions.checkUser,
-      addPermissions = _useActions.addPermissions,
-      removePermissions = _useActions.removePermissions;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var toggleModal = function toggleModal() {
-    return setIsShowModal(!isShowModal);
-  };
-
-  useEffect(function () {
-    setPermissions(defaultPermissions);
-    setIsPrivate(defaultIsPrivate);
+  useEffect(() => {
+    setPermissions(_defaultPermissions);
+    setIsPrivate(_defaultIsPrivate);
   }, [instancePath]);
-  var updatePrivate = useDebounce(function (isPrivate) {
+  const updatePrivate = useDebounce(isPrivate => {
     if (onUpdatePrivate) onUpdatePrivate(isPrivate);
   }, []);
-  var checkUserName = useDebounce(function (userName) {
+  const checkUserName = useDebounce(userName => {
     setUserExists(null);
 
     if (userName.length) {
-      checkUser(userName).then(function (data) {
-        return setUserExists(data.exists);
-      })["catch"](function () {
-        return setUserExists(null);
-      });
+      checkUser(userName).then(data => setUserExists(data.exists)).catch(() => setUserExists(null));
     }
   }, []);
 
-  var onChangeIsPrivate = function onChangeIsPrivate(event) {
+  const onChangeIsPrivate = event => {
     setIsPrivate(event.target.checked);
     updatePrivate(event.target.checked);
   };
 
-  var onChangeUserName = function onChangeUserName(event) {
+  const onChangeUserName = event => {
     setUserName(event.target.value);
 
     if (isValidEmail(event.target.value).isValid && get(configInfo, 'data.email_enabled')) {
@@ -3465,52 +3047,44 @@ var Share = function Share(_ref) {
     }
   };
 
-  var onKeyPressUserName = function onKeyPressUserName(event) {
+  const onKeyPressUserName = event => {
     if (event.which === 13 || event.keyCode === 13 || event.key === 'Enter') {
       if (userName.length) {
-        var userHasPermission = permissions.some(function (i) {
-          return i.user === userName;
-        });
+        const userHasPermission = permissions.some(i => i.user === userName);
         if (!userHasPermission) addUser(userName);else setUserName('');
       }
     }
   };
 
-  var addUser = function addUser(userName) {
+  const addUser = userName => {
     setLoading(true);
     addPermissions({
-      userName: userName,
-      instancePath: instancePath
-    }).then(function (data) {
+      userName,
+      instancePath
+    }).then(data => {
       setUserName('');
-      setPermissions(function (permissions) {
-        var newPermissions = permissions.concat([data]);
+      setPermissions(permissions => {
+        const newPermissions = permissions.concat([data]);
         onUpdatePermissions(newPermissions);
         return newPermissions;
       });
-    })["finally"](function () {
-      return setLoading(false);
+    }).finally(() => setLoading(false));
+  };
+
+  const removeUser = user => () => {
+    removePermissions({
+      instancePath,
+      user
+    }).then(() => {
+      setPermissions(permissions => {
+        const newPermissions = permissions.filter(i => !isEqual(i, user));
+        onUpdatePermissions(newPermissions);
+        return newPermissions;
+      });
     });
   };
 
-  var removeUser = function removeUser(user) {
-    return function () {
-      removePermissions({
-        instancePath: instancePath,
-        user: user
-      }).then(function () {
-        setPermissions(function (permissions) {
-          var newPermissions = permissions.filter(function (i) {
-            return !isEqual(i, user);
-          });
-          onUpdatePermissions(newPermissions);
-          return newPermissions;
-        });
-      });
-    };
-  };
-
-  var renderUser = function renderUser(user, index) {
+  const renderUser = (user, index) => {
     return /*#__PURE__*/React__default.createElement("div", {
       className: cx(css$y.user, {
         disabled: !user.user
@@ -3531,14 +3105,16 @@ var Share = function Share(_ref) {
     }, t('waitingForAcceptance')));
   };
 
-  var searchString = useMemo(function () {
-    var searchString = Object.keys(urlParams).reduce(function (result, key) {
-      if (urlParams[key]) result.push(key + "=" + urlParams[key]);
+  const searchString = useMemo(() => {
+    const searchString = Object.keys(_urlParams).reduce((result, key) => {
+      if (_urlParams[key]) result.push(`${key}=${_urlParams[key]}`);
       return result;
     }, []).join('&');
-    if (searchString) return "?" + searchString;
-  }, [urlParams]);
-  var origin = window.location.origin;
+    if (searchString) return `?${searchString}`;
+  }, [_urlParams]);
+  const {
+    origin
+  } = window.location;
   return /*#__PURE__*/React__default.createElement(Fragment, null, /*#__PURE__*/React__default.createElement(Button, {
     className: cx(css$y.desktopButton, className),
     color: "primary",
@@ -3567,10 +3143,10 @@ var Share = function Share(_ref) {
   }, /*#__PURE__*/React__default.createElement(TextField, {
     className: css$y.textInput,
     readOnly: true,
-    value: origin + "/" + instancePath + searchString
+    value: `${origin}/${instancePath}${searchString}`
   }), /*#__PURE__*/React__default.createElement(Copy, {
     className: css$y.copy,
-    copyText: origin + "/" + instancePath + searchString,
+    copyText: `${origin}/${instancePath}${searchString}`,
     successMessage: t('linkIsCopied')
   })), /*#__PURE__*/React__default.createElement("div", {
     className: css$y.content
@@ -3603,11 +3179,9 @@ var Share = function Share(_ref) {
   }, permissions.map(renderUser)))));
 };
 
-var css$z = {"loader":"_2wNmt","title":"_1Ms-2","stacks-pulse":"_FjfKI","label":"_1rFaq","description":"_1Rg_O","diagram":"_2Aj7C"};
+var css$z = {"loader":"_styles-module__loader__2wNmt","title":"_styles-module__title__1Ms-2","stacks-pulse":"_styles-module__stacks-pulse__FjfKI","label":"_styles-module__label__1rFaq","description":"_styles-module__description__1Rg_O","diagram":"_styles-module__diagram__2Aj7C"};
 
-var Loader$1 = function Loader(_ref) {
-  _objectDestructuringEmpty(_ref);
-
+const Loader$1 = ({}) => {
   return /*#__PURE__*/React__default.createElement("div", {
     className: css$z.loader
   }, /*#__PURE__*/React__default.createElement("div", {
@@ -3621,10 +3195,11 @@ var Loader$1 = function Loader(_ref) {
   }));
 };
 
-var css$A = {"readme":"_1PJ3A","container":"_-2BiZ","header":"_3iG0n","title":"_g2ESz","edit":"_nlNob","content":"_3ljCE","field":"_3xq6J","emptyMessage":"_2_Q5X","preview":"_2KwU9","help":"_PBB0u","buttons":"_3X-XL","button":"_16WI-"};
+var css$A = {"readme":"_styles-module__readme__1PJ3A","container":"_styles-module__container__-2BiZ","header":"_styles-module__header__3iG0n","title":"_styles-module__title__g2ESz","edit":"_styles-module__edit__nlNob","content":"_styles-module__content__3ljCE","field":"_styles-module__field__3xq6J","emptyMessage":"_styles-module__emptyMessage__2_Q5X","preview":"_styles-module__preview__2KwU9","help":"_styles-module__help__PBB0u","buttons":"_styles-module__buttons__3X-XL","button":"_styles-module__button__16WI-"};
 
-var EmptyMessage = function EmptyMessage(_ref) {
-  var onAdd = _ref.onAdd;
+const EmptyMessage = ({
+  onAdd
+}) => {
   return /*#__PURE__*/React__default.createElement(Trans, {
     i18nKey: "readmeEmptyMessage"
   }, "Sure your ML model is easy to understand without README? IF no, please, ", /*#__PURE__*/React__default.createElement("a", {
@@ -3633,36 +3208,28 @@ var EmptyMessage = function EmptyMessage(_ref) {
   }, "add some helpful information"), " about how to use the model.");
 };
 
-var Readme = function Readme(_ref2) {
+const Readme = ({
+  className,
+  data,
+  onUpdate
+}) => {
   var _currentUser$data;
 
-  var className = _ref2.className,
-      data = _ref2.data,
-      onUpdate = _ref2.onUpdate;
-
-  var _useAppStore = useAppStore(),
-      currentUser = _useAppStore[0].currentUser;
-
-  var currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
-  var category = getStackCategory({
+  const [{
+    currentUser
+  }] = useAppStore();
+  const currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
+  const category = getStackCategory({
     application: get(data, 'head.attachments[0].application'),
     contentType: get(data, 'head.attachments[0].content_type')
   });
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var textareaRef = useRef(null);
-
-  var _useState = useState(data.readme),
-      value = _useState[0],
-      setValue = _useState[1];
-
-  var _useState2 = useState(false),
-      isEdit = _useState2[0],
-      setIsEdit = _useState2[1];
-
-  useEffect(function () {
+  const {
+    t
+  } = useTranslation();
+  const textareaRef = useRef(null);
+  const [value, setValue] = useState(data.readme);
+  const [isEdit, setIsEdit] = useState(false);
+  useEffect(() => {
     if (isEdit && (textareaRef === null || textareaRef === void 0 ? void 0 : textareaRef.current)) {
       textareaRef.current.focus();
       if (textareaRef.current.setSelectionRange) textareaRef.current.setSelectionRange(textareaRef.current.value.length, textareaRef.current.value.length);
@@ -3670,26 +3237,24 @@ var Readme = function Readme(_ref2) {
     }
   }, [isEdit]);
 
-  var edit = function edit() {
-    return setIsEdit(true);
-  };
+  const edit = () => setIsEdit(true);
 
-  var cancel = function cancel() {
+  const cancel = () => {
     setIsEdit(false);
     setValue(data.readme);
   };
 
-  var save = function save() {
+  const save = () => {
     onUpdate(value);
     setIsEdit(false);
   };
 
-  var onAddReadme = function onAddReadme(event) {
+  const onAddReadme = event => {
     event.preventDefault();
     edit();
   };
 
-  var onChange = function onChange(event) {
+  const onChange = event => {
     setValue(event.target.value);
   };
 
@@ -3740,42 +3305,29 @@ var Readme = function Readme(_ref2) {
   }, t('save')))));
 };
 
-var validationMap = {
+const validationMap = {
   required: isRequired,
   email: isEmail,
   'no-spaces-stack': noSpaces,
   'stack-name': isValidStackName
 };
 
-var getValidationFunction = function getValidationFunction(validator) {
+const getValidationFunction = validator => {
   if (typeof validator === 'string' && validationMap[validator]) return validationMap[validator];
   if (typeof validator === 'function') return validator;
-  return function () {
-    return true;
-  };
+  return () => true;
 };
 
-var useForm = (function (initialFormState, fieldsValidators) {
-  if (fieldsValidators === void 0) {
-    fieldsValidators = {};
-  }
+var useForm = ((initialFormState, fieldsValidators = {}) => {
+  const [form, setForm] = useState(initialFormState);
+  const [formErrors, setFormErrors] = useState({});
 
-  var _useState = useState(initialFormState),
-      form = _useState[0],
-      setForm = _useState[1];
-
-  var _useState2 = useState({}),
-      formErrors = _useState2[0],
-      setFormErrors = _useState2[1];
-
-  var onChange = function onChange(eventOrName, value) {
-    var _extends2, _extends3;
-
-    var name;
-    var fieldValue;
+  const onChange = (eventOrName, value) => {
+    let name;
+    let fieldValue;
 
     if (eventOrName.target) {
-      var event = eventOrName;
+      const event = eventOrName;
       fieldValue = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
       name = event.target.name;
     } else {
@@ -3783,35 +3335,39 @@ var useForm = (function (initialFormState, fieldsValidators) {
       fieldValue = value;
     }
 
-    setForm(_extends({}, form, (_extends2 = {}, _extends2[name] = fieldValue, _extends2)));
-    setFormErrors(_extends({}, formErrors, (_extends3 = {}, _extends3[name] = [], _extends3)));
+    setForm({ ...form,
+      [name]: fieldValue
+    });
+    setFormErrors({ ...formErrors,
+      [name]: []
+    });
   };
 
-  var resetForm = function resetForm() {
+  const resetForm = () => {
     setForm(initialFormState);
     setFormErrors({});
   };
 
-  var getFieldErrors = function getFieldErrors(fieldName) {
-    var errors = [];
-    if (Array.isArray(fieldsValidators[fieldName])) fieldsValidators[fieldName].forEach(function (validator) {
-      var isValid = getValidationFunction(validator);
+  const getFieldErrors = fieldName => {
+    const errors = [];
+    if (Array.isArray(fieldsValidators[fieldName])) fieldsValidators[fieldName].forEach(validator => {
+      const isValid = getValidationFunction(validator);
       if (!isValid(form[fieldName])) errors.push(validator);
     });
 
     if (typeof fieldsValidators[fieldName] === 'string') {
-      var isValid = getValidationFunction(fieldsValidators[fieldName]);
+      const isValid = getValidationFunction(fieldsValidators[fieldName]);
       if (!isValid(form[fieldName])) errors.push(fieldsValidators[fieldName]);
     }
 
     return errors;
   };
 
-  var checkValidForm = function checkValidForm() {
-    var isValid = true;
-    var newFormErrors = {};
-    Object.keys(fieldsValidators).forEach(function (fieldName) {
-      var errors = getFieldErrors(fieldName);
+  const checkValidForm = () => {
+    let isValid = true;
+    const newFormErrors = {};
+    Object.keys(fieldsValidators).forEach(fieldName => {
+      const errors = getFieldErrors(fieldName);
       newFormErrors[fieldName] = errors;
       isValid = isValid && !errors.length;
     });
@@ -3820,79 +3376,68 @@ var useForm = (function (initialFormState, fieldsValidators) {
   };
 
   return {
-    form: form,
-    setForm: setForm,
-    formErrors: formErrors,
-    setFormErrors: setFormErrors,
-    resetForm: resetForm,
-    onChange: onChange,
-    checkValidForm: checkValidForm
+    form,
+    setForm,
+    formErrors,
+    setFormErrors,
+    resetForm,
+    onChange,
+    checkValidForm
   };
 });
 
-var css$B = {"details":"_3iAZb","header":"_2kekg","title":"_1zGvd","permissions":"_3ydGO","sideHeader":"_1FUDu","share":"_2kaMN","dropdown":"_3axDI","description":"_Y6gJz","label":"_2FemD","label-tooltip":"_2Oe5S","actions":"_sZkKa","size":"_Ja107","revisions":"_bLqAO","tabs":"_3mpfk","container":"_3_I7R","withFilters":"_3exQh","filters":"_1-hdZ","attachment":"_3IGZo","readme":"_mADeQ"};
+var css$B = {"details":"_styles-module__details__3iAZb","header":"_styles-module__header__2kekg","title":"_styles-module__title__1zGvd","permissions":"_styles-module__permissions__3ydGO","sideHeader":"_styles-module__sideHeader__1FUDu","share":"_styles-module__share__2kaMN","dropdown":"_styles-module__dropdown__3axDI","description":"_styles-module__description__Y6gJz","label":"_styles-module__label__2FemD","label-tooltip":"_styles-module__label-tooltip__2Oe5S","actions":"_styles-module__actions__sZkKa","size":"_styles-module__size__Ja107","revisions":"_styles-module__revisions__bLqAO","tabs":"_styles-module__tabs__3mpfk","container":"_styles-module__container__3_I7R","withFilters":"_styles-module__withFilters__3exQh","filters":"_styles-module__filters__1-hdZ","attachment":"_styles-module__attachment__3IGZo","readme":"_styles-module__readme__mADeQ"};
 
-var Details = function Details(_ref) {
-  var _data$head, _cx;
+const Details = ({
+  currentFrameId,
+  headId,
+  onChangeHeadFrame,
+  attachmentIndex,
+  onChangeAttachmentIndex,
+  downloadAttachment,
+  onChangeFrame,
+  onUpdateReadme,
+  data,
+  frame,
+  loading,
+  currentUser,
+  backUrl,
+  user,
+  stack,
+  setPrivate,
+  updatePermissions
+}) => {
+  var _data$head;
 
-  var currentFrameId = _ref.currentFrameId,
-      headId = _ref.headId,
-      onChangeHeadFrame = _ref.onChangeHeadFrame,
-      attachmentIndex = _ref.attachmentIndex,
-      onChangeAttachmentIndex = _ref.onChangeAttachmentIndex,
-      onChangeFrame = _ref.onChangeFrame,
-      onUpdateReadme = _ref.onUpdateReadme,
-      data = _ref.data,
-      frame = _ref.frame,
-      loading = _ref.loading,
-      currentUser = _ref.currentUser,
-      backUrl = _ref.backUrl,
-      user = _ref.user,
-      stack = _ref.stack,
-      setPrivate = _ref.setPrivate,
-      updatePermissions = _ref.updatePermissions;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var didMountRef = useRef(false);
-
-  var _useForm = useForm({}),
-      form = _useForm.form,
-      setForm = _useForm.setForm,
-      onChange = _useForm.onChange;
-
-  var _useState = useState(),
-      activeTab = _useState[0],
-      setActiveTab = _useState[1];
-
-  var _useState2 = useState({}),
-      fields = _useState2[0],
-      setFields = _useState2[1];
-
-  var _useState3 = useState([]),
-      tabs = _useState3[0],
-      setTabs = _useState3[1];
-
-  var prevFrame = usePrevious(frame);
-  useEffect(function () {
+  const {
+    t
+  } = useTranslation();
+  const didMountRef = useRef(false);
+  const {
+    form,
+    setForm,
+    onChange
+  } = useForm({});
+  const [activeTab, setActiveTab] = useState();
+  const [fields, setFields] = useState({});
+  const [tabs, setTabs] = useState([]);
+  const prevFrame = usePrevious(frame);
+  useEffect(() => {
     if ((!isEqual(prevFrame, frame) || !didMountRef.current) && frame) parseTabs();
   }, [frame]);
-  var findAttach = useCallback(function (form, tabName, attachmentIndex) {
-    var attachments = get(frame, 'attachments');
-    var fields = Object.keys(form);
-    var tab = tabs.find(function (t) {
-      return t.value === tabName;
-    });
+  const findAttach = useCallback((form, tabName, attachmentIndex) => {
+    const attachments = get(frame, 'attachments');
+    const fields = Object.keys(form);
+    const tab = tabs.find(t => t.value === tabName);
     if (!attachments) return;
 
     if (fields.length || tabs.length) {
-      attachments.some(function (attach, index) {
+      attachments.some((attach, index) => {
         var _attach$params$tab$va, _attach$params$tab$ke;
 
-        var valid = true;
+        let valid = true;
         if (tab && ((_attach$params$tab$va = attach.params[tab.value]) === null || _attach$params$tab$va === void 0 ? void 0 : _attach$params$tab$va.type) !== 'tab' && ((_attach$params$tab$ke = attach.params[tab.key]) === null || _attach$params$tab$ke === void 0 ? void 0 : _attach$params$tab$ke.title) !== tab.value) return false;
-        fields.forEach(function (key) {
+        fields.forEach(key => {
           if (!attach.params || !isEqual(attach.params[key], form[key])) valid = false;
         });
         if (valid && !(attachmentIndex === undefined && index === 0)) onChangeAttachmentIndex(index);
@@ -3900,23 +3445,23 @@ var Details = function Details(_ref) {
       });
     }
   }, [tabs]);
-  var findAttachDebounce = useCallback(debounce(findAttach, 300), [data, frame, findAttach]);
-  useEffect(function () {
+  const findAttachDebounce = useCallback(debounce(findAttach, 300), [data, frame, findAttach]);
+  useEffect(() => {
     if (didMountRef.current) findAttachDebounce(form, activeTab, attachmentIndex);
   }, [form]);
-  useEffect(function () {
+  useEffect(() => {
     if (didMountRef.current) parseParams();
   }, [activeTab]);
-  useEffect(function () {
+  useEffect(() => {
     if (!didMountRef.current) didMountRef.current = true;
   }, []);
 
-  var getCurrentAttachment = function getCurrentAttachment(selectedTab) {
-    var attachments = get(frame, 'attachments');
-    var attachment;
+  const getCurrentAttachment = selectedTab => {
+    const attachments = get(frame, 'attachments');
+    let attachment;
 
     if (selectedTab) {
-      attachment = attachments.find(function (attach) {
+      attachment = attachments.find(attach => {
         var _attach$params$select, _attach$params$select2;
 
         return ((_attach$params$select = attach.params[selectedTab.value]) === null || _attach$params$select === void 0 ? void 0 : _attach$params$select.type) === 'tab' || ((_attach$params$select2 = attach.params[selectedTab.key]) === null || _attach$params$select2 === void 0 ? void 0 : _attach$params$select2.title) === selectedTab.value;
@@ -3932,19 +3477,19 @@ var Details = function Details(_ref) {
     return attachment;
   };
 
-  var parseTabs = function parseTabs() {
-    var attachments = get(frame, 'attachments');
+  const parseTabs = () => {
+    const attachments = get(frame, 'attachments');
     if (!attachments || !attachments.length) return;
-    var tabs = parseStackTabs(attachments);
-    var attachment = getCurrentAttachment();
+    const tabs = parseStackTabs(attachments);
+    const attachment = getCurrentAttachment();
     setTabs(tabs);
 
     if (attachment) {
       var _params$tab;
 
-      var params = _extends({}, attachment.params);
-
-      var tab = Object.keys(params).find(function (key) {
+      const params = { ...attachment.params
+      };
+      const tab = Object.keys(params).find(key => {
         var _params$key;
 
         return ((_params$key = params[key]) === null || _params$key === void 0 ? void 0 : _params$key.type) === 'tab';
@@ -3953,19 +3498,18 @@ var Details = function Details(_ref) {
     }
   };
 
-  var parseParams = function parseParams() {
-    var attachments = get(frame, 'attachments');
-    var tab = tabs.find(function (t) {
-      return t.value === activeTab;
-    });
-    var attachment = getCurrentAttachment(tab);
-    var fields = parseStackParams(attachments, tab);
+  const parseParams = () => {
+    const attachments = get(frame, 'attachments');
+    const tab = tabs.find(t => t.value === activeTab);
+    const attachment = getCurrentAttachment(tab);
+    const fields = parseStackParams(attachments, tab);
     setFields(fields);
 
     if (attachment) {
-      var params = _extends({}, attachment.params);
+      const params = { ...attachment.params
+      };
 
-      var _tab = Object.keys(params).find(function (key) {
+      const _tab = Object.keys(params).find(key => {
         var _params$key2;
 
         return ((_params$key2 = params[key]) === null || _params$key2 === void 0 ? void 0 : _params$key2.type) === 'tab';
@@ -3976,7 +3520,7 @@ var Details = function Details(_ref) {
     }
   };
 
-  var onChangeTab = function onChangeTab(tabName) {
+  const onChangeTab = tabName => {
     findAttachDebounce(form, tabName, attachmentIndex);
     setActiveTab(tabName);
   };
@@ -3996,25 +3540,23 @@ var Details = function Details(_ref) {
   }, /*#__PURE__*/React__default.createElement("div", {
     className: css$B.title
   }, data.name, /*#__PURE__*/React__default.createElement("span", {
-    className: "mdi mdi-lock" + (data["private"] ? '' : '-open')
-  })), data["private"] && /*#__PURE__*/React__default.createElement(PermissionUsers, {
+    className: `mdi mdi-lock${data.private ? '' : '-open'}`
+  })), data.private && /*#__PURE__*/React__default.createElement(PermissionUsers, {
     className: css$B.permissions,
     permissions: data.permissions
   }), /*#__PURE__*/React__default.createElement("div", {
     className: css$B.sideHeader
   }, data && data.user === currentUser && /*#__PURE__*/React__default.createElement(Share, {
-    instancePath: user + "/" + stack,
+    instancePath: `${user}/${stack}`,
     onUpdatePrivate: setPrivate,
     className: css$B.share,
-    defaultIsPrivate: data["private"],
+    defaultIsPrivate: data.private,
     defaultPermissions: data.permissions,
     urlParams: {
       a: attachmentIndex ? attachmentIndex : null,
       f: (frame === null || frame === void 0 ? void 0 : frame.id) !== (data === null || data === void 0 ? void 0 : (_data$head = data.head) === null || _data$head === void 0 ? void 0 : _data$head.id) ? frame === null || frame === void 0 ? void 0 : frame.id : null
     },
-    onUpdatePermissions: function onUpdatePermissions(permissions) {
-      return updatePermissions(user + "/" + stack, permissions);
-    }
+    onUpdatePermissions: permissions => updatePermissions(`${user}/${stack}`, permissions)
   }))), /*#__PURE__*/React__default.createElement(Frames, {
     frames: get(data, 'frames', []),
     frame: currentFrameId,
@@ -4028,7 +3570,9 @@ var Details = function Details(_ref) {
     value: activeTab,
     items: tabs
   }), /*#__PURE__*/React__default.createElement("div", {
-    className: cx(css$B.container, (_cx = {}, _cx[css$B.withFilters] = Object.keys(fields).length, _cx))
+    className: cx(css$B.container, {
+      [css$B.withFilters]: Object.keys(fields).length
+    })
   }, /*#__PURE__*/React__default.createElement(StackFilters, {
     fields: fields,
     form: form,
@@ -4037,7 +3581,7 @@ var Details = function Details(_ref) {
   }), frame && /*#__PURE__*/React__default.createElement(Attachment, {
     className: css$B.attachment,
     withLoader: true,
-    stack: user + "/" + stack,
+    stack: `${user}/${stack}`,
     frameId: frame.id,
     id: attachmentIndex || 0
   })), data && /*#__PURE__*/React__default.createElement(Readme, {
@@ -4047,10 +3591,11 @@ var Details = function Details(_ref) {
   }));
 };
 
-var css$C = {"loader":"_31Z5G","side":"_k2iUe","filter-pulse":"_vad3r","content":"_kUkc8"};
+var css$C = {"loader":"_styles-module__loader__31Z5G","side":"_styles-module__side__k2iUe","filter-pulse":"_styles-module__filter-pulse__vad3r","content":"_styles-module__content__kUkc8"};
 
-var Loader$2 = function Loader(_ref) {
-  var className = _ref.className;
+const Loader$2 = ({
+  className
+}) => {
   return /*#__PURE__*/React__default.createElement("div", {
     className: cx(css$C.loader, className)
   }, /*#__PURE__*/React__default.createElement("div", {
@@ -4060,61 +3605,55 @@ var Loader$2 = function Loader(_ref) {
   }));
 };
 
-var css$D = {"progress":"_1PIt0","percent":"_m5cJQ","bar":"_1v1JQ","label":"_1xBAh"};
+var css$D = {"progress":"_styles-module__progress__1PIt0","percent":"_styles-module__percent__m5cJQ","bar":"_styles-module__bar__1v1JQ","label":"_styles-module__label__1xBAh"};
 
-var Progress = function Progress(_ref) {
-  var _ref$isActive = _ref.isActive,
-      isActive = _ref$isActive === void 0 ? true : _ref$isActive,
-      className = _ref.className;
+const Progress = ({
+  isActive: _isActive = true,
+  className
+}) => {
+  const {
+    t
+  } = useTranslation();
+  const [progress, setProgress] = useState(0);
+  const step = useRef(0.01);
+  const currentProgress = useRef(0);
+  const prevIsActive = usePrevious(_isActive);
+  const requestFrame = useRef(null);
+  const isActiveRef = useRef(false);
+  useEffect(() => {
+    isActiveRef.current = _isActive;
 
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var _useState = useState(0),
-      progress = _useState[0],
-      setProgress = _useState[1];
-
-  var step = useRef(0.01);
-  var currentProgress = useRef(0);
-  var prevIsActive = usePrevious(isActive);
-  var requestFrame = useRef(null);
-  var isActiveRef = useRef(false);
-  useEffect(function () {
-    isActiveRef.current = isActive;
-
-    if (isActive) {
+    if (_isActive) {
       setProgress(0);
       step.current = 0.01;
       currentProgress.current = 0;
       startCalculateProgress();
     }
 
-    if (prevIsActive === true && isActive === false) {
+    if (prevIsActive === true && _isActive === false) {
       setProgress(100);
-      setTimeout(function () {
-        return setProgress(0);
-      }, 800);
+      setTimeout(() => setProgress(0), 800);
     }
 
-    if (isActive === null) {
+    if (_isActive === null) {
       setProgress(0);
     }
 
-    if (!isActive && requestFrame.current) {
+    if (!_isActive && requestFrame.current) {
       cancelAnimationFrame(requestFrame.current);
     }
-  }, [isActive]);
+  }, [_isActive]);
 
-  var calculateProgress = function calculateProgress() {
+  const calculateProgress = () => {
     currentProgress.current += step.current;
-    var progress = Math.round(Math.atan(currentProgress.current) / (Math.PI / 2) * 100 * 1000) / 1000;
+    const progress = Math.round(Math.atan(currentProgress.current) / (Math.PI / 2) * 100 * 1000) / 1000;
     setProgress(progress);
     if (progress > 70) step.current = 0.005;
     if (progress >= 100 || !isActiveRef.current) cancelAnimationFrame(requestFrame.current);
     if (isActiveRef.current) requestFrame.current = requestAnimationFrame(calculateProgress);
   };
 
-  var startCalculateProgress = function startCalculateProgress() {
+  const startCalculateProgress = () => {
     requestAnimationFrame(calculateProgress);
   };
 
@@ -4126,138 +3665,101 @@ var Progress = function Progress(_ref) {
     className: css$D.bar
   }, /*#__PURE__*/React__default.createElement("div", {
     style: {
-      width: progress + "%"
+      width: `${progress}%`
     }
   })), /*#__PURE__*/React__default.createElement("div", {
     className: css$D.label
   }, t('calculatingTheData')));
 };
 
-var api$1 = apiFabric();
-var actions$1 = (function () {
-  var _useAppStore = useAppStore(),
-      apiUrl = _useAppStore[0].apiUrl;
+const api$1 = apiFabric();
+var actions$1 = (() => {
+  const [{
+    apiUrl
+  }] = useAppStore();
 
-  var executeStack = function executeStack(params) {
-    return new Promise(function (resolve, reject) {
+  const executeStack = params => {
+    return new Promise(async (resolve, reject) => {
       try {
-        var _temp2 = _catch(function () {
-          return Promise.resolve(api$1.post(apiUrl + config.APPS_EXECUTE, params)).then(function (request) {
-            resolve(request.data);
-          });
-        }, function (e) {
-          reject(e);
-        });
-
-        return Promise.resolve(_temp2 && _temp2.then ? _temp2.then(function () {}) : void 0);
+        const request = await api$1.post(apiUrl + config.APPS_EXECUTE, params);
+        resolve(request.data);
       } catch (e) {
-        return Promise.reject(e);
+        reject(e);
       }
     });
   };
 
-  var pollStack = function pollStack(_ref) {
-    var id = _ref.id;
-    return new Promise(function (resolve, reject) {
+  const pollStack = ({
+    id
+  }) => {
+    return new Promise(async (resolve, reject) => {
       try {
-        var _temp4 = _catch(function () {
-          return Promise.resolve(api$1.get(apiUrl + config.APPS_POLL + ("?id=" + id))).then(function (request) {
-            resolve(request.data);
-          });
-        }, function (e) {
-          reject(e);
-        });
-
-        return Promise.resolve(_temp4 && _temp4.then ? _temp4.then(function () {}) : void 0);
+        const request = await api$1.get(apiUrl + config.APPS_POLL + `?id=${id}`);
+        resolve(request.data);
       } catch (e) {
-        return Promise.reject(e);
+        reject(e);
       }
     });
   };
 
   return {
-    executeStack: executeStack,
-    pollStack: pollStack
+    executeStack,
+    pollStack
   };
 });
 
-var css$E = {"details":"_ti47L","header":"_1-me2","title":"_1ZJdY","permissions":"_3X_XO","sideHeader":"_1w9C6","share":"_2sRwt","dropdown":"_1fs1J","description":"_3dUVb","label":"_1JQAe","label-tooltip":"_15gJa","actions":"_2mMuP","size":"_2GzG9","revisions":"_1t1sR","tabs":"_1iRHh","container":"_2Ro1o","withSidebar":"_3dv-r","filters":"_283Wj","filterLoader":"_7OdCa","attachment":"_1QLqg","progress":"_HhauM","emptyMessage":"_16j-R","error":"_2FCD_","message":"_nbe6T","fromAgo":"_2urIx","log":"_3Aob9","readme":"_19inZ"};
+var css$E = {"details":"_styles-module__details__ti47L","header":"_styles-module__header__1-me2","title":"_styles-module__title__1ZJdY","permissions":"_styles-module__permissions__3X_XO","sideHeader":"_styles-module__sideHeader__1w9C6","share":"_styles-module__share__2sRwt","dropdown":"_styles-module__dropdown__1fs1J","description":"_styles-module__description__3dUVb","label":"_styles-module__label__1JQAe","label-tooltip":"_styles-module__label-tooltip__15gJa","actions":"_styles-module__actions__2mMuP","size":"_styles-module__size__2GzG9","revisions":"_styles-module__revisions__1t1sR","tabs":"_styles-module__tabs__1iRHh","container":"_styles-module__container__2Ro1o","withSidebar":"_styles-module__withSidebar__3dv-r","filters":"_styles-module__filters__283Wj","filterLoader":"_styles-module__filterLoader__7OdCa","attachment":"_styles-module__attachment__1QLqg","progress":"_styles-module__progress__HhauM","emptyMessage":"_styles-module__emptyMessage__16j-R","error":"_styles-module__error__2FCD_","message":"_styles-module__message__nbe6T","fromAgo":"_styles-module__fromAgo__2urIx","log":"_styles-module__log__3Aob9","readme":"_styles-module__readme__19inZ"};
 
-var REFRESH_INTERVAL = 1000;
+const REFRESH_INTERVAL = 1000;
 
-var Details$1 = function Details(_ref) {
-  var _data$head, _cx;
+const Details$1 = ({
+  currentFrameId,
+  headId,
+  executionId,
+  onChangeExecutionId,
+  onChangeHeadFrame,
+  attachmentIndex,
+  onChangeAttachmentIndex,
+  onChangeFrame,
+  onUpdateReadme,
+  data,
+  frame,
+  loading,
+  currentUser,
+  backUrl,
+  user,
+  stack,
+  setPrivate,
+  updatePermissions
+}) => {
+  var _data$head;
 
-  var currentFrameId = _ref.currentFrameId,
-      headId = _ref.headId,
-      executionId = _ref.executionId,
-      onChangeExecutionId = _ref.onChangeExecutionId,
-      onChangeHeadFrame = _ref.onChangeHeadFrame,
-      attachmentIndex = _ref.attachmentIndex,
-      onChangeAttachmentIndex = _ref.onChangeAttachmentIndex,
-      onChangeFrame = _ref.onChangeFrame,
-      onUpdateReadme = _ref.onUpdateReadme,
-      data = _ref.data,
-      frame = _ref.frame,
-      loading = _ref.loading,
-      currentUser = _ref.currentUser,
-      backUrl = _ref.backUrl,
-      user = _ref.user,
-      stack = _ref.stack,
-      setPrivate = _ref.setPrivate,
-      updatePermissions = _ref.updatePermissions;
+  const {
+    t
+  } = useTranslation();
+  const didMountRef = useRef(false);
+  const {
+    form,
+    setForm,
+    onChange
+  } = useForm({});
+  const [fields, setFields] = useState({});
+  const [executeData, setExecuteData] = useState(null);
+  const [executing, setExecuting] = useState(false);
+  const [calculating, setCalculating] = useState(false);
+  const [error, setError] = useState(null);
+  const [appAttachment, setAppAttachment] = useState(null);
+  const [activeTab, setActiveTab] = useState();
+  const [tabs, setTabs] = useState([]);
+  const prevFrame = usePrevious(frame);
+  const {
+    executeStack,
+    pollStack
+  } = actions$1();
 
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var didMountRef = useRef(false);
-
-  var _useForm = useForm({}),
-      form = _useForm.form,
-      setForm = _useForm.setForm,
-      onChange = _useForm.onChange;
-
-  var _useState = useState({}),
-      fields = _useState[0],
-      setFields = _useState[1];
-
-  var _useState2 = useState(null),
-      executeData = _useState2[0],
-      setExecuteData = _useState2[1];
-
-  var _useState3 = useState(false),
-      executing = _useState3[0],
-      setExecuting = _useState3[1];
-
-  var _useState4 = useState(false),
-      calculating = _useState4[0],
-      setCalculating = _useState4[1];
-
-  var _useState5 = useState(null),
-      error = _useState5[0],
-      setError = _useState5[1];
-
-  var _useState6 = useState(null),
-      appAttachment = _useState6[0],
-      setAppAttachment = _useState6[1];
-
-  var _useState7 = useState(),
-      activeTab = _useState7[0],
-      setActiveTab = _useState7[1];
-
-  var _useState8 = useState([]),
-      tabs = _useState8[0],
-      setTabs = _useState8[1];
-
-  var prevFrame = usePrevious(frame);
-
-  var _actions = actions$1(),
-      executeStack = _actions.executeStack,
-      pollStack = _actions.pollStack;
-
-  var getFormFromViews = function getFormFromViews(views) {
+  const getFormFromViews = views => {
     if (!views || !Array.isArray(views)) return {};
-    return views.reduce(function (result, view, index) {
+    return views.reduce((result, view, index) => {
       switch (view.type) {
         case 'ApplyView':
           return result;
@@ -4282,13 +3784,11 @@ var Details$1 = function Details(_ref) {
     }, {});
   };
 
-  var setActiveExecutionId = function setActiveExecutionId(value) {
+  const setActiveExecutionId = value => {
     if (typeof onChangeExecutionId === 'function') onChangeExecutionId(value);
 
     if (tabs.length && activeTab) {
-      var tabIndex = tabs.findIndex(function (t) {
-        return t.value === activeTab;
-      });
+      const tabIndex = tabs.findIndex(t => t.value === activeTab);
 
       if (tabIndex >= 0) {
         tabs[tabIndex].executionId = value;
@@ -4297,26 +3797,20 @@ var Details$1 = function Details(_ref) {
     }
   };
 
-  var updateExecuteData = function updateExecuteData(data) {
-    var fields = parseStackViews(data.views);
-    var form = getFormFromViews(data.views);
+  const updateExecuteData = data => {
+    const fields = parseStackViews(data.views);
+    const form = getFormFromViews(data.views);
     setFields(fields);
     setForm(form);
     setExecuteData(data);
   };
 
-  var hasApplyButton = function hasApplyButton() {
+  const hasApplyButton = () => {
     if (!(executeData === null || executeData === void 0 ? void 0 : executeData.views) || !Array.isArray(executeData.views)) return false;
-    return executeData.views.some(function (view) {
-      return view.type === 'ApplyView';
-    });
+    return executeData.views.some(view => view.type === 'ApplyView');
   };
 
-  var submit = function submit(form, apply) {
-    if (apply === void 0) {
-      apply = true;
-    }
-
+  const submit = (form, apply = true) => {
     setExecuting(true);
     if (apply) setCalculating(true);else {
       setAppAttachment(null);
@@ -4327,8 +3821,8 @@ var Details$1 = function Details(_ref) {
       stack: data.name,
       frame: frame === null || frame === void 0 ? void 0 : frame.id,
       attachment: attachmentIndex || 0,
-      apply: apply,
-      views: executeData.views.map(function (view, index) {
+      apply,
+      views: executeData.views.map((view, index) => {
         switch (view.type) {
           case 'ApplyView':
             return view;
@@ -4342,9 +3836,7 @@ var Details$1 = function Details(_ref) {
             break;
 
           case 'SliderView':
-            view.selected = view.data.findIndex(function (i) {
-              return i === form[index];
-            });
+            view.selected = view.data.findIndex(i => i === form[index]);
             break;
 
           default:
@@ -4353,7 +3845,7 @@ var Details$1 = function Details(_ref) {
 
         return view;
       })
-    }).then(function (data) {
+    }).then(data => {
       setExecuting(false);
       setError(null);
       updateExecuteData(data);
@@ -4365,7 +3857,7 @@ var Details$1 = function Details(_ref) {
         });
         setActiveExecutionId(data.id);
       }
-    })["catch"](function () {
+    }).catch(() => {
       setExecuting(false);
       setCalculating(false);
       setError({
@@ -4376,22 +3868,20 @@ var Details$1 = function Details(_ref) {
     });
   };
 
-  useDebounce$1(function () {
+  useDebounce$1(() => {
     if (!isEqual(form, getFormFromViews(executeData === null || executeData === void 0 ? void 0 : executeData.views)) && !executing) {
       submit(form, !!(!hasApplyButton() && appAttachment));
     }
   }, 300, [form]);
 
-  var onApply = function onApply() {
-    return submit(form);
-  };
+  const onApply = () => submit(form);
 
-  useEffect(function () {
+  useEffect(() => {
     if (executeData && executeData.status === 'READY' && !appAttachment && !executing) {
       if (!hasApplyButton()) submit(form, true);
     }
   }, [executeData]);
-  useEffect(function () {
+  useEffect(() => {
     if ((data === null || data === void 0 ? void 0 : data.user) && (data === null || data === void 0 ? void 0 : data.name) && frame && !loading) {
       if (!executionId || !isEqual(frame, prevFrame)) {
         setExecuting(true);
@@ -4402,11 +3892,11 @@ var Details$1 = function Details(_ref) {
           stack: data.name,
           frame: frame === null || frame === void 0 ? void 0 : frame.id,
           attachment: attachmentIndex || 0
-        }).then(function (data) {
+        }).then(data => {
           setExecuting(false);
           setError(null);
           updateExecuteData(data);
-        })["catch"](function () {
+        }).catch(() => {
           setExecuting(false);
           setError({
             date: Date.now(),
@@ -4425,19 +3915,19 @@ var Details$1 = function Details(_ref) {
       }
     }
   }, [data, frame, attachmentIndex]);
-  useEffect(function () {
+  useEffect(() => {
     if ((!isEqual(prevFrame, frame) || !didMountRef.current) && frame) parseTabs();
   }, [frame]);
-  useEffect(function () {
+  useEffect(() => {
     if (!didMountRef.current) didMountRef.current = true;
   }, []);
 
-  var getCurrentAttachment = function getCurrentAttachment(selectedTab) {
-    var attachments = get(frame, 'attachments');
-    var attachment;
+  const getCurrentAttachment = selectedTab => {
+    const attachments = get(frame, 'attachments');
+    let attachment;
 
     if (selectedTab) {
-      attachment = attachments.find(function (attach) {
+      attachment = attachments.find(attach => {
         var _attach$params$select, _attach$params$select2;
 
         return ((_attach$params$select = attach.params[selectedTab.value]) === null || _attach$params$select === void 0 ? void 0 : _attach$params$select.type) === 'tab' || ((_attach$params$select2 = attach.params[selectedTab.key]) === null || _attach$params$select2 === void 0 ? void 0 : _attach$params$select2.title) === selectedTab.value;
@@ -4453,19 +3943,19 @@ var Details$1 = function Details(_ref) {
     return attachment;
   };
 
-  var parseTabs = function parseTabs() {
-    var attachments = get(frame, 'attachments');
+  const parseTabs = () => {
+    const attachments = get(frame, 'attachments');
     if (!attachments || !attachments.length) return;
-    var tabs = parseStackTabs(attachments);
-    var attachment = getCurrentAttachment();
+    const tabs = parseStackTabs(attachments);
+    const attachment = getCurrentAttachment();
     setTabs(tabs);
 
     if (attachment) {
       var _params$tab;
 
-      var params = _extends({}, attachment.params);
-
-      var tab = Object.keys(params).find(function (key) {
+      const params = { ...attachment.params
+      };
+      const tab = Object.keys(params).find(key => {
         var _params$key;
 
         return ((_params$key = params[key]) === null || _params$key === void 0 ? void 0 : _params$key.type) === 'tab';
@@ -4474,16 +3964,14 @@ var Details$1 = function Details(_ref) {
     }
   };
 
-  var onChangeTab = function onChangeTab(tabName) {
+  const onChangeTab = tabName => {
     setActiveTab(tabName);
-    var attachments = get(frame, 'attachments');
-    var tab = tabs.find(function (t) {
-      return t.value === tabName;
-    });
+    const attachments = get(frame, 'attachments');
+    const tab = tabs.find(t => t.value === tabName);
     if (!attachments) return;
 
     if (tabs.length) {
-      attachments.some(function (attach, index) {
+      attachments.some((attach, index) => {
         var _attach$params$tab$va, _attach$params$tab$ke;
 
         if (tab && ((_attach$params$tab$va = attach.params[tab.value]) === null || _attach$params$tab$va === void 0 ? void 0 : _attach$params$tab$va.type) !== 'tab' && ((_attach$params$tab$ke = attach.params[tab.key]) === null || _attach$params$tab$ke === void 0 ? void 0 : _attach$params$tab$ke.title) !== tab.value) return false;
@@ -4495,13 +3983,14 @@ var Details$1 = function Details(_ref) {
     }
   };
 
-  var checkFinished = function checkFinished(_ref2) {
-    var id = _ref2.id,
-        isUpdateData = _ref2.isUpdateData;
+  const checkFinished = ({
+    id,
+    isUpdateData
+  }) => {
     pollStack({
       id: id
-    }).then(function (data) {
-      if (['SCHEDULED', 'RUNNING'].indexOf(data.status) >= 0) setTimeout(function () {
+    }).then(data => {
+      if (['SCHEDULED', 'RUNNING'].indexOf(data.status) >= 0) setTimeout(() => {
         checkFinished({
           id: data.id
         });
@@ -4536,7 +4025,7 @@ var Details$1 = function Details(_ref) {
   };
 
   if (loading) return /*#__PURE__*/React__default.createElement(Loader$1, null);
-  var withSidebar = Object.keys(fields).some(function (key, index) {
+  const withSidebar = Object.keys(fields).some((key, index) => {
     if (fields[key].type === 'textarea') return true;
     return index >= 3;
   });
@@ -4554,26 +4043,24 @@ var Details$1 = function Details(_ref) {
   }, /*#__PURE__*/React__default.createElement("div", {
     className: css$E.title
   }, data.name, /*#__PURE__*/React__default.createElement("span", {
-    className: "mdi mdi-lock" + (data["private"] ? '' : '-open')
-  })), data["private"] && /*#__PURE__*/React__default.createElement(PermissionUsers, {
+    className: `mdi mdi-lock${data.private ? '' : '-open'}`
+  })), data.private && /*#__PURE__*/React__default.createElement(PermissionUsers, {
     className: css$E.permissions,
     permissions: data.permissions
   }), /*#__PURE__*/React__default.createElement("div", {
     className: css$E.sideHeader
   }, data && data.user === currentUser && /*#__PURE__*/React__default.createElement(Share, {
-    instancePath: user + "/" + stack,
+    instancePath: `${user}/${stack}`,
     onUpdatePrivate: setPrivate,
     className: css$E.share,
-    defaultIsPrivate: data["private"],
+    defaultIsPrivate: data.private,
     defaultPermissions: data.permissions,
     urlParams: {
       a: attachmentIndex ? attachmentIndex : null,
       f: (frame === null || frame === void 0 ? void 0 : frame.id) !== (data === null || data === void 0 ? void 0 : (_data$head = data.head) === null || _data$head === void 0 ? void 0 : _data$head.id) ? frame === null || frame === void 0 ? void 0 : frame.id : null,
       'execution_id': executionId
     },
-    onUpdatePermissions: function onUpdatePermissions(permissions) {
-      return updatePermissions(user + "/" + stack, permissions);
-    }
+    onUpdatePermissions: permissions => updatePermissions(`${user}/${stack}`, permissions)
   }))), /*#__PURE__*/React__default.createElement(Frames, {
     frames: get(data, 'frames', []),
     frame: currentFrameId,
@@ -4592,7 +4079,9 @@ var Details$1 = function Details(_ref) {
   }, /*#__PURE__*/React__default.createElement(Loader$2, {
     className: css$E.filterLoader
   })), executeData && /*#__PURE__*/React__default.createElement("div", {
-    className: cx(css$E.container, (_cx = {}, _cx[css$E.withSidebar] = withSidebar, _cx))
+    className: cx(css$E.container, {
+      [css$E.withSidebar]: withSidebar
+    })
   }, /*#__PURE__*/React__default.createElement(StackFilters, {
     fields: fields,
     form: form,
@@ -4603,7 +4092,7 @@ var Details$1 = function Details(_ref) {
     disabled: executing || calculating
   }), appAttachment && !calculating && /*#__PURE__*/React__default.createElement(Attachment, {
     className: css$E.attachment,
-    stack: user + "/" + stack,
+    stack: `${user}/${stack}`,
     customData: appAttachment
   }), calculating && /*#__PURE__*/React__default.createElement(Progress, {
     className: css$E.progress
@@ -4626,148 +4115,107 @@ var Details$1 = function Details(_ref) {
   }));
 };
 
-var css$F = {"upload":"_1HGtr","content":"_zyXjr","subtitle":"_2QLXi","field":"_2kyid","dragndrop":"_1_81H","buttons":"_1PXB0","button":"_1nx-b"};
+var css$F = {"upload":"_style-module__upload__1HGtr","content":"_style-module__content__zyXjr","subtitle":"_style-module__subtitle__2QLXi","field":"_style-module__field__2kyid","dragndrop":"_style-module__dragndrop__1_81H","buttons":"_style-module__buttons__1PXB0","button":"_style-module__button__1nx-b"};
 
-var MB = 1048576;
+const MB = 1048576;
 
-var Upload = function Upload(_ref) {
-  var stack = _ref.stack,
-      className = _ref.className,
-      isShow = _ref.isShow,
-      onClose = _ref.onClose,
-      refresh = _ref.refresh,
-      withButton = _ref.withButton,
-      apiUrl = _ref.apiUrl,
-      user = _ref.user;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var _useState = useState(false),
-      isShowModal = _useState[0],
-      setIsShowModal = _useState[1];
-
-  var _useState2 = useState(null),
-      uploading = _useState2[0],
-      setUploading = _useState2[1];
-
-  var _useState3 = useState(null),
-      progress = _useState3[0],
-      setProgress = _useState3[1];
-
-  var _useState4 = useState(null),
-      file = _useState4[0],
-      setFile = _useState4[1];
-
-  var isDidMount = useRef(true);
-
-  var _useForm = useForm({
+const Upload = ({
+  stack,
+  className,
+  isShow,
+  onClose,
+  refresh,
+  withButton,
+  apiUrl,
+  user
+}) => {
+  const {
+    t
+  } = useTranslation();
+  const [isShowModal, setIsShowModal] = useState(false);
+  const [uploading, setUploading] = useState(null);
+  const [progress, setProgress] = useState(null);
+  const [file, setFile] = useState(null);
+  const isDidMount = useRef(true);
+  const {
+    form,
+    onChange,
+    formErrors,
+    checkValidForm
+  } = useForm({
     stack: stack || ''
   }, {
     stack: ['required', 'no-spaces-stack', 'stack-name']
-  }),
-      form = _useForm.form,
-      onChange = _useForm.onChange,
-      formErrors = _useForm.formErrors,
-      checkValidForm = _useForm.checkValidForm;
-
-  var runValidation = useDebounce(checkValidForm);
-  useEffect(function () {
+  });
+  const runValidation = useDebounce(checkValidForm);
+  useEffect(() => {
     if (!isDidMount.current) runValidation();else isDidMount.current = false;
   }, [form.stack]);
-  useEffect(function () {
+  useEffect(() => {
     if (isShow !== undefined) setIsShowModal(isShow);
   }, [isShow]);
 
-  var toggleModal = function toggleModal() {
-    return setIsShowModal(!isShowModal);
-  };
+  const toggleModal = () => setIsShowModal(!isShowModal);
 
-  var closeHandle = function closeHandle() {
+  const closeHandle = () => {
     if (onClose) onClose();else setIsShowModal(false);
   };
 
-  var getErrorsText = function getErrorsText(fieldName) {
-    if (formErrors[fieldName] && formErrors[fieldName].length) return [t("formErrors." + formErrors[fieldName][0])];
+  const getErrorsText = fieldName => {
+    if (formErrors[fieldName] && formErrors[fieldName].length) return [t(`formErrors.${formErrors[fieldName][0]}`)];
   };
 
-  var submit = function submit() {
+  const submit = async () => {
+    setProgress(null);
+    setUploading(true);
+    const params = {
+      type: file.type,
+      timestamp: Date.now(),
+      id: v4(),
+      stack: `${user}/${form.stack}`,
+      size: file.size
+    };
+    if (file.size > MB) params.attachments = [{
+      length: file.size
+    }];else params.attachments = [{
+      data: await fileToBase64(file)
+    }];
+
     try {
-      var _temp7 = function _temp7() {
-        var _temp4 = _catch(function () {
-          var token = localStorage.getItem(config.TOKEN_STORAGE_KEY);
-          return Promise.resolve(axios({
-            method: 'post',
+      const token = localStorage.getItem(config.TOKEN_STORAGE_KEY);
+      const {
+        data
+      } = await axios({
+        method: 'post',
+        headers: {
+          Authorization: token ? `Bearer ${token}` : ''
+        },
+        baseURL: apiUrl,
+        url: config.STACK_PUSH,
+        data: params
+      });
+
+      if (data.attachments && data.attachments.length) {
+        const [attachment] = data.attachments;
+
+        if (attachment['upload_url']) {
+          await axios.put(attachment['upload_url'], file, {
             headers: {
-              Authorization: token ? "Bearer " + token : ''
+              'Content-Type': 'application/octet-stream'
             },
-            baseURL: apiUrl,
-            url: config.STACK_PUSH,
-            data: params
-          })).then(function (_ref2) {
-            var data = _ref2.data;
-
-            function _temp3() {
-              setUploading(false);
-              closeHandle();
-              if (refresh) refresh();
+            onUploadProgress: progressEvent => {
+              const percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
+              setProgress(percentCompleted);
             }
-
-            var _temp2 = function () {
-              if (data.attachments && data.attachments.length) {
-                var _data$attachments = data.attachments,
-                    attachment = _data$attachments[0];
-
-                var _temp9 = function () {
-                  if (attachment['upload_url']) {
-                    return Promise.resolve(axios.put(attachment['upload_url'], file, {
-                      headers: {
-                        'Content-Type': 'application/octet-stream'
-                      },
-                      onUploadProgress: function onUploadProgress(progressEvent) {
-                        var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
-                        setProgress(percentCompleted);
-                      }
-                    })).then(function () {});
-                  }
-                }();
-
-                if (_temp9 && _temp9.then) return _temp9.then(function () {});
-              }
-            }();
-
-            return _temp2 && _temp2.then ? _temp2.then(_temp3) : _temp3(_temp2);
           });
-        }, function () {
-          closeHandle();
-        });
+        }
+      }
 
-        if (_temp4 && _temp4.then) return _temp4.then(function () {});
-      };
-
-      setProgress(null);
-      setUploading(true);
-      var params = {
-        type: file.type,
-        timestamp: Date.now(),
-        id: v4(),
-        stack: user + "/" + form.stack,
-        size: file.size
-      };
-
-      var _temp8 = function () {
-        if (file.size > MB) params.attachments = [{
-          length: file.size
-        }];else return Promise.resolve(fileToBase64(file)).then(function (_fileToBaseTo) {
-          params.attachments = [{
-            data: _fileToBaseTo
-          }];
-        });
-      }();
-
-      return Promise.resolve(_temp8 && _temp8.then ? _temp8.then(_temp7) : _temp7(_temp8));
+      setUploading(false);
+      closeHandle();
+      if (refresh) refresh();
     } catch (e) {
-      return Promise.reject(e);
+      closeHandle();
     }
   };
 
@@ -4793,9 +4241,9 @@ var Upload = function Upload(_ref) {
     onChange: onChange,
     value: form.value,
     maxLength: 30,
-    placeholder: t('stackName') + ", " + t('noSpaces') + ", " + t('maxSymbol', {
+    placeholder: `${t('stackName')}, ${t('noSpaces')}, ${t('maxSymbol', {
       count: 30
-    }),
+    })}`,
     errors: getErrorsText('stack')
   })), stack && file && /*#__PURE__*/React__default.createElement("div", {
     className: css$F.subtitle
@@ -4822,52 +4270,42 @@ var Upload = function Upload(_ref) {
   }, t('cancel')))));
 };
 
-var css$G = {"upload":"_2UOiz","content":"_22x3Q","subtitle":"_2sXDC","field":"_3icVJ","dragndrop":"_30Hxh","buttons":"_3VDuj","button":"_2bzId"};
+var css$G = {"upload":"_style-module__upload__2UOiz","content":"_style-module__content__22x3Q","subtitle":"_style-module__subtitle__2sXDC","field":"_style-module__field__3icVJ","dragndrop":"_style-module__dragndrop__30Hxh","buttons":"_style-module__buttons__3VDuj","button":"_style-module__button__2bzId"};
 
-var MB$1 = 1048576;
+const MB$1 = 1048576;
 
-var Upload$1 = function Upload(_ref) {
-  var stack = _ref.stack,
-      className = _ref.className,
-      refresh = _ref.refresh,
-      apiUrl = _ref.apiUrl,
-      user = _ref.user;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var _useState = useState(null),
-      uploading = _useState[0],
-      setUploading = _useState[1];
-
-  var _useState2 = useState(null),
-      progress = _useState2[0],
-      setProgress = _useState2[1];
-
-  var _useState3 = useState(null),
-      file = _useState3[0],
-      setFile = _useState3[1];
-
-  var isDidMount = useRef(true);
-  var fileFieldRef = useRef(null);
-
-  var _useForm = useForm({
+const Upload$1 = ({
+  stack,
+  className,
+  refresh,
+  apiUrl,
+  user
+}) => {
+  const {
+    t
+  } = useTranslation();
+  const [uploading, setUploading] = useState(null);
+  const [progress, setProgress] = useState(null);
+  const [file, setFile] = useState(null);
+  const isDidMount = useRef(true);
+  const fileFieldRef = useRef(null);
+  const {
+    form,
+    onChange,
+    setForm,
+    formErrors,
+    checkValidForm
+  } = useForm({
     stack: stack || ''
   }, {
     stack: ['required', 'no-spaces-stack', 'stack-name']
-  }),
-      form = _useForm.form,
-      onChange = _useForm.onChange,
-      setForm = _useForm.setForm,
-      formErrors = _useForm.formErrors,
-      checkValidForm = _useForm.checkValidForm;
-
-  var runValidation = useDebounce(checkValidForm);
-  useEffect(function () {
+  });
+  const runValidation = useDebounce(checkValidForm);
+  useEffect(() => {
     if (!isDidMount.current) runValidation();else isDidMount.current = false;
   }, [form.stack]);
 
-  var clearForm = function clearForm() {
+  const clearForm = () => {
     setFile(null);
     setForm({
       stack: ''
@@ -4875,88 +4313,62 @@ var Upload$1 = function Upload(_ref) {
     if (fileFieldRef.current) fileFieldRef.current.clear();
   };
 
-  var getErrorsText = function getErrorsText(fieldName) {
-    if (formErrors[fieldName] && formErrors[fieldName].length) return [t("formErrors." + formErrors[fieldName][0])];
+  const getErrorsText = fieldName => {
+    if (formErrors[fieldName] && formErrors[fieldName].length) return [t(`formErrors.${formErrors[fieldName][0]}`)];
   };
 
-  var submit = function submit() {
+  const submit = async () => {
+    setProgress(null);
+    setUploading(true);
+    const params = {
+      type: file.type,
+      timestamp: Date.now(),
+      id: v4(),
+      stack: `${user}/${form.stack}`,
+      size: file.size
+    };
+    if (file.size > MB$1) params.attachments = [{
+      length: file.size
+    }];else params.attachments = [{
+      data: await fileToBase64(file)
+    }];
+
     try {
-      var _temp7 = function _temp7() {
-        var _temp4 = _catch(function () {
-          var token = localStorage.getItem(config.TOKEN_STORAGE_KEY);
-          return Promise.resolve(axios({
-            method: 'post',
+      const token = localStorage.getItem(config.TOKEN_STORAGE_KEY);
+      const {
+        data
+      } = await axios({
+        method: 'post',
+        headers: {
+          Authorization: token ? `Bearer ${token}` : ''
+        },
+        baseURL: apiUrl,
+        url: config.STACK_PUSH,
+        data: params
+      });
+
+      if (data.attachments && data.attachments.length) {
+        const [attachment] = data.attachments;
+
+        if (attachment['upload_url']) {
+          await axios.put(attachment['upload_url'], file, {
             headers: {
-              Authorization: token ? "Bearer " + token : ''
+              'Content-Type': 'application/octet-stream'
             },
-            baseURL: apiUrl,
-            url: config.STACK_PUSH,
-            data: params
-          })).then(function (_ref2) {
-            var data = _ref2.data;
-
-            function _temp3() {
-              setUploading(false);
-              if (refresh) refresh();
-              clearForm();
+            onUploadProgress: progressEvent => {
+              const percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
+              setProgress(percentCompleted);
             }
-
-            var _temp2 = function () {
-              if (data.attachments && data.attachments.length) {
-                var _data$attachments = data.attachments,
-                    attachment = _data$attachments[0];
-
-                var _temp9 = function () {
-                  if (attachment['upload_url']) {
-                    return Promise.resolve(axios.put(attachment['upload_url'], file, {
-                      headers: {
-                        'Content-Type': 'application/octet-stream'
-                      },
-                      onUploadProgress: function onUploadProgress(progressEvent) {
-                        var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
-                        setProgress(percentCompleted);
-                      }
-                    })).then(function () {});
-                  }
-                }();
-
-                if (_temp9 && _temp9.then) return _temp9.then(function () {});
-              }
-            }();
-
-            return _temp2 && _temp2.then ? _temp2.then(_temp3) : _temp3(_temp2);
           });
-        }, function (e) {
-          console.log(e);
-          clearForm();
-        });
+        }
+      }
 
-        if (_temp4 && _temp4.then) return _temp4.then(function () {});
-      };
-
-      setProgress(null);
-      setUploading(true);
-      var params = {
-        type: file.type,
-        timestamp: Date.now(),
-        id: v4(),
-        stack: user + "/" + form.stack,
-        size: file.size
-      };
-
-      var _temp8 = function () {
-        if (file.size > MB$1) params.attachments = [{
-          length: file.size
-        }];else return Promise.resolve(fileToBase64(file)).then(function (_fileToBaseTo) {
-          params.attachments = [{
-            data: _fileToBaseTo
-          }];
-        });
-      }();
-
-      return Promise.resolve(_temp8 && _temp8.then ? _temp8.then(_temp7) : _temp7(_temp8));
+      setUploading(false);
+      if (refresh) refresh();
+      clearForm();
     } catch (e) {
-      return Promise.reject(e);
+      console.log(e);
+      clearForm();
     }
   };
 
@@ -4973,9 +4385,9 @@ var Upload$1 = function Upload(_ref) {
     onChange: onChange,
     value: form.value,
     maxLength: 30,
-    placeholder: t('stackName') + ", " + t('noSpaces') + ", " + t('maxSymbol', {
+    placeholder: `${t('stackName')}, ${t('noSpaces')}, ${t('maxSymbol', {
       count: 30
-    }),
+    })}`,
     errors: getErrorsText('stack')
   })), stack && file && /*#__PURE__*/React__default.createElement("div", {
     className: css$G.subtitle
@@ -5003,31 +4415,25 @@ var Upload$1 = function Upload(_ref) {
   }, t('cancel'))));
 };
 
-var css$H = {"howto":"_362z-","tabs":"_h6zun","description":"_SODNv","code":"_WU2Z-","footer":"_1DRv-"};
+var css$H = {"howto":"_styles-module__howto__362z-","tabs":"_styles-module__tabs__h6zun","description":"_styles-module__description__SODNv","code":"_styles-module__code__WU2Z-","footer":"_styles-module__footer__1DRv-"};
 
-var UploadStack = function UploadStack(_ref) {
-  var user = _ref.user,
-      refresh = _ref.refresh,
-      apiUrl = _ref.apiUrl,
-      configurePythonCommand = _ref.configurePythonCommand,
-      withFileUpload = _ref.withFileUpload;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var _useState = useState(1),
-      activeCodeTab = _useState[0],
-      setActiveCodeTab = _useState[1];
-
-  var _useState2 = useState(1),
-      activePublishTab = _useState2[0],
-      setActivePublishTab = _useState2[1];
-
-  var tabs = [{
+const UploadStack = ({
+  user,
+  refresh,
+  apiUrl,
+  configurePythonCommand,
+  withFileUpload
+}) => {
+  const {
+    t
+  } = useTranslation();
+  const [activeCodeTab, setActiveCodeTab] = useState(1);
+  const [activePublishTab, setActivePublishTab] = useState(1);
+  const tabs = [{
     label: t('python'),
     value: 1
   }];
-  var publishTabs = [{
+  const publishTabs = [{
     label: t('model'),
     value: 1
   }, {
@@ -5082,136 +4488,94 @@ var UploadStack = function UploadStack(_ref) {
   }));
 };
 
-var api$2 = apiFabric();
-var useActions$1 = (function () {
-  var _useAppStore = useAppStore(),
-      apiUrl = _useAppStore[0].apiUrl;
+const api$2 = apiFabric();
+var useActions$1 = (() => {
+  const [{
+    apiUrl
+  }] = useAppStore();
 
-  var fetchJob = function fetchJob(_ref) {
-    var user = _ref.user,
-        id = _ref.id;
-    return new Promise(function (resolve) {
+  const fetchJob = ({
+    user,
+    id
+  }) => {
+    return new Promise(async resolve => {
       try {
-        var _temp2 = _catch(function () {
-          return Promise.resolve(api$2.get(apiUrl + config.JOB_DETAILS(user, id))).then(function (request) {
-            resolve(request.data);
-          });
-        }, function () {
-          resolve({});
-        });
-
-        return Promise.resolve(_temp2 && _temp2.then ? _temp2.then(function () {}) : void 0);
+        const request = await api$2.get(apiUrl + config.JOB_DETAILS(user, id));
+        resolve(request.data);
       } catch (e) {
-        return Promise.reject(e);
+        resolve({});
       }
     });
   };
 
-  var runJob = function runJob(params) {
-    return new Promise(function (resolve) {
+  const runJob = params => {
+    return new Promise(async resolve => {
       try {
-        var _temp4 = _catch(function () {
-          return Promise.resolve(api$2.post(apiUrl + config.JOB_RUN, params)).then(function (request) {
-            resolve(request.data);
-          });
-        }, function () {
-          resolve({});
-        });
-
-        return Promise.resolve(_temp4 && _temp4.then ? _temp4.then(function () {}) : void 0);
+        const request = await api$2.post(apiUrl + config.JOB_RUN, params);
+        resolve(request.data);
       } catch (e) {
-        return Promise.reject(e);
+        resolve({});
       }
     });
   };
 
-  var stopJob = function stopJob(params) {
-    return new Promise(function (resolve) {
+  const stopJob = params => {
+    return new Promise(async resolve => {
       try {
-        var _temp6 = _catch(function () {
-          return Promise.resolve(api$2.post(apiUrl + config.JOB_STOP, params)).then(function (request) {
-            resolve(request.data);
-          });
-        }, function () {
-          resolve({});
-        });
-
-        return Promise.resolve(_temp6 && _temp6.then ? _temp6.then(function () {}) : void 0);
+        const request = await api$2.post(apiUrl + config.JOB_STOP, params);
+        resolve(request.data);
       } catch (e) {
-        return Promise.reject(e);
+        resolve({});
       }
     });
   };
 
-  var createJob = function createJob(params) {
-    return new Promise(function (resolve) {
+  const createJob = params => {
+    return new Promise(async resolve => {
       try {
-        var _temp8 = _catch(function () {
-          return Promise.resolve(api$2.post(apiUrl + config.JOB_CREATE, params)).then(function (request) {
-            resolve(request.data);
-          });
-        }, function () {
-          resolve({});
-        });
-
-        return Promise.resolve(_temp8 && _temp8.then ? _temp8.then(function () {}) : void 0);
+        const request = await api$2.post(apiUrl + config.JOB_CREATE, params);
+        resolve(request.data);
       } catch (e) {
-        return Promise.reject(e);
+        resolve({});
       }
     });
   };
 
-  var updateJob = function updateJob(params) {
-    return new Promise(function (resolve) {
+  const updateJob = params => {
+    return new Promise(async resolve => {
       try {
-        var _temp10 = _catch(function () {
-          return Promise.resolve(api$2.post(apiUrl + config.JOB_UPDATE, params)).then(function (request) {
-            resolve(request.data);
-          });
-        }, function () {
-          resolve({});
-        });
-
-        return Promise.resolve(_temp10 && _temp10.then ? _temp10.then(function () {}) : void 0);
+        const request = await api$2.post(apiUrl + config.JOB_UPDATE, params);
+        resolve(request.data);
       } catch (e) {
-        return Promise.reject(e);
+        resolve({});
       }
     });
   };
 
-  var removeJob = function removeJob(params) {
-    return new Promise(function (resolve) {
+  const removeJob = params => {
+    return new Promise(async resolve => {
       try {
-        var _temp12 = _catch(function () {
-          return Promise.resolve(api$2.post(apiUrl + config.JOB_DELETE, params)).then(function (request) {
-            resolve(request.data);
-          });
-        }, function () {
-          resolve({});
-        });
-
-        return Promise.resolve(_temp12 && _temp12.then ? _temp12.then(function () {}) : void 0);
+        const request = await api$2.post(apiUrl + config.JOB_DELETE, params);
+        resolve(request.data);
       } catch (e) {
-        return Promise.reject(e);
+        resolve({});
       }
     });
   };
 
   return {
-    fetchJob: fetchJob,
-    runJob: runJob,
-    stopJob: stopJob,
-    createJob: createJob,
-    updateJob: updateJob,
-    removeJob: removeJob
+    fetchJob,
+    runJob,
+    stopJob,
+    createJob,
+    updateJob,
+    removeJob
   };
 });
 
-var css$I = {"loader":"_DHDDF","title":"_3eHle","loader-pulsee":"_3Q4hE","text":"_2QdBi","table":"_3c_Ia","item":"_2_9nD"};
+var css$I = {"loader":"_styles-module__loader__DHDDF","title":"_styles-module__title__3eHle","loader-pulsee":"_styles-module__loader-pulsee__3Q4hE","text":"_styles-module__text__2QdBi","table":"_styles-module__table__3c_Ia","item":"_styles-module__item__2_9nD"};
 
-var Loader$3 = function Loader(_ref) {
-  _objectDestructuringEmpty(_ref);
-
+const Loader$3 = ({}) => {
   return /*#__PURE__*/React__default.createElement("div", {
     className: css$I.loader
   }, /*#__PURE__*/React__default.createElement("div", {
@@ -5235,50 +4599,41 @@ var Loader$3 = function Loader(_ref) {
   })));
 };
 
-var JOB_DEFAULT_ESTIMATED_DURATION = 600000;
-var calculateJobProgress = function calculateJobProgress(job) {
-  var estimatedDuration = job['estimated_duration'] || JOB_DEFAULT_ESTIMATED_DURATION;
-  var currentDuration = Date.now() - job.started;
-  var leftDuration = estimatedDuration - currentDuration;
-  var progress = Math.min(currentDuration / estimatedDuration * 100, 100).toFixed();
+const JOB_DEFAULT_ESTIMATED_DURATION = 600000;
+const calculateJobProgress = job => {
+  const estimatedDuration = job['estimated_duration'] || JOB_DEFAULT_ESTIMATED_DURATION;
+  const currentDuration = Date.now() - job.started;
+  const leftDuration = estimatedDuration - currentDuration;
+  const progress = Math.min(currentDuration / estimatedDuration * 100, 100).toFixed();
   return [progress, leftDuration];
 };
 
-var css$J = {"section":"_3RnYw","progressBar":"_3xjSa","progress":"_3eEzL","time":"_1q33r"};
+var css$J = {"section":"_styles-module__section__3RnYw","progressBar":"_styles-module__progressBar__3xjSa","progress":"_styles-module__progress__3eEzL","time":"_styles-module__time__1q33r"};
 
-var Progress$1 = function Progress(_ref) {
-  var data = _ref.data,
-      className = _ref.className,
-      onlyDuration = _ref.onlyDuration;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var progressTimer = useRef(null);
-
-  var _useState = useState(null),
-      set = _useState[1];
-
-  useEffect(function () {
+const Progress$1 = ({
+  data,
+  className,
+  onlyDuration
+}) => {
+  const {
+    t
+  } = useTranslation();
+  const progressTimer = useRef(null);
+  const [, set] = useState(null);
+  useEffect(() => {
     if (data.status === 'RUNNING') {
       clearInterval(progressTimer.current);
-      progressTimer.current = setInterval(function () {
+      progressTimer.current = setInterval(() => {
         set(Date.now());
       }, 50);
     } else {
       clearInterval(progressTimer.current);
     }
 
-    return function () {
-      return clearInterval(progressTimer.current);
-    };
+    return () => clearInterval(progressTimer.current);
   }, [data]);
   if (!data.started) return null;
-
-  var _calculateJobProgress = calculateJobProgress(data),
-      progress = _calculateJobProgress[0],
-      leftDuration = _calculateJobProgress[1];
-
+  const [progress, leftDuration] = calculateJobProgress(data);
   return /*#__PURE__*/React__default.createElement("div", {
     className: cx(css$J.section, className)
   }, !onlyDuration && /*#__PURE__*/React__default.createElement("div", {
@@ -5286,63 +4641,57 @@ var Progress$1 = function Progress(_ref) {
   }, /*#__PURE__*/React__default.createElement("div", {
     className: css$J.progress,
     style: {
-      width: progress + "%"
+      width: `${progress}%`
     }
   })), /*#__PURE__*/React__default.createElement("div", {
     className: css$J.time
   }, getFormattedDuration(leftDuration), " ", t('left')));
 };
 
-var css$K = {"row":"_2f7FO","dropdown":"_2hTQP","cell":"_3ntzL","status":"_2MUSr","progress":"_1J2il"};
+var css$K = {"row":"_styles-module__row__2f7FO","dropdown":"_styles-module__dropdown__2hTQP","cell":"_styles-module__cell__3ntzL","status":"_styles-module__status__2MUSr","progress":"_styles-module__progress__1J2il"};
 
-var REFRESH_TIMEOUT = 2000;
+const REFRESH_TIMEOUT = 2000;
 
-var dataFormat = function dataFormat(data) {
-  return data.job;
-};
+const dataFormat = data => data.job;
 
-var TableRow = memo(function (_ref) {
+const TableRow = memo(({
+  data,
+  onClickRow,
+  onEdit,
+  onDelete
+}) => {
   var _currentUser$data;
 
-  var data = _ref.data,
-      onClickRow = _ref.onClickRow,
-      onEdit = _ref.onEdit,
-      onDelete = _ref.onDelete;
-
-  var _useActions = useActions$1(),
-      runJob = _useActions.runJob,
-      stopJob = _useActions.stopJob;
-
-  var _useAppStore = useAppStore(),
-      _useAppStore$ = _useAppStore[0],
-      currentUser = _useAppStore$.currentUser,
-      apiUrl = _useAppStore$.apiUrl;
-
-  var currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var _useParams = useParams(),
-      user = _useParams.user;
-
-  var _useState = useState(0),
-      refreshInterval = _useState[0],
-      setRefreshInterval = _useState[1];
-
-  var _useSWR = useSWR([apiUrl + config.JOB_DETAILS(user, data.id), dataFormat], fetcher, {
-    refreshInterval: refreshInterval,
+  const {
+    runJob,
+    stopJob
+  } = useActions$1();
+  const [{
+    currentUser,
+    apiUrl
+  }] = useAppStore();
+  const currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
+  const {
+    t
+  } = useTranslation();
+  const {
+    user
+  } = useParams();
+  const [refreshInterval, setRefreshInterval] = useState(0);
+  const {
+    data: jobData,
+    mutate
+  } = useSWR([apiUrl + config.JOB_DETAILS(user, data.id), dataFormat], fetcher, {
+    refreshInterval,
     initialData: data,
     revalidateOnFocus: false
-  }),
-      jobData = _useSWR.data,
-      mutate = _useSWR.mutate;
+  });
 
-  var rowClick = function rowClick() {
+  const rowClick = () => {
     if (onClickRow) onClickRow(jobData);
   };
 
-  useEffect(function () {
+  useEffect(() => {
     if (['RUNNING', 'SCHEDULED'].indexOf(jobData === null || jobData === void 0 ? void 0 : jobData.status) >= 0) {
       if (!refreshInterval) setRefreshInterval(REFRESH_TIMEOUT);
     } else if (refreshInterval) {
@@ -5350,39 +4699,35 @@ var TableRow = memo(function (_ref) {
     }
   }, [jobData]);
 
-  var onRun = function onRun() {
-    try {
-      return Promise.resolve(runJob({
-        user: user,
-        id: jobData.id
-      })).then(function (_ref2) {
-        var job = _ref2.job;
-        if (job) mutate(_extends({}, jobData, job));
-      });
-    } catch (e) {
-      return Promise.reject(e);
-    }
+  const onRun = async () => {
+    const {
+      job
+    } = await runJob({
+      user,
+      id: jobData.id
+    });
+    if (job) mutate({ ...jobData,
+      ...job
+    });
   };
 
-  var onStop = function onStop() {
-    try {
-      return Promise.resolve(stopJob({
-        user: user,
-        id: jobData.id
-      })).then(function (_ref3) {
-        var job = _ref3.job;
-        if (job) mutate(_extends({}, jobData, job));
-      });
-    } catch (e) {
-      return Promise.reject(e);
-    }
+  const onStop = async () => {
+    const {
+      job
+    } = await stopJob({
+      user,
+      id: jobData.id
+    });
+    if (job) mutate({ ...jobData,
+      ...job
+    });
   };
 
-  var getTitle = function getTitle() {
+  const getTitle = () => {
     if (jobData.title && jobData.title.length) return jobData.title;else return /*#__PURE__*/React__default.createElement("span", null, "New job");
   };
 
-  var renderStatus = function renderStatus() {
+  const renderStatus = () => {
     switch (jobData.status) {
       case 'SCHEDULED':
         return /*#__PURE__*/React__default.createElement("div", {
@@ -5441,106 +4786,82 @@ var TableRow = memo(function (_ref) {
     className: css$K.cell
   }, renderStatus(), currentUserName === user && /*#__PURE__*/React__default.createElement(Dropdown, {
     className: css$K.dropdown,
-    items: [].concat(['RUNNING', 'SCHEDULED', 'STOPPING'].indexOf(jobData.status) >= 0 ? [{
+    items: [...(['RUNNING', 'SCHEDULED', 'STOPPING'].indexOf(jobData.status) >= 0 ? [{
       title: t('stop'),
       onClick: onStop
     }] : [{
       title: t('run'),
       onClick: onRun
-    }], [{
+    }]), {
       title: t('edit'),
       onClick: onEdit
     }, {
       title: t('delete'),
       onClick: onDelete
-    }])
+    }]
   })));
 });
 
-var css$L = {"list":"_VXs44","title":"_r4zAA","button":"_21dbT","search":"_1mylL","mobileSearch":"_3Oub0","text":"_Ra7UV","tableWrap":"_2CYWc","table":"_2iL6k","tableCaptions":"_2YOUS","tableCell":"_3tQ5e"};
+var css$L = {"list":"_styles-module__list__VXs44","title":"_styles-module__title__r4zAA","button":"_styles-module__button__21dbT","search":"_styles-module__search__1mylL","mobileSearch":"_styles-module__mobileSearch__3Oub0","text":"_styles-module__text__Ra7UV","tableWrap":"_styles-module__tableWrap__2CYWc","table":"_styles-module__table__2iL6k","tableCaptions":"_styles-module__tableCaptions__2YOUS","tableCell":"_styles-module__tableCell__3tQ5e"};
 
-var dataFormat$1 = function dataFormat(data) {
-  return data.jobs;
-};
+const dataFormat$1 = data => data.jobs;
 
-var List$1 = function List() {
+const List$1 = () => {
   var _currentUser$data;
 
-  var _useActions = useActions$1(),
-      createJob = _useActions.createJob,
-      removeJob = _useActions.removeJob;
+  const {
+    createJob,
+    removeJob
+  } = useActions$1();
+  const [{
+    currentUser,
+    apiUrl
+  }] = useAppStore();
+  const currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
+  const {
+    t
+  } = useTranslation();
+  const [search, setSearch] = useState('');
+  const {
+    user
+  } = useParams();
+  const {
+    push
+  } = useHistory();
+  const {
+    data,
+    mutate
+  } = useSWR([apiUrl + config.JOB_LIST(user), dataFormat$1], fetcher);
 
-  var _useAppStore = useAppStore(),
-      _useAppStore$ = _useAppStore[0],
-      currentUser = _useAppStore$.currentUser,
-      apiUrl = _useAppStore$.apiUrl;
+  const onChangeSearch = value => setSearch(value);
 
-  var currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var _useState = useState(''),
-      search = _useState[0],
-      setSearch = _useState[1];
-
-  var _useParams = useParams(),
-      user = _useParams.user;
-
-  var _useHistory = useHistory(),
-      push = _useHistory.push;
-
-  var _useSWR = useSWR([apiUrl + config.JOB_LIST(user), dataFormat$1], fetcher),
-      data = _useSWR.data,
-      mutate = _useSWR.mutate;
-
-  var onChangeSearch = function onChangeSearch(value) {
-    return setSearch(value);
-  };
-
-  var getItems = function getItems() {
-    var items = [];
+  const getItems = () => {
+    let items = [];
 
     if (data && data.length) {
-      if (search.length) items = data.filter(function (i) {
-        return i.title.indexOf(search) >= 0;
-      });else items = data;
+      if (search.length) items = data.filter(i => i.title.indexOf(search) >= 0);else items = data;
     }
 
     return items;
   };
 
-  var items = getItems();
+  const items = getItems();
 
-  var onAdd = function onAdd() {
-    try {
-      var lastRuntime = localStorage.getItem('lastRuntime') || 'python';
-      return Promise.resolve(createJob({
-        user: user,
-        runtime: lastRuntime
-      })).then(function (data) {
-        push(routes.jobsDetails(user, data.job.id));
-      });
-    } catch (e) {
-      return Promise.reject(e);
-    }
+  const onAdd = async () => {
+    const lastRuntime = localStorage.getItem('lastRuntime') || 'python';
+    const data = await createJob({
+      user,
+      runtime: lastRuntime
+    });
+    push(routes.jobsDetails(user, data.job.id));
   };
 
-  var getOnRemove = function getOnRemove(job) {
-    return function () {
-      try {
-        return Promise.resolve(removeJob({
-          user: user,
-          id: job.id
-        })).then(function () {
-          mutate(data.filter(function (j) {
-            return j.id !== job.id;
-          }));
-        });
-      } catch (e) {
-        return Promise.reject(e);
-      }
-    };
+  const getOnRemove = job => async () => {
+    await removeJob({
+      user,
+      id: job.id
+    });
+    mutate(data.filter(j => j.id !== job.id));
   };
 
   if (!data) return /*#__PURE__*/React__default.createElement(Loader$3, null);
@@ -5600,118 +4921,95 @@ var List$1 = function List() {
     className: css$L.tableCell
   }, t('timeSpent')), /*#__PURE__*/React__default.createElement("div", {
     className: css$L.tableCell
-  }, t('status'))), items.map(function (item) {
-    return /*#__PURE__*/React__default.createElement(TableRow, {
-      data: item,
-      key: item.id,
-      onClickRow: function onClickRow() {
-        return push(routes.jobsDetails(user, item.id));
-      },
-      onEdit: function onEdit() {
-        return push(routes.jobsDetails(user, item.id));
-      },
-      onDelete: getOnRemove(item)
-    });
-  }))));
+  }, t('status'))), items.map(item => /*#__PURE__*/React__default.createElement(TableRow, {
+    data: item,
+    key: item.id,
+    onClickRow: () => push(routes.jobsDetails(user, item.id)),
+    onEdit: () => push(routes.jobsDetails(user, item.id)),
+    onDelete: getOnRemove(item)
+  })))));
 };
 
-var useAppProgress = (function () {
-  var _useAppStore = useAppStore(),
-      dispatch = _useAppStore[1];
+var useAppProgress = (() => {
+  const [, dispatch] = useAppStore();
 
-  var startAppProgress = function startAppProgress() {
+  const startAppProgress = () => {
     dispatch({
       type: actionsTypes.START_PROGRESS
     });
   };
 
-  var setAppProgress = function setAppProgress(progress) {
+  const setAppProgress = progress => {
     dispatch({
       type: actionsTypes.SET_PROGRESS,
       payload: progress
     });
   };
 
-  var completeAppProgress = function completeAppProgress() {
+  const completeAppProgress = () => {
     dispatch({
       type: actionsTypes.COMPLETE_PROGRESS
     });
   };
 
-  var resetAppProgress = function resetAppProgress() {
+  const resetAppProgress = () => {
     dispatch({
       type: actionsTypes.RESET_PROGRESS
     });
   };
 
   return {
-    startAppProgress: startAppProgress,
-    setAppProgress: setAppProgress,
-    completeAppProgress: completeAppProgress,
-    resetAppProgress: resetAppProgress
+    startAppProgress,
+    setAppProgress,
+    completeAppProgress,
+    resetAppProgress
   };
 });
 
-var css$M = {"schedule":"_YoEcM","dropdown":"_3RJdh","runtime":"_2h8GE","dropdownButton":"_3fdRe","message":"_1byIj"};
+var css$M = {"schedule":"_styles-module__schedule__YoEcM","dropdown":"_styles-module__dropdown__3RJdh","runtime":"_styles-module__runtime__2h8GE","dropdownButton":"_styles-module__dropdownButton__3fdRe","message":"_styles-module__message__1byIj"};
 
-var timeout = null;
+let timeout = null;
 
-var ScheduleSettings = function ScheduleSettings(_ref) {
-  var data = _ref.data,
-      className = _ref.className,
-      onChange = _ref.onChange,
-      onChangeRuntime = _ref.onChangeRuntime;
+const ScheduleSettings = ({
+  data,
+  className,
+  onChange,
+  onChangeRuntime
+}) => {
+  const {
+    t
+  } = useTranslation();
+  const messageRef = useRef();
+  const [scheduleType, setScheduleType] = useState(data ? data.schedule.split('/')[0] : '');
+  const [scheduleTime, setScheduleTime] = useState(data ? data.schedule.split('/')[1] : null);
+  const [nextRunDelay, setNextRunDelay] = useState(0);
+  const isDidMount = useRef(true);
 
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var messageRef = useRef();
-
-  var _useState = useState(data ? data.schedule.split('/')[0] : ''),
-      scheduleType = _useState[0],
-      setScheduleType = _useState[1];
-
-  var _useState2 = useState(data ? data.schedule.split('/')[1] : null),
-      scheduleTime = _useState2[0],
-      setScheduleTime = _useState2[1];
-
-  var _useState3 = useState(0),
-      nextRunDelay = _useState3[0],
-      setNextRunDelay = _useState3[1];
-
-  var isDidMount = useRef(true);
-
-  var runtimeChange = function runtimeChange(runtime) {
-    return function () {
-      onChangeRuntime(runtime);
-      localStorage.setItem('lastRuntime', runtime);
-    };
+  const runtimeChange = runtime => () => {
+    onChangeRuntime(runtime);
+    localStorage.setItem('lastRuntime', runtime);
   };
 
-  var scheduleTypeChange = function scheduleTypeChange(type) {
-    return function () {
-      setScheduleType(type);
-      if (!scheduleTime) setScheduleTime('12:00');
-      if (type === 'daily') type += "/" + (scheduleTime ? scheduleTime : '12:00');
-      onChange(type);
-    };
+  const scheduleTypeChange = type => () => {
+    setScheduleType(type);
+    if (!scheduleTime) setScheduleTime('12:00');
+    if (type === 'daily') type += `/${scheduleTime ? scheduleTime : '12:00'}`;
+    onChange(type);
   };
 
-  var scheduleTimeChange = function scheduleTimeChange(time) {
-    return function () {
-      setScheduleTime(time);
-      onChange(scheduleType + "/" + time);
-      var runTime = moment(time, 'HH:mm');
-      if (new Date().getHours() > runTime.get('hours')) runTime.add(1, 'day');
-      setNextRunDelay(runTime.toDate().getTime() - Date.now());
-    };
+  const scheduleTimeChange = time => () => {
+    setScheduleTime(time);
+    onChange(`${scheduleType}/${time}`);
+    const runTime = moment(time, 'HH:mm');
+    if (new Date().getHours() > runTime.get('hours')) runTime.add(1, 'day');
+    setNextRunDelay(runTime.toDate().getTime() - Date.now());
   };
 
-  useEffect(function () {
+  useEffect(() => {
     if (nextRunDelay && !isDidMount.current && messageRef.current) {
       messageRef.current.classList.add('show');
       if (timeout) clearTimeout(timeout);
-      timeout = setTimeout(function () {
+      timeout = setTimeout(() => {
         messageRef.current.classList.remove('show');
       }, 3000);
     }
@@ -5750,8 +5048,8 @@ var ScheduleSettings = function ScheduleSettings(_ref) {
     className: "mdi mdi-chevron-down"
   }))), scheduleType === 'daily' && /*#__PURE__*/React__default.createElement(Fragment, null, t('at'), /*#__PURE__*/React__default.createElement(Dropdown, {
     className: css$M.dropdown,
-    items: new Array(24).fill(0).map(function (i, index) {
-      var time = (index < 10 ? '0' + index : index) + ":00";
+    items: new Array(24).fill(0).map((i, index) => {
+      const time = `${index < 10 ? '0' + index : index}:00`;
       return {
         title: time,
         onClick: scheduleTimeChange(time)
@@ -5768,27 +5066,26 @@ var ScheduleSettings = function ScheduleSettings(_ref) {
   }, "The next run starts in ", getFormattedDuration(nextRunDelay))));
 };
 
-var css$N = {"editor":"_m0hwp","token":"_281_3","atrule":"_1M8ph","attr-value":"_T6_N1","keyword":"_1gT7U","function":"_2ZXkX","class-name":"_upcGt","selector":"_3rmyW","attr-name":"_I3P48","string":"_hoRdC","char":"_1uxpB","builtin":"_3xCwG","inserted":"_2Lvrk","scroll":"_1yHaS","content":"_3cHiP","success":"_1Z8bo","lineNumbers":"_1CW5r"};
+var css$N = {"editor":"_styles-module__editor__m0hwp","token":"_styles-module__token__281_3","atrule":"_styles-module__atrule__1M8ph","attr-value":"_styles-module__attr-value__T6_N1","keyword":"_styles-module__keyword__1gT7U","function":"_styles-module__function__2ZXkX","class-name":"_styles-module__class-name__upcGt","selector":"_styles-module__selector__3rmyW","attr-name":"_styles-module__attr-name__I3P48","string":"_styles-module__string__hoRdC","char":"_styles-module__char__1uxpB","builtin":"_styles-module__builtin__3xCwG","inserted":"_styles-module__inserted__2Lvrk","scroll":"_styles-module__scroll__1yHaS","content":"_styles-module__content__3cHiP","success":"_styles-module__success__1Z8bo","lineNumbers":"_styles-module__lineNumbers__1CW5r"};
 
-var CodeEditor = function CodeEditor(_ref) {
-  var _ref$value = _ref.value,
-      value = _ref$value === void 0 ? '' : _ref$value,
-      onChange = _ref.onChange,
-      language = _ref.language,
-      className = _ref.className,
-      saved = _ref.saved;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var successMessageRef = useRef();
-  var lines = (value.match(/\n/g) || []).length + 2;
-  var lineNos = [].concat(Array(lines).keys()).slice(1).join('\n');
-  var isDidMount = useRef(true);
-  useEffect(function () {
+const CodeEditor = ({
+  value: _value = '',
+  onChange,
+  language,
+  className,
+  saved
+}) => {
+  const {
+    t
+  } = useTranslation();
+  const successMessageRef = useRef();
+  const lines = (_value.match(/\n/g) || []).length + 2;
+  const lineNos = [...Array(lines).keys()].slice(1).join('\n');
+  const isDidMount = useRef(true);
+  useEffect(() => {
     if (successMessageRef.current && !isDidMount.current) if (saved) {
       successMessageRef.current.classList.add('show');
-      setTimeout(function () {
+      setTimeout(() => {
         if (successMessageRef.current) successMessageRef.current.classList.remove('show');
       }, 4000);
     } else {
@@ -5811,11 +5108,9 @@ var CodeEditor = function CodeEditor(_ref) {
       __html: lineNos
     }
   }), /*#__PURE__*/React__default.createElement(Editor, {
-    value: value,
+    value: _value,
     onValueChange: onChange,
-    highlight: function highlight$1(code) {
-      return highlight(code, languages[language]);
-    },
+    highlight: code => highlight(code, languages[language]),
     padding: 6,
     style: {
       width: '100%',
@@ -5827,18 +5122,18 @@ var CodeEditor = function CodeEditor(_ref) {
   }))));
 };
 
-var css$O = {"status":"_3Pfpo"};
+var css$O = {"status":"_styles-module__status__3Pfpo"};
 
-var Status = function Status(_ref) {
-  var data = _ref.data;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
+const Status = ({
+  data
+}) => {
+  const {
+    t
+  } = useTranslation();
   if (!data.started) return null;
   return /*#__PURE__*/React__default.createElement("div", {
     className: css$O.status
-  }, t('lastRunning'), ' ', moment(data.started).format("MM-DD-YYYY [" + t('at') + "] HH:mm"), /*#__PURE__*/React__default.createElement("span", null, /*#__PURE__*/React__default.createElement("span", {
+  }, t('lastRunning'), ' ', moment(data.started).format(`MM-DD-YYYY [${t('at')}] HH:mm`), /*#__PURE__*/React__default.createElement("span", null, /*#__PURE__*/React__default.createElement("span", {
     className: "mdi mdi-clock-outline"
   }), ['RUNNING', 'SCHEDULED'].indexOf(data.status) >= 0 ? /*#__PURE__*/React__default.createElement("span", null, ' ', t('inProgress'), "\u2026") : getFormattedDuration(data.finished - data.started)), data.status === 'FAILED' && /*#__PURE__*/React__default.createElement("span", {
     className: "red-text"
@@ -5851,26 +5146,20 @@ var Status = function Status(_ref) {
   }), t('failedDueToTimeout')));
 };
 
-var css$P = {"logs":"_1poNo","button":"_35eOC","text":"_2eQos","label":"_LksjJ"};
+var css$P = {"logs":"_styles-module__logs__1poNo","button":"_styles-module__button__35eOC","text":"_styles-module__text__2eQos","label":"_styles-module__label__LksjJ"};
 
-var Logs = function Logs(_ref) {
-  var data = _ref.data,
-      className = _ref.className;
+const Logs = ({
+  data,
+  className
+}) => {
   if (!data.logs) return null;
+  const {
+    t
+  } = useTranslation();
+  const [isShown, setIsShown] = useState(true);
+  const [updated] = useState(data.finished || data.started);
 
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var _useState = useState(true),
-      isShown = _useState[0],
-      setIsShown = _useState[1];
-
-  var _useState2 = useState(data.finished || data.started),
-      updated = _useState2[0];
-
-  var toggleShow = function toggleShow() {
-    return setIsShown(!isShown);
-  };
+  const toggleShow = () => setIsShown(!isShown);
 
   return /*#__PURE__*/React__default.createElement("div", {
     className: cx(css$P.logs, className)
@@ -5888,11 +5177,9 @@ var Logs = function Logs(_ref) {
   }, t('updated'), " ", moment(updated).fromNow())));
 };
 
-var css$Q = {"loader":"_2nOeY","loader-pulse":"_1Aj7Q","title":"_RJ2x5","text1":"_2hZDH","text2":"_1-tIa","code":"_3LgqO"};
+var css$Q = {"loader":"_styles-module__loader__2nOeY","loader-pulse":"_styles-module__loader-pulse__1Aj7Q","title":"_styles-module__title__RJ2x5","text1":"_styles-module__text1__2hZDH","text2":"_styles-module__text2__1-tIa","code":"_styles-module__code__3LgqO"};
 
-var Loader$4 = function Loader(_ref) {
-  _objectDestructuringEmpty(_ref);
-
+const Loader$4 = ({}) => {
   return /*#__PURE__*/React__default.createElement("div", {
     className: css$Q.loader
   }, /*#__PURE__*/React__default.createElement("div", {
@@ -5906,130 +5193,97 @@ var Loader$4 = function Loader(_ref) {
   }));
 };
 
-var css$R = {"details":"_1K_mA","header":"_1nmEh","dropdown":"_3RSoB","dropdownButton":"_2dnN2","title":"_3U50H","edit":"_bgkiC","side":"_3uIQ_","progress":"_1jRHi","button":"_2J0VV","schedule":"_2YXFa","codeEditor":"_1M2Sw","logs":"_ZQT6g"};
+var css$R = {"details":"_styles-module__details__1K_mA","header":"_styles-module__header__1nmEh","dropdown":"_styles-module__dropdown__3RSoB","dropdownButton":"_styles-module__dropdownButton__2dnN2","title":"_styles-module__title__3U50H","edit":"_styles-module__edit__bgkiC","side":"_styles-module__side__3uIQ_","progress":"_styles-module__progress__1jRHi","button":"_styles-module__button__2J0VV","schedule":"_styles-module__schedule__2YXFa","codeEditor":"_styles-module__codeEditor__1M2Sw","logs":"_styles-module__logs__ZQT6g"};
 
-var REFRESH_TIMEOUT$1 = 3000;
+const REFRESH_TIMEOUT$1 = 3000;
 
-var dataFormat$2 = function dataFormat(data) {
-  return data.job;
-};
+const dataFormat$2 = data => data.job;
 
-var Details$2 = function Details(_ref) {
+const Details$2 = ({}) => {
   var _currentUser$data;
 
-  _objectDestructuringEmpty(_ref);
+  const {
+    runJob,
+    stopJob,
+    updateJob,
+    removeJob
+  } = useActions$1();
+  const {
+    setAppProgress,
+    resetAppProgress
+  } = useAppProgress();
+  const {
+    user,
+    id
+  } = useParams();
+  const [refreshInterval, setRefreshInterval] = useState(0);
+  const [{
+    currentUser,
+    apiUrl
+  }] = useAppStore();
+  const currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
+  const {
+    data: jobData,
+    error,
+    mutate
+  } = useSWR([apiUrl + config.JOB_DETAILS(user, id), dataFormat$2], fetcher, {
+    refreshInterval
+  });
+  const {
+    push
+  } = useHistory();
+  const {
+    t
+  } = useTranslation();
+  const [titleValue, setTitleValue] = useState('');
+  const [code, setCode] = useState('');
+  const [running, setRunning] = useState(false);
+  const [stopping, setStopping] = useState(false);
+  const [codeSaved, setCodeSaved] = useState(true);
+  const progressTimer = useRef(null);
 
-  var _useActions = useActions$1(),
-      runJob = _useActions.runJob,
-      stopJob = _useActions.stopJob,
-      updateJob = _useActions.updateJob,
-      removeJob = _useActions.removeJob;
-
-  var _useAppProgress = useAppProgress(),
-      setAppProgress = _useAppProgress.setAppProgress,
-      resetAppProgress = _useAppProgress.resetAppProgress;
-
-  var _useParams = useParams(),
-      user = _useParams.user,
-      id = _useParams.id;
-
-  var _useState = useState(0),
-      refreshInterval = _useState[0],
-      setRefreshInterval = _useState[1];
-
-  var _useAppStore = useAppStore(),
-      _useAppStore$ = _useAppStore[0],
-      currentUser = _useAppStore$.currentUser,
-      apiUrl = _useAppStore$.apiUrl;
-
-  var currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
-
-  var _useSWR = useSWR([apiUrl + config.JOB_DETAILS(user, id), dataFormat$2], fetcher, {
-    refreshInterval: refreshInterval
-  }),
-      jobData = _useSWR.data,
-      error = _useSWR.error,
-      mutate = _useSWR.mutate;
-
-  var _useHistory = useHistory(),
-      push = _useHistory.push;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var _useState2 = useState(''),
-      titleValue = _useState2[0],
-      setTitleValue = _useState2[1];
-
-  var _useState3 = useState(''),
-      code = _useState3[0],
-      setCode = _useState3[1];
-
-  var _useState4 = useState(false),
-      running = _useState4[0],
-      setRunning = _useState4[1];
-
-  var _useState5 = useState(false),
-      stopping = _useState5[0],
-      setStopping = _useState5[1];
-
-  var _useState6 = useState(true),
-      codeSaved = _useState6[0],
-      setCodeSaved = _useState6[1];
-
-  var progressTimer = useRef(null);
-
-  var update = function update(params) {
-    try {
-      return Promise.resolve(updateJob(params)).then(function (data) {
-        mutate(_extends({}, jobData, data.job));
-      });
-    } catch (e) {
-      return Promise.reject(e);
-    }
+  const update = async params => {
+    const data = await updateJob(params);
+    mutate({ ...jobData,
+      ...data.job
+    });
   };
 
-  var updateDebounce = useDebounce(update, 1000, []);
-  var updateLongDebounce = useDebounce(update, 2000, []);
-  var prevData = usePrevious(jobData);
-  useEffect(function () {
+  const updateDebounce = useDebounce(update, 1000, []);
+  const updateLongDebounce = useDebounce(update, 2000, []);
+  const prevData = usePrevious(jobData);
+  useEffect(() => {
     window.addEventListener('keydown', detectEnterPress);
-    return function () {
-      return window.removeEventListener('keydown', detectEnterPress);
-    };
+    return () => window.removeEventListener('keydown', detectEnterPress);
   }, [jobData, code]);
-  useEffect(function () {
+  useEffect(() => {
     if (jobData) {
       setTitleValue(jobData.title);
       setCode(jobData.code);
     }
   }, []);
 
-  var detectEnterPress = function detectEnterPress(event) {
+  const detectEnterPress = event => {
     if (event.code === 'Enter' && (event.shiftKey || event.ctrlKey)) {
       event.preventDefault();
       if (!running && !stopping) onClickRun();
     }
   };
 
-  useEffect(function () {
+  useEffect(() => {
     if (['RUNNING', 'SCHEDULED', 'STOPPING'].indexOf(jobData === null || jobData === void 0 ? void 0 : jobData.status) >= 0) {
       clearInterval(progressTimer.current);
-      progressTimer.current = setInterval(function () {
-        var _calculateJobProgress = calculateJobProgress(jobData),
-            progress = _calculateJobProgress[0];
-
+      progressTimer.current = setInterval(() => {
+        const [progress] = calculateJobProgress(jobData);
         setAppProgress(progress);
       }, 50);
     } else {
       clearInterval(progressTimer.current);
     }
 
-    return function () {
-      return clearInterval(progressTimer.current);
-    };
+    return () => clearInterval(progressTimer.current);
   }, [refreshInterval, jobData]);
-  useEffect(function () {
+  useEffect(() => {
     if ((prevData === null || prevData === void 0 ? void 0 : prevData.id) !== (jobData === null || jobData === void 0 ? void 0 : jobData.id)) {
       setTitleValue(jobData.title);
       setCode(jobData.code);
@@ -6042,12 +5296,12 @@ var Details$2 = function Details(_ref) {
       resetAppProgress();
     }
 
-    return function () {
+    return () => {
       resetAppProgress();
     };
   }, [jobData]);
 
-  var onChangeTitle = function onChangeTitle(value) {
+  const onChangeTitle = value => {
     setTitleValue(value);
     updateDebounce({
       user: user,
@@ -6056,19 +5310,17 @@ var Details$2 = function Details(_ref) {
     });
   };
 
-  var onChangeCode = function onChangeCode(value) {
+  const onChangeCode = value => {
     setCode(value);
     setCodeSaved(false);
     updateLongDebounce({
       user: user,
       id: jobData === null || jobData === void 0 ? void 0 : jobData.id,
       code: value
-    }, function () {
-      return setCodeSaved(true);
-    });
+    }, () => setCodeSaved(true));
   };
 
-  var onChangeRuntime = function onChangeRuntime(runtime) {
+  const onChangeRuntime = runtime => {
     update({
       user: user,
       id: jobData === null || jobData === void 0 ? void 0 : jobData.id,
@@ -6076,7 +5328,7 @@ var Details$2 = function Details(_ref) {
     });
   };
 
-  var onChangeSchedule = function onChangeSchedule(schedule) {
+  const onChangeSchedule = schedule => {
     update({
       user: user,
       id: jobData === null || jobData === void 0 ? void 0 : jobData.id,
@@ -6084,69 +5336,50 @@ var Details$2 = function Details(_ref) {
     });
   };
 
-  var onClickRun = function onClickRun() {
+  const onClickRun = async () => {
+    setRunning(true);
+
     try {
-      var _temp3 = function _temp3() {
-        setRunning(false);
-      };
-
-      setRunning(true);
-
-      var _temp4 = _catch(function () {
-        return Promise.resolve(runJob({
-          user: user,
-          id: jobData === null || jobData === void 0 ? void 0 : jobData.id,
-          code: code
-        })).then(function (data) {
-          mutate(_extends({}, jobData, data));
-          setRefreshInterval(REFRESH_TIMEOUT$1);
-        });
-      }, function (e) {
-        console.log(e);
+      const data = await runJob({
+        user: user,
+        id: jobData === null || jobData === void 0 ? void 0 : jobData.id,
+        code
       });
-
-      return Promise.resolve(_temp4 && _temp4.then ? _temp4.then(_temp3) : _temp3(_temp4));
+      mutate({ ...jobData,
+        ...data
+      });
+      setRefreshInterval(REFRESH_TIMEOUT$1);
     } catch (e) {
-      return Promise.reject(e);
+      console.log(e);
     }
+
+    setRunning(false);
   };
 
-  var onClickStop = function onClickStop() {
+  const onClickStop = async () => {
+    setStopping(true);
+
     try {
-      var _temp7 = function _temp7() {
-        setStopping(false);
-      };
-
-      setStopping(true);
-
-      var _temp8 = _catch(function () {
-        return Promise.resolve(stopJob({
-          user: user,
-          id: jobData === null || jobData === void 0 ? void 0 : jobData.id
-        })).then(function (data) {
-          mutate(_extends({}, jobData, data));
-        });
-      }, function (e) {
-        console.log(e);
-      });
-
-      return Promise.resolve(_temp8 && _temp8.then ? _temp8.then(_temp7) : _temp7(_temp8));
-    } catch (e) {
-      return Promise.reject(e);
-    }
-  };
-
-  var onClickDelete = function onClickDelete() {
-    try {
-      return Promise.resolve(removeJob({
+      const data = await stopJob({
         user: user,
         id: jobData === null || jobData === void 0 ? void 0 : jobData.id
-      })).then(function () {
-        push(routes.jobs(user));
+      });
+      mutate({ ...jobData,
+        ...data
       });
     } catch (e) {
-      return Promise.reject(e);
+      console.log(e);
     }
+
+    setStopping(false);
+  };
+
+  const onClickDelete = async () => {
+    await removeJob({
+      user: user,
+      id: jobData === null || jobData === void 0 ? void 0 : jobData.id
+    });
+    push(routes.jobs(user));
   };
 
   if (!jobData && !error) return /*#__PURE__*/React__default.createElement(Loader$4, null);
@@ -6232,11 +5465,9 @@ var Details$2 = function Details(_ref) {
   }));
 };
 
-var css$S = {"jobs":"_z2_YO"};
+var css$S = {"jobs":"_styles-module__jobs__z2_YO"};
 
-var Jobs = function Jobs(_ref) {
-  _objectDestructuringEmpty(_ref);
-
+const Jobs = ({}) => {
   return /*#__PURE__*/React__default.createElement("div", {
     className: css$S.jobs
   }, /*#__PURE__*/React__default.createElement(Switch, null, /*#__PURE__*/React__default.createElement(Route, {
@@ -6249,25 +5480,23 @@ var Jobs = function Jobs(_ref) {
   })));
 };
 
-var css$T = {"item":"_2TtG-","preview":"_l7PkQ","label":"_IluCM","previewWrap":"_JeLjN","emptyMessage":"_3FYnh","attachment":"_29ErP","section":"_t4Sh3","content":"_1PvDk","name":"_246Ao","by":"_15CWL","permissions":"_Venzr","dropdown":"_3zDl9","preview-stack-pulse":"_1TX_d"};
+var css$T = {"item":"_styles-module__item__2TtG-","preview":"_styles-module__preview__l7PkQ","label":"_styles-module__label__IluCM","previewWrap":"_styles-module__previewWrap__JeLjN","emptyMessage":"_styles-module__emptyMessage__3FYnh","attachment":"_styles-module__attachment__29ErP","section":"_styles-module__section__t4Sh3","content":"_styles-module__content__1PvDk","name":"_styles-module__name__246Ao","by":"_styles-module__by__15CWL","permissions":"_styles-module__permissions__Venzr","dropdown":"_styles-module__dropdown__3zDl9","preview-stack-pulse":"_styles-module__preview-stack-pulse__1TX_d"};
 
-var Item$1 = function Item(_ref) {
-  var data = _ref.data,
-      deleteItem = _ref.deleteItem,
-      user = _ref.user,
-      renderContent = _ref.renderContent;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var ref = useRef(null);
-  var hasStacks = data.cards && Boolean(data.cards.length);
-  var card = data.cards.find(function (c) {
-    return get(c, 'head.id');
-  });
-  var isShowDropdown = Boolean(deleteItem);
+const Item$1 = ({
+  data,
+  deleteItem,
+  user,
+  renderContent
+}) => {
+  const {
+    t
+  } = useTranslation();
+  const ref = useRef(null);
+  const hasStacks = data.cards && Boolean(data.cards.length);
+  const card = data.cards.find(c => get(c, 'head.id'));
+  const isShowDropdown = Boolean(deleteItem);
   return /*#__PURE__*/React__default.createElement(Link, {
-    to: "/" + user + "/d/" + data.id,
+    to: `/${user}/d/${data.id}`,
     className: css$T.item,
     ref: ref
   }, Boolean(data.cards.length) && /*#__PURE__*/React__default.createElement("div", {
@@ -6292,7 +5521,7 @@ var Item$1 = function Item(_ref) {
   }, /*#__PURE__*/React__default.createElement("div", {
     className: css$T.name
   }, data.title, ' ', /*#__PURE__*/React__default.createElement("span", {
-    className: "mdi mdi-lock" + (data["private"] ? '' : '-open')
+    className: `mdi mdi-lock${data.private ? '' : '-open'}`
   })), user !== data.user && /*#__PURE__*/React__default.createElement("div", {
     className: css$T.by
   }, t('by'), " ", data.user), renderContent && renderContent(data)), isShowDropdown && /*#__PURE__*/React__default.createElement(Dropdown, {
@@ -6304,11 +5533,9 @@ var Item$1 = function Item(_ref) {
   })));
 };
 
-var css$U = {"loader":"_Tepr9","text":"_123Jw","dashboards-pulse":"_DeSvR","grid":"_37UOy","item":"_B93bY","pic":"_33hqz","section":"_3jX_z"};
+var css$U = {"loader":"_styles-module__loader__Tepr9","text":"_styles-module__text__123Jw","dashboards-pulse":"_styles-module__dashboards-pulse__DeSvR","grid":"_styles-module__grid__37UOy","item":"_styles-module__item__B93bY","pic":"_styles-module__pic__33hqz","section":"_styles-module__section__3jX_z"};
 
-var Loader$5 = function Loader(_ref) {
-  _objectDestructuringEmpty(_ref);
-
+const Loader$5 = ({}) => {
   return /*#__PURE__*/React__default.createElement("div", {
     className: css$U.loader
   }, /*#__PURE__*/React__default.createElement("div", {
@@ -6330,234 +5557,165 @@ var Loader$5 = function Loader(_ref) {
   }))));
 };
 
-var api$3 = apiFabric();
-var useActions$2 = (function () {
-  var _useAppStore = useAppStore(),
-      apiUrl = _useAppStore[0].apiUrl;
+const api$3 = apiFabric();
+var useActions$2 = (() => {
+  const [{
+    apiUrl
+  }] = useAppStore();
 
-  var createReport = function createReport(userName) {
-    return new Promise(function (resolve) {
+  const createReport = userName => {
+    return new Promise(async resolve => {
       try {
-        var _temp2 = _catch(function () {
-          return Promise.resolve(api$3.post(apiUrl + config.DASHBOARD_CREATE, {
-            user: userName
-          })).then(function (request) {
-            resolve(request.data);
-          });
-        }, function () {
-          resolve({});
+        const request = await api$3.post(apiUrl + config.DASHBOARD_CREATE, {
+          user: userName
         });
-
-        return Promise.resolve(_temp2 && _temp2.then ? _temp2.then(function () {}) : void 0);
+        resolve(request.data);
       } catch (e) {
-        return Promise.reject(e);
+        resolve({});
       }
     });
   };
 
-  var updateReport = function updateReport(userName, id, fields) {
-    return new Promise(function (resolve) {
+  const updateReport = (userName, id, fields) => {
+    return new Promise(async resolve => {
       try {
-        var _temp4 = _catch(function () {
-          return Promise.resolve(api$3.post(apiUrl + config.DASHBOARD_UPDATE, _extends({
-            user: userName,
-            id: id
-          }, fields))).then(function (request) {
-            resolve(request.data);
-          });
-        }, function () {
-          resolve({});
+        const request = await api$3.post(apiUrl + config.DASHBOARD_UPDATE, {
+          user: userName,
+          id,
+          ...fields
         });
-
-        return Promise.resolve(_temp4 && _temp4.then ? _temp4.then(function () {}) : void 0);
+        resolve(request.data);
       } catch (e) {
-        return Promise.reject(e);
+        resolve({});
       }
     });
   };
 
-  var deleteReport = function deleteReport(userName, reportId) {
-    return new Promise(function (resolve) {
+  const deleteReport = (userName, reportId) => {
+    return new Promise(async resolve => {
       try {
-        var _temp6 = _catch(function () {
-          return Promise.resolve(api$3.post(apiUrl + config.DASHBOARD_DELETE, {
-            user: userName,
-            id: reportId
-          })).then(function (request) {
-            resolve(request.data);
-          });
-        }, function () {
-          resolve({});
+        const request = await api$3.post(apiUrl + config.DASHBOARD_DELETE, {
+          user: userName,
+          id: reportId
         });
-
-        return Promise.resolve(_temp6 && _temp6.then ? _temp6.then(function () {}) : void 0);
+        resolve(request.data);
       } catch (e) {
-        return Promise.reject(e);
+        resolve({});
       }
     });
   };
 
-  var reportInsertCard = function reportInsertCard(userName, id, cards, index) {
-    return new Promise(function (resolve) {
+  const reportInsertCard = (userName, id, cards, index) => {
+    return new Promise(async resolve => {
       try {
-        var _temp8 = _catch(function () {
-          return Promise.resolve(api$3.post(apiUrl + config.DASHBOARD_CARDS_INSERT + '?attachments=true', {
-            user: userName,
-            dashboard: id,
-            cards: cards,
-            index: index
-          })).then(function (request) {
-            resolve(request.data);
-          });
-        }, function () {
-          resolve({});
+        const request = await api$3.post(apiUrl + config.DASHBOARD_CARDS_INSERT + '?attachments=true', {
+          user: userName,
+          dashboard: id,
+          cards,
+          index
         });
-
-        return Promise.resolve(_temp8 && _temp8.then ? _temp8.then(function () {}) : void 0);
+        resolve(request.data);
       } catch (e) {
-        return Promise.reject(e);
+        resolve({});
       }
     });
   };
 
-  var reportUpdateCard = function reportUpdateCard(userName, id, stack, fields) {
-    return new Promise(function (resolve) {
+  const reportUpdateCard = (userName, id, stack, fields) => {
+    return new Promise(async resolve => {
       try {
-        var _temp10 = _catch(function () {
-          return Promise.resolve(api$3.post(apiUrl + config.DASHBOARD_CARDS_UPDATE, _extends({
-            user: userName,
-            dashboard: id,
-            stack: stack
-          }, fields))).then(function (request) {
-            resolve(request.data);
-          });
-        }, function () {
-          resolve({});
+        const request = await api$3.post(apiUrl + config.DASHBOARD_CARDS_UPDATE, {
+          user: userName,
+          dashboard: id,
+          stack,
+          ...fields
         });
-
-        return Promise.resolve(_temp10 && _temp10.then ? _temp10.then(function () {}) : void 0);
+        resolve(request.data);
       } catch (e) {
-        return Promise.reject(e);
+        resolve({});
       }
     });
   };
 
-  var reportDeleteCard = function reportDeleteCard(userName, id, stack) {
-    return new Promise(function (resolve) {
+  const reportDeleteCard = (userName, id, stack) => {
+    return new Promise(async resolve => {
       try {
-        var _temp12 = _catch(function () {
-          return Promise.resolve(api$3.post(apiUrl + config.DASHBOARD_CARDS_DELETE, {
-            user: userName,
-            dashboard: id,
-            stack: stack
-          })).then(function (request) {
-            resolve(request.data);
-          });
-        }, function () {
-          resolve({});
+        const request = await api$3.post(apiUrl + config.DASHBOARD_CARDS_DELETE, {
+          user: userName,
+          dashboard: id,
+          stack
         });
-
-        return Promise.resolve(_temp12 && _temp12.then ? _temp12.then(function () {}) : void 0);
+        resolve(request.data);
       } catch (e) {
-        return Promise.reject(e);
+        resolve({});
       }
     });
   };
 
   return {
-    createReport: createReport,
-    deleteReport: deleteReport,
-    updateReport: updateReport,
-    reportInsertCard: reportInsertCard,
-    reportUpdateCard: reportUpdateCard,
-    reportDeleteCard: reportDeleteCard
+    createReport,
+    deleteReport,
+    updateReport,
+    reportInsertCard,
+    reportUpdateCard,
+    reportDeleteCard
   };
 });
 
-var css$V = {"list":"_uwcI_","title":"_36F7e","search":"_1HsPY","mobileSearch":"_3JBKO","text":"_11SLK","grid":"_2KJdC","add":"_3vd7A","caption":"_2_R7F"};
+var css$V = {"list":"_styles-module__list__uwcI_","title":"_styles-module__title__36F7e","search":"_styles-module__search__1HsPY","mobileSearch":"_styles-module__mobileSearch__3JBKO","text":"_styles-module__text__11SLK","grid":"_styles-module__grid__2KJdC","add":"_styles-module__add__3vd7A","caption":"_styles-module__caption__2_R7F"};
 
-var dataFormat$3 = function dataFormat(data) {
-  return data.dashboards;
-};
+const dataFormat$3 = data => data.dashboards;
 
-var List$2 = function List(_ref) {
+const List$2 = ({}) => {
   var _currentUser$data;
 
-  _objectDestructuringEmpty(_ref);
-
-  var _useState = useState(''),
-      search = _useState[0],
-      setSearch = _useState[1];
-
-  var _useState2 = useState(false),
-      creating = _useState2[0],
-      setCreating = _useState2[1];
-
-  var _useAppStore = useAppStore(),
-      _useAppStore$ = _useAppStore[0],
-      currentUser = _useAppStore$.currentUser,
-      apiUrl = _useAppStore$.apiUrl;
-
-  var currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
-
-  var _useActions = useActions$2(),
-      createReport = _useActions.createReport,
-      deleteReport = _useActions.deleteReport;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var _useParams = useParams(),
-      user = _useParams.user;
-
-  var _useHistory = useHistory(),
-      push = _useHistory.push;
-
-  var _useSWR = useSWR([apiUrl + config.DASHBOARD_LIST(user), dataFormat$3], fetcher),
-      data = _useSWR.data,
-      error = _useSWR.error,
-      mutate = _useSWR.mutate;
-
-  var items = useMemo(function () {
-    var items = [];
+  const [search, setSearch] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [{
+    currentUser,
+    apiUrl
+  }] = useAppStore();
+  const currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
+  const {
+    createReport,
+    deleteReport
+  } = useActions$2();
+  const {
+    t
+  } = useTranslation();
+  const {
+    user
+  } = useParams();
+  const {
+    push
+  } = useHistory();
+  const {
+    data,
+    error,
+    mutate
+  } = useSWR([apiUrl + config.DASHBOARD_LIST(user), dataFormat$3], fetcher);
+  const items = useMemo(() => {
+    let items = [];
 
     if (data && data.length) {
-      if (search.length) items = data.filter(function (i) {
-        return i.title.indexOf(search) >= 0;
-      });else items = data;
+      if (search.length) items = data.filter(i => i.title.indexOf(search) >= 0);else items = data;
     }
 
     return items;
   }, [data, search]);
 
-  var onChangeSearch = function onChangeSearch(value) {
-    return setSearch(value);
+  const onChangeSearch = value => setSearch(value);
+
+  const create = async () => {
+    setCreating(true);
+    const data = await createReport(user);
+    setCreating(false);
+    push(routes.reportsDetails(user, data.dashboard.id));
   };
 
-  var create = function create() {
-    try {
-      setCreating(true);
-      return Promise.resolve(createReport(user)).then(function (data) {
-        setCreating(false);
-        push(routes.reportsDetails(user, data.dashboard.id));
-      });
-    } catch (e) {
-      return Promise.reject(e);
-    }
-  };
-
-  var getDeleteFunc = function getDeleteFunc(id) {
-    return function () {
-      try {
-        return Promise.resolve(deleteReport(user, id)).then(function () {
-          mutate(data.filter(function (r) {
-            return r.id !== id;
-          }));
-        });
-      } catch (e) {
-        return Promise.reject(e);
-      }
-    };
+  const getDeleteFunc = id => async () => {
+    await deleteReport(user, id);
+    mutate(data.filter(r => r.id !== id));
   };
 
   if ((error === null || error === void 0 ? void 0 : error.status) === 404) return /*#__PURE__*/React__default.createElement(NotFound, null, t('theDashboardYouAreRookingForCouldNotBeFound'), ' ', isSignedIn() && /*#__PURE__*/React__default.createElement(Fragment, null, /*#__PURE__*/React__default.createElement(Link, {
@@ -6598,21 +5756,17 @@ var List$2 = function List(_ref) {
     className: css$V.caption
   }, /*#__PURE__*/React__default.createElement("span", {
     className: "mdi mdi-plus"
-  }), t('newReport'))), items.map(function (item, index) {
-    return /*#__PURE__*/React__default.createElement(Item$1, {
-      key: index,
-      user: user,
-      data: item,
-      deleteItem: currentUserName === item.user && getDeleteFunc(item.id)
-    });
-  })));
+  }), t('newReport'))), items.map((item, index) => /*#__PURE__*/React__default.createElement(Item$1, {
+    key: index,
+    user: user,
+    data: item,
+    deleteItem: currentUserName === item.user && getDeleteFunc(item.id)
+  }))));
 };
 
-var css$W = {"loader":"_3meGS","text":"_2fWbA","dashboards-details-pulse":"_nJVCo","filters":"_3RT0J","grid":"_qat5v","item":"_2kTBz"};
+var css$W = {"loader":"_styles-module__loader__3meGS","text":"_styles-module__text__2fWbA","dashboards-details-pulse":"_styles-module__dashboards-details-pulse__nJVCo","filters":"_styles-module__filters__3RT0J","grid":"_styles-module__grid__qat5v","item":"_styles-module__item__2kTBz"};
 
-var Loader$6 = function Loader(_ref) {
-  _objectDestructuringEmpty(_ref);
-
+const Loader$6 = ({}) => {
   return /*#__PURE__*/React__default.createElement("div", {
     className: css$W.loader
   }, /*#__PURE__*/React__default.createElement("div", {
@@ -6638,73 +5792,53 @@ function move(array, oldIndex, newIndex) {
 }
 
 function moveElement(array, index, offset) {
-  var newIndex = index + offset;
+  const newIndex = index + offset;
   return move(array, index, newIndex);
 }
 
-var GridContext = createContext({
+const GridContext = createContext({
   items: []
 });
-var GridProvider = /*#__PURE__*/function (_Component) {
-  _inheritsLoose(GridProvider, _Component);
+class GridProvider extends Component {
+  constructor(props) {
+    super(props);
 
-  function GridProvider(props) {
-    var _this;
+    this.setItems = items => this.setState({
+      items
+    });
 
-    _this = _Component.call(this, props) || this;
-
-    _this.setItems = function (items) {
-      return _this.setState({
-        items: items
-      });
-    };
-
-    _this.moveItem = function (sourceId, destinationId) {
-      var sourceIndex = _this.state.items.findIndex(function (item) {
-        return item.id === sourceId;
-      });
-
-      var destinationIndex = _this.state.items.findIndex(function (item) {
-        return item.id === destinationId;
-      });
+    this.moveItem = (sourceId, destinationId) => {
+      const sourceIndex = this.state.items.findIndex(item => item.id === sourceId);
+      const destinationIndex = this.state.items.findIndex(item => item.id === destinationId);
 
       if (sourceId === -1 || destinationId === -1) {
         return;
       }
 
-      var offset = destinationIndex - sourceIndex;
-
-      _this.setState(function (state) {
-        return {
-          items: moveElement(state.items, sourceIndex, offset)
-        };
-      });
+      const offset = destinationIndex - sourceIndex;
+      this.setState(state => ({
+        items: moveElement(state.items, sourceIndex, offset)
+      }));
     };
 
-    _this.state = {
+    this.state = {
       items: [],
-      moveItem: _this.moveItem,
-      setItems: _this.setItems
+      moveItem: this.moveItem,
+      setItems: this.setItems
     };
-    return _this;
   }
 
-  var _proto = GridProvider.prototype;
-
-  _proto.render = function render() {
+  render() {
     return /*#__PURE__*/React__default.createElement(GridContext.Provider, {
       value: this.state
     }, this.props.children);
-  };
+  }
 
-  return GridProvider;
-}(Component);
+}
 
-var css$X = {"loader":"_3bVFk","text":"_2ZWwD","stacks-pulse":"_32IBp","grid":"_1NGPz","item":"_pEfso","pic":"_3Cu55","section":"_3VyE7"};
+var css$X = {"loader":"_styles-module__loader__3bVFk","text":"_styles-module__text__2ZWwD","stacks-pulse":"_styles-module__stacks-pulse__32IBp","grid":"_styles-module__grid__1NGPz","item":"_styles-module__item__pEfso","pic":"_styles-module__pic__3Cu55","section":"_styles-module__section__3VyE7"};
 
-var Loader$7 = function Loader(_ref) {
-  _objectDestructuringEmpty(_ref);
-
+const Loader$7 = ({}) => {
   return /*#__PURE__*/React__default.createElement("div", {
     className: css$X.loader
   }, /*#__PURE__*/React__default.createElement("div", {
@@ -6732,96 +5866,73 @@ var Loader$7 = function Loader(_ref) {
   }))));
 };
 
-var css$Y = {"stacks":"_1EVMf","grid":"_23g1_","search":"_2aMVS","message":"_1MJtk","text":"_3eeN7","item":"_1S3Mz","checkbox":"_1Zf0d","buttons":"_1HBY_","button":"_1m3l6"};
+var css$Y = {"stacks":"_style-module__stacks__1EVMf","grid":"_style-module__grid__23g1_","search":"_style-module__search__2aMVS","message":"_style-module__message__1MJtk","text":"_style-module__text__3eeN7","item":"_style-module__item__1S3Mz","checkbox":"_style-module__checkbox__1Zf0d","buttons":"_style-module__buttons__1HBY_","button":"_style-module__button__1m3l6"};
 
-var dataFormat$4 = function dataFormat(data) {
-  return data.stacks;
-};
+const dataFormat$4 = data => data.stacks;
 
-var AddStacksModal = function AddStacksModal(_ref) {
+const AddStacksModal = ({
+  isShow,
+  onClose,
+  onAddStacks
+}) => {
   var _currentUser$data;
 
-  var isShow = _ref.isShow,
-      onClose = _ref.onClose,
-      onAddStacks = _ref.onAddStacks;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var params = useParams();
-
-  var _useState = useState(''),
-      searchQuery = _useState[0],
-      setSearchQuery = _useState[1];
-
-  var _useState2 = useState([]),
-      selected = _useState2[0],
-      setSelected = _useState2[1];
-
-  var _useAppStore = useAppStore(),
-      _useAppStore$ = _useAppStore[0],
-      currentUser = _useAppStore$.currentUser,
-      apiUrl = _useAppStore$.apiUrl;
-
-  var currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
-
-  var _useSWR = useSWR([apiUrl + config.STACKS_LIST(params.user), dataFormat$4], fetcher),
-      data = _useSWR.data;
-
-  useEffect(function () {
+  const {
+    t
+  } = useTranslation();
+  const params = useParams();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selected, setSelected] = useState([]);
+  const [{
+    currentUser,
+    apiUrl
+  }] = useAppStore();
+  const currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
+  const {
+    data
+  } = useSWR([apiUrl + config.STACKS_LIST(params.user), dataFormat$4], fetcher);
+  useEffect(() => {
     if (!isShow) {
       setSelected([]);
       setSearchQuery('');
     }
   }, [isShow]);
-  var items = useMemo(function () {
-    var items = [];
+  const items = useMemo(() => {
+    let items = [];
 
     if (data && data.length) {
-      if (searchQuery.length) items = data.filter(function (i) {
-        return i.name.indexOf(searchQuery) >= 0;
-      });else items = data;
+      if (searchQuery.length) items = data.filter(i => i.name.indexOf(searchQuery) >= 0);else items = data;
     }
 
     return items;
   }, [data, searchQuery]);
 
-  var onChangeSearch = function onChangeSearch(value) {
-    return setSearchQuery(value);
+  const onChangeSearch = value => setSearchQuery(value);
+
+  const getFullStackName = stack => `${stack.user}/${stack.name}`;
+
+  const isChecked = stack => {
+    const stackName = getFullStackName(stack);
+    return selected.findIndex(i => i === stackName) >= 0;
   };
 
-  var getFullStackName = function getFullStackName(stack) {
-    return stack.user + "/" + stack.name;
+  const getOnClickStack = stack => () => {
+    const stackName = getFullStackName(stack);
+
+    if (isChecked(stack)) {
+      const filtered = selected.filter(i => i !== stackName);
+      setSelected(filtered);
+    } else {
+      setSelected([...selected, stackName]);
+    }
   };
 
-  var isChecked = function isChecked(stack) {
-    var stackName = getFullStackName(stack);
-    return selected.findIndex(function (i) {
-      return i === stackName;
-    }) >= 0;
-  };
-
-  var getOnClickStack = function getOnClickStack(stack) {
-    return function () {
-      var stackName = getFullStackName(stack);
-
-      if (isChecked(stack)) {
-        var filtered = selected.filter(function (i) {
-          return i !== stackName;
-        });
-        setSelected(filtered);
-      } else {
-        setSelected([].concat(selected, [stackName]));
-      }
-    };
-  };
-
-  var submit = function submit() {
+  const submit = () => {
     if (onAddStacks) onAddStacks(selected);
     onClose();
   };
 
-  var isUserOwner = currentUserName === params.user;
+  const isUserOwner = currentUserName === params.user;
   return /*#__PURE__*/React__default.createElement(Modal, {
     dialogClassName: css$Y.stacks,
     isShow: isShow,
@@ -6844,19 +5955,17 @@ var AddStacksModal = function AddStacksModal(_ref) {
     className: css$Y.text
   }, t('noStacksAreFoundedMatchedTheSearchCriteria')), data && Boolean(data.length && items.length) && /*#__PURE__*/React__default.createElement(Fragment, null, /*#__PURE__*/React__default.createElement("div", {
     className: css$Y.grid
-  }, items.map(function (item, index) {
-    return /*#__PURE__*/React__default.createElement("div", {
-      className: css$Y.item,
-      key: index,
-      onClick: getOnClickStack(item)
-    }, /*#__PURE__*/React__default.createElement(CheckboxField, {
-      className: css$Y.checkbox,
-      value: isChecked(item),
-      readOnly: true
-    }), /*#__PURE__*/React__default.createElement(Item, {
-      data: item
-    }));
-  })), /*#__PURE__*/React__default.createElement("div", {
+  }, items.map((item, index) => /*#__PURE__*/React__default.createElement("div", {
+    className: css$Y.item,
+    key: index,
+    onClick: getOnClickStack(item)
+  }, /*#__PURE__*/React__default.createElement(CheckboxField, {
+    className: css$Y.checkbox,
+    value: isChecked(item),
+    readOnly: true
+  }), /*#__PURE__*/React__default.createElement(Item, {
+    data: item
+  })))), /*#__PURE__*/React__default.createElement("div", {
     className: css$Y.buttons
   }, /*#__PURE__*/React__default.createElement(Button, {
     className: css$Y.button,
@@ -6872,96 +5981,74 @@ var AddStacksModal = function AddStacksModal(_ref) {
   }, t('cancel')))));
 };
 
-var css$Z = {"card":"_2USXU","inner":"_nCWYo","head":"_3Ir7x","name":"_dAh2C","nameEdit":"_3U2XI","nameValue":"_1d1pL","info":"_1KbVf","dropdown":"_3Fjm5","button":"_3jXy5","move":"_1XXQ2","viewSwitcher":"_2EIG0","cardControls":"_M80-o","description":"_1od1n","addDesc":"_24azt","infoTime":"_ISfic","emptyMessage":"_3Fu27","attachment":"_3x5M9"};
+var css$Z = {"card":"_styles-module__card__2USXU","inner":"_styles-module__inner__nCWYo","head":"_styles-module__head__3Ir7x","name":"_styles-module__name__dAh2C","nameEdit":"_styles-module__nameEdit__3U2XI","nameValue":"_styles-module__nameValue__1d1pL","info":"_styles-module__info__1KbVf","dropdown":"_styles-module__dropdown__3Fjm5","button":"_styles-module__button__3jXy5","move":"_styles-module__move__1XXQ2","viewSwitcher":"_styles-module__viewSwitcher__2EIG0","cardControls":"_styles-module__cardControls__M80-o","description":"_styles-module__description__1od1n","addDesc":"_styles-module__addDesc__24azt","infoTime":"_styles-module__infoTime__ISfic","emptyMessage":"_styles-module__emptyMessage__3Fu27","attachment":"_styles-module__attachment__3x5M9"};
 
-var viewValueMap = {
+const viewValueMap = {
   grid: 1,
   list: 2
 };
-var Card = memo(function (_ref) {
+const Card = memo(({
+  data,
+  className,
+  deleteCard,
+  updateCard,
+  filters,
+  activeTab,
+  forwardedRef,
+  moveAvailable
+}) => {
   var _data$description;
 
-  var data = _ref.data,
-      className = _ref.className,
-      deleteCard = _ref.deleteCard,
-      updateCard = _ref.updateCard,
-      filters = _ref.filters,
-      activeTab = _ref.activeTab,
-      forwardedRef = _ref.forwardedRef,
-      moveAvailable = _ref.moveAvailable;
-
-  var _useState = useState(data.title),
-      title = _useState[0],
-      setTitle = _useState[1];
-
-  var _useState2 = useState(data.columns),
-      columns = _useState2[0],
-      setColumns = _useState2[1];
-
-  var descFieldRef = useRef();
-  var isMounted = useRef(false);
-  var isHoveredMoveBtn = useRef(false);
-
-  var _useState3 = useState((_data$description = data.description) === null || _data$description === void 0 ? void 0 : _data$description.length),
-      isShowDesc = _useState3[0],
-      setIsShowDesc = _useState3[1];
-
-  var prevIsShowDesc = usePrevious$1(isShowDesc);
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var headId = get(data, 'head.id');
-  var stackOwner = data.stack.split('/')[0];
-
-  var _useState4 = useState(0),
-      attachmentIndex = _useState4[0],
-      setAttachmentIndex = _useState4[1];
-
-  var _useState5 = useState([]),
-      cardParams = _useState5[0],
-      setCardParams = _useState5[1];
-
-  useEffect(function () {
-    var params = parseStackParams(get(data, 'head.attachments', []));
+  const [title, setTitle] = useState(data.title);
+  const [columns, setColumns] = useState(data.columns);
+  const descFieldRef = useRef();
+  const isMounted = useRef(false);
+  const isHoveredMoveBtn = useRef(false);
+  const [isShowDesc, setIsShowDesc] = useState((_data$description = data.description) === null || _data$description === void 0 ? void 0 : _data$description.length);
+  const prevIsShowDesc = usePrevious$1(isShowDesc);
+  const {
+    t
+  } = useTranslation();
+  const headId = get(data, 'head.id');
+  const stackOwner = data.stack.split('/')[0];
+  const [attachmentIndex, setAttachmentIndex] = useState(0);
+  const [cardParams, setCardParams] = useState([]);
+  useEffect(() => {
+    const params = parseStackParams(get(data, 'head.attachments', []));
     if (params) setCardParams(Object.keys(params));
   }, [data]);
-  useEffect(function () {
+  useEffect(() => {
     findAttach();
   }, [filters]);
-  useEffect(function () {
-    if (forwardedRef && forwardedRef.current) forwardedRef.current.addEventListener('dragstart', function (event) {
+  useEffect(() => {
+    if (forwardedRef && forwardedRef.current) forwardedRef.current.addEventListener('dragstart', event => {
       if (!isHoveredMoveBtn.current) {
         event.stopPropagation();
         event.preventDefault();
       }
     });
   }, [forwardedRef]);
-  useEffect(function () {
+  useEffect(() => {
     if (isMounted.current && prevIsShowDesc !== isShowDesc && descFieldRef.current) descFieldRef.current.focus();
   }, [isShowDesc]);
-  useEffect(function () {
+  useEffect(() => {
     isMounted.current = true;
   }, []);
 
-  var findAttach = function findAttach() {
-    var attachments = get(data, 'head.attachments');
-    var tabs = parseStackTabs(attachments);
-    var fields = Object.keys(filters).filter(function (f) {
-      return cardParams.indexOf(f) >= 0;
-    });
-    var tab = tabs.find(function (t) {
-      return t.value === activeTab;
-    });
+  const findAttach = () => {
+    const attachments = get(data, 'head.attachments');
+    const tabs = parseStackTabs(attachments);
+    const fields = Object.keys(filters).filter(f => cardParams.indexOf(f) >= 0);
+    const tab = tabs.find(t => t.value === activeTab);
     if (!attachments) return;
 
     if (fields.length || tabs.length && activeTab) {
-      attachments.some(function (attach, index) {
+      attachments.some((attach, index) => {
         var _attach$params$tab$va, _attach$params$tab$ke;
 
-        var valid = true;
+        let valid = true;
         if (!tab || ((_attach$params$tab$va = attach.params[tab.value]) === null || _attach$params$tab$va === void 0 ? void 0 : _attach$params$tab$va.type) !== 'tab' && ((_attach$params$tab$ke = attach.params[tab.key]) === null || _attach$params$tab$ke === void 0 ? void 0 : _attach$params$tab$ke.title) !== tab.value) return false;
-        fields.forEach(function (key) {
+        fields.forEach(key => {
           if (!attach.params || !isEqual(attach.params[key], filters[key])) valid = false;
         });
         if (valid) setAttachmentIndex(index);
@@ -6970,50 +6057,48 @@ var Card = memo(function (_ref) {
     } else setAttachmentIndex(0);
   };
 
-  var onUpdate = updateCard ? useDebounce(updateCard, [updateCard]) : function () {};
+  const onUpdate = updateCard ? useDebounce(updateCard, [updateCard]) : () => {};
 
-  var onChangeTitle = function onChangeTitle(event) {
+  const onChangeTitle = event => {
     setTitle(event.target.value);
     onUpdate({
       title: event.target.value
     });
   };
 
-  var onChangeView = function onChangeView(view) {
-    var columns = viewValueMap[view];
+  const onChangeView = view => {
+    const columns = viewValueMap[view];
     setColumns(columns);
     onUpdate({
-      columns: columns
+      columns
     });
   };
 
-  var onChangeDescription = function onChangeDescription(description) {
+  const onChangeDescription = description => {
     setColumns(columns);
     onUpdate({
-      description: description
+      description
     });
   };
 
-  var onEnterMove = function onEnterMove() {
+  const onEnterMove = () => {
     isHoveredMoveBtn.current = true;
   };
 
-  var onLeaveMove = function onLeaveMove() {
+  const onLeaveMove = () => {
     isHoveredMoveBtn.current = false;
   };
 
-  var onBlurDescription = function onBlurDescription() {
+  const onBlurDescription = () => {
     var _data$description2;
 
     if (!((_data$description2 = data.description) === null || _data$description2 === void 0 ? void 0 : _data$description2.length)) setIsShowDesc(false);
   };
 
-  var addDesc = function addDesc() {
-    return setIsShowDesc(true);
-  };
+  const addDesc = () => setIsShowDesc(true);
 
   return /*#__PURE__*/React__default.createElement("div", {
-    className: cx(css$Z.card, "col-" + columns, className),
+    className: cx(css$Z.card, `col-${columns}`, className),
     ref: forwardedRef
   }, /*#__PURE__*/React__default.createElement("div", {
     className: css$Z.inner
@@ -7047,7 +6132,7 @@ var Card = memo(function (_ref) {
     className: cx(css$Z.button, css$Z.link),
     color: "secondary",
     Component: Link,
-    to: "/" + data.stack
+    to: `/${data.stack}`
   }, /*#__PURE__*/React__default.createElement("span", {
     className: "mdi mdi-open-in-new"
   })), /*#__PURE__*/React__default.createElement("div", {
@@ -7094,133 +6179,101 @@ var Card = memo(function (_ref) {
   }, t('emptyDashboard'))));
 });
 
-var DnDItem = memo(function (_ref) {
-  var id = _ref.id,
-      onMoveItem = _ref.onMoveItem,
-      children = _ref.children;
-  var ref = useRef(null);
-
-  var _useDrag = useDrag({
+const DnDItem = memo(({
+  id,
+  onMoveItem,
+  children
+}) => {
+  const ref = useRef(null);
+  const [, connectDrag] = useDrag({
     item: {
-      id: id,
+      id,
       type: 'IMG'
     },
-    collect: function collect(monitor) {
+    collect: monitor => {
       return {
         isDragging: monitor.isDragging()
       };
     }
-  }),
-      connectDrag = _useDrag[1];
-
-  var _useDrop = useDrop({
+  });
+  const [, connectDrop] = useDrop({
     accept: 'IMG',
-    drop: function drop(hoveredOverItem) {
+    drop: hoveredOverItem => {
       if (hoveredOverItem.id !== id) {
         onMoveItem(hoveredOverItem.id, id);
       }
     }
-  }),
-      connectDrop = _useDrop[1];
-
+  });
   connectDrag(ref);
   connectDrop(ref);
-  return React__default.Children.map(children, function (child) {
-    return React__default.cloneElement(child, {
-      forwardedRef: ref
-    });
-  });
+  return React__default.Children.map(children, child => React__default.cloneElement(child, {
+    forwardedRef: ref
+  }));
 });
 
-var css$_ = {"details":"_1YGMH","header":"_1lU-L","title":"_2HPT5","edit":"_3ezYE","permissions":"_3OGBJ","share":"_198zx","sideHeader":"_2PqMZ","addButton":"_4KCh5","description":"_1peNb","addDesc":"_-FjzY","dropdown":"_2-VRH","tabs":"_pJ1U-","container":"_3V4ls","section":"_2_7da","cards":"_3OOzf","fields":"_WLi30","filters":"_2q551","empty":"_13-9o"};
+var css$_ = {"details":"_styles-module__details__1YGMH","header":"_styles-module__header__1lU-L","title":"_styles-module__title__2HPT5","edit":"_styles-module__edit__3ezYE","permissions":"_styles-module__permissions__3OGBJ","share":"_styles-module__share__198zx","sideHeader":"_styles-module__sideHeader__2PqMZ","addButton":"_styles-module__addButton__4KCh5","description":"_styles-module__description__1peNb","addDesc":"_styles-module__addDesc__-FjzY","dropdown":"_styles-module__dropdown__2-VRH","tabs":"_styles-module__tabs__pJ1U-","container":"_styles-module__container__3V4ls","section":"_styles-module__section__2_7da","cards":"_styles-module__cards__3OOzf","fields":"_styles-module__fields__WLi30","filters":"_styles-module__filters__2q551","empty":"_styles-module__empty__13-9o"};
 
-var dataFormat$5 = function dataFormat(data) {
-  return data.dashboard;
-};
+const dataFormat$5 = data => data.dashboard;
 
-var Details$3 = function Details() {
+const Details$3 = () => {
   var _currentUser$data, _data$description;
 
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
+  const {
+    t
+  } = useTranslation();
+  const {
+    user,
+    id
+  } = useParams();
+  const {
+    push
+  } = useHistory();
+  const {
+    items,
+    moveItem,
+    setItems
+  } = useContext(GridContext);
+  const [{
+    currentUser,
+    apiUrl
+  }] = useAppStore();
+  const currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
+  const {
+    deleteReport,
+    updateReport,
+    reportInsertCard,
+    reportDeleteCard,
+    reportUpdateCard
+  } = useActions$2();
+  const descFieldRef = useRef();
+  const isMounted = useRef(false);
+  const [isShowStacksModal, setIsShowStacksModal] = useState(false);
+  const [activeTab, setActiveTab] = useState();
+  const [tabs, setTabs] = useState([]);
+  const {
+    form,
+    setForm,
+    onChange
+  } = useForm({});
+  const [fields, setFields] = useState({});
+  const [filteredCards, setFilteredCards] = useState([]);
 
-  var _useParams = useParams(),
-      user = _useParams.user,
-      id = _useParams.id;
+  const setGridItems = cardsItems => setItems(cardsItems.map(card => ({
+    id: card.index,
+    card
+  })));
 
-  var _useHistory = useHistory(),
-      push = _useHistory.push;
-
-  var _useContext = useContext(GridContext),
-      items = _useContext.items,
-      moveItem = _useContext.moveItem,
-      setItems = _useContext.setItems;
-
-  var _useAppStore = useAppStore(),
-      _useAppStore$ = _useAppStore[0],
-      currentUser = _useAppStore$.currentUser,
-      apiUrl = _useAppStore$.apiUrl;
-
-  var currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
-
-  var _useActions = useActions$2(),
-      deleteReport = _useActions.deleteReport,
-      updateReport = _useActions.updateReport,
-      reportInsertCard = _useActions.reportInsertCard,
-      reportDeleteCard = _useActions.reportDeleteCard,
-      reportUpdateCard = _useActions.reportUpdateCard;
-
-  var descFieldRef = useRef();
-  var isMounted = useRef(false);
-
-  var _useState = useState(false),
-      isShowStacksModal = _useState[0],
-      setIsShowStacksModal = _useState[1];
-
-  var _useState2 = useState(),
-      activeTab = _useState2[0],
-      setActiveTab = _useState2[1];
-
-  var _useState3 = useState([]),
-      tabs = _useState3[0],
-      setTabs = _useState3[1];
-
-  var _useForm = useForm({}),
-      form = _useForm.form,
-      setForm = _useForm.setForm,
-      onChange = _useForm.onChange;
-
-  var _useState4 = useState({}),
-      fields = _useState4[0],
-      setFields = _useState4[1];
-
-  var _useState5 = useState([]),
-      filteredCards = _useState5[0],
-      setFilteredCards = _useState5[1];
-
-  var setGridItems = function setGridItems(cardsItems) {
-    return setItems(cardsItems.map(function (card) {
-      return {
-        id: card.index,
-        card: card
-      };
-    }));
-  };
-
-  var _useSWR = useSWR([apiUrl + config.DASHBOARD_DETAILS(user, id), dataFormat$5], fetcher, {
+  const {
+    data,
+    mutate,
+    error
+  } = useSWR([apiUrl + config.DASHBOARD_DETAILS(user, id), dataFormat$5], fetcher, {
     revalidateOnFocus: false
-  }),
-      data = _useSWR.data,
-      mutate = _useSWR.mutate,
-      error = _useSWR.error;
-
-  var _useState6 = useState(Boolean(data === null || data === void 0 ? void 0 : (_data$description = data.description) === null || _data$description === void 0 ? void 0 : _data$description.length)),
-      isShowDesc = _useState6[0],
-      setIsShowDesc = _useState6[1];
-
-  var prevIsShowDesc = usePrevious(isShowDesc);
-  var prevData = usePrevious(data);
-  useEffect(function () {
+  });
+  const [isShowDesc, setIsShowDesc] = useState(Boolean(data === null || data === void 0 ? void 0 : (_data$description = data.description) === null || _data$description === void 0 ? void 0 : _data$description.length));
+  const prevIsShowDesc = usePrevious(isShowDesc);
+  const prevData = usePrevious(data);
+  useEffect(() => {
     var _data$description2;
 
     if (!isEqual(prevData === null || prevData === void 0 ? void 0 : prevData.cards, data === null || data === void 0 ? void 0 : data.cards) || (data === null || data === void 0 ? void 0 : data.cards) && !isMounted.current) {
@@ -7229,46 +6282,46 @@ var Details$3 = function Details() {
 
     if ((prevData === null || prevData === void 0 ? void 0 : prevData.description) !== (data === null || data === void 0 ? void 0 : data.description)) setIsShowDesc(Boolean(data === null || data === void 0 ? void 0 : (_data$description2 = data.description) === null || _data$description2 === void 0 ? void 0 : _data$description2.length));
   }, [data]);
-  useEffect(function () {
-    return function () {
+  useEffect(() => {
+    return () => {
       setGridItems([]);
     };
   }, []);
-  useEffect(function () {
+  useEffect(() => {
     if (filteredCards.length) {
       setGridItems(filteredCards);
       parseParams();
     }
   }, [filteredCards]);
-  useEffect(function () {
+  useEffect(() => {
     if (activeTab !== undefined) filterCards();
   }, [activeTab]);
-  useEffect(function () {
+  useEffect(() => {
     var _data$description3;
 
     if (isMounted.current && prevIsShowDesc !== isShowDesc && descFieldRef.current && !((_data$description3 = data.description) === null || _data$description3 === void 0 ? void 0 : _data$description3.length)) descFieldRef.current.focus();
   }, [isShowDesc]);
-  useEffect(function () {
+  useEffect(() => {
     isMounted.current = true;
   }, []);
 
-  var getAllAttachments = function getAllAttachments(cards) {
+  const getAllAttachments = cards => {
     var _cards;
 
     if (!cards) cards = data === null || data === void 0 ? void 0 : data.cards;
     if (!((_cards = cards) === null || _cards === void 0 ? void 0 : _cards.length)) return [];
-    return cards.reduce(function (result, card) {
+    return cards.reduce((result, card) => {
       return result.concat(get(card, 'head.attachments', []));
     }, []);
   };
 
-  var parseParams = function parseParams() {
-    var fields = parseStackParams(getAllAttachments(filteredCards)) || {};
-    var defaultFilterValues = Object.keys(fields).reduce(function (result, fieldName) {
+  const parseParams = () => {
+    const fields = parseStackParams(getAllAttachments(filteredCards)) || {};
+    const defaultFilterValues = Object.keys(fields).reduce((result, fieldName) => {
       if (fields[fieldName].type === 'select') result[fieldName] = fields[fieldName].options[0].value;
 
       if (fields[fieldName].type === 'slider') {
-        var key = Object.keys(fields[fieldName].options)[0];
+        const key = Object.keys(fields[fieldName].options)[0];
         result[fieldName] = fields[fieldName].options[key];
       }
 
@@ -7279,193 +6332,142 @@ var Details$3 = function Details() {
     setFields(fields);
   };
 
-  var parseTabs = function parseTabs() {
+  const parseTabs = () => {
     var _tabs$;
 
-    var attachments = getAllAttachments();
+    const attachments = getAllAttachments();
     if (!attachments || !attachments.length) return;
-    var tabs = parseStackTabs(attachments);
-    var hasOldTab = tabs.some(function (t) {
-      return activeTab && t.value === activeTab;
-    });
-    var newActiveTab = hasOldTab ? activeTab : ((_tabs$ = tabs[0]) === null || _tabs$ === void 0 ? void 0 : _tabs$.value) || null;
+    const tabs = parseStackTabs(attachments);
+    const hasOldTab = tabs.some(t => activeTab && t.value === activeTab);
+    const newActiveTab = hasOldTab ? activeTab : ((_tabs$ = tabs[0]) === null || _tabs$ === void 0 ? void 0 : _tabs$.value) || null;
     setTabs(tabs);
     setActiveTab(newActiveTab);
     if (newActiveTab === activeTab) filterCards();
   };
 
-  var filterCards = function filterCards() {
+  const filterCards = () => {
     if (tabs.length && activeTab) {
-      var _filteredCards = data.cards.filter(function (card) {
-        var attachments = get(card, 'head.attachments', []);
+      const filteredCards = data.cards.filter(card => {
+        const attachments = get(card, 'head.attachments', []);
         if (!attachments || !attachments.length) return true;
-        var tabs = parseStackTabs(attachments);
-        var tab = tabs.find(function (t) {
-          return t.value === activeTab;
-        });
+        const tabs = parseStackTabs(attachments);
+        const tab = tabs.find(t => t.value === activeTab);
         if (!tabs.length) return true;
-        return attachments.some(function (attach) {
+        return attachments.some(attach => {
           var _attach$params$tab$va, _attach$params$tab$ke;
 
           return tab && (((_attach$params$tab$va = attach.params[tab.value]) === null || _attach$params$tab$va === void 0 ? void 0 : _attach$params$tab$va.type) === 'tab' || ((_attach$params$tab$ke = attach.params[tab.key]) === null || _attach$params$tab$ke === void 0 ? void 0 : _attach$params$tab$ke.title) === tab.value);
         });
       });
-
-      setFilteredCards(_filteredCards);
+      setFilteredCards(filteredCards);
     } else {
       setFilteredCards(data.cards);
     }
   };
 
-  var onChangeTab = function onChangeTab(tabName) {
+  const onChangeTab = tabName => {
     setActiveTab(tabName);
   };
 
-  var update = function update(params) {
-    try {
-      return Promise.resolve(updateReport(user, id, params)).then(function () {});
-    } catch (e) {
-      return Promise.reject(e);
-    }
+  const update = async params => {
+    await updateReport(user, id, params);
   };
 
-  var debounceUpdateTitle = useDebounce(function (fields) {
-    try {
-      return Promise.resolve(update(fields)).then(function () {});
-    } catch (e) {
-      return Promise.reject(e);
-    }
+  const debounceUpdateTitle = useDebounce(async fields => {
+    await update(fields);
   }, 300);
 
-  var onChangeTitle = function onChangeTitle(title) {
+  const onChangeTitle = title => {
     data.title = title;
     mutate(data, false);
     debounceUpdateTitle({
-      title: title
+      title
     });
   };
 
-  var debounceUpdateDescription = useDebounce(function (fields) {
-    try {
-      return Promise.resolve(update(fields)).then(function () {});
-    } catch (e) {
-      return Promise.reject(e);
-    }
+  const debounceUpdateDescription = useDebounce(async fields => {
+    await update(fields);
   }, 300);
 
-  var onChangeDescription = function onChangeDescription(description) {
+  const onChangeDescription = description => {
     data.description = description;
     mutate(data, false);
     debounceUpdateDescription({
-      description: description
+      description
     });
   };
 
-  var onChangePrivate = function onChangePrivate(isPrivate) {
-    try {
-      update({
-        "private": isPrivate
-      }).then(function () {
-        mutate(_extends({}, data, {
-          "private": isPrivate
-        }), false);
-      });
-      return Promise.resolve();
-    } catch (e) {
-      return Promise.reject(e);
-    }
+  const onChangePrivate = async isPrivate => {
+    update({
+      private: isPrivate
+    }).then(() => {
+      mutate({ ...data,
+        private: isPrivate
+      }, false);
+    });
   };
 
-  var addStacks = function addStacks(stacks) {
-    try {
-      var _data$cards;
+  const addStacks = async stacks => {
+    var _data$cards;
 
-      return Promise.resolve(reportInsertCard(user, id, stacks.map(function (stack) {
-        return {
-          stack: stack
-        };
-      }), data === null || data === void 0 ? void 0 : (_data$cards = data.cards) === null || _data$cards === void 0 ? void 0 : _data$cards.length)).then(function (_ref) {
-        var cards = _ref.dashboard.cards;
-        var newCards = cards.filter(function (c) {
-          return stacks.indexOf(c.stack) >= 0;
-        });
-        mutate(_extends({}, data, {
-          cards: data.cards.concat(newCards)
-        }), false);
-      });
-    } catch (e) {
-      return Promise.reject(e);
-    }
-  };
-
-  var getDeleteCardFunc = function getDeleteCardFunc(stack) {
-    return function () {
-      try {
-        return Promise.resolve(reportDeleteCard(user, id, stack)).then(function () {
-          mutate(_extends({}, data, {
-            cards: data.cards.filter(function (c) {
-              return c.stack !== stack;
-            })
-          }), false);
-        });
-      } catch (e) {
-        return Promise.reject(e);
+    const {
+      dashboard: {
+        cards
       }
-    };
+    } = await reportInsertCard(user, id, stacks.map(stack => ({
+      stack
+    })), data === null || data === void 0 ? void 0 : (_data$cards = data.cards) === null || _data$cards === void 0 ? void 0 : _data$cards.length);
+    const newCards = cards.filter(c => stacks.indexOf(c.stack) >= 0);
+    mutate({ ...data,
+      cards: data.cards.concat(newCards)
+    }, false);
   };
 
-  var updatePermissions = function updatePermissions(permissions) {
-    mutate(_extends({}, data, {
-      permissions: permissions
-    }), false);
+  const getDeleteCardFunc = stack => async () => {
+    await reportDeleteCard(user, id, stack);
+    mutate({ ...data,
+      cards: data.cards.filter(c => c.stack !== stack)
+    }, false);
   };
 
-  var getUpdatedCardFunc = function getUpdatedCardFunc(stack) {
-    return function (fields) {
-      try {
-        return Promise.resolve(reportUpdateCard(user, id, stack, fields)).then(function (_ref2) {
-          var newCards = _ref2.cards;
-          var updatedCard = newCards.find(function (i) {
-            return i.stack === stack;
-          });
-          var index = data.cards.findIndex(function (i) {
-            return i.stack === stack;
-          });
-          if (index >= 0) Object.keys(fields).forEach(function (key) {
-            data.cards[index][key] = updatedCard[key];
-          });
-          mutate(_extends({}, data), false);
-        });
-      } catch (e) {
-        return Promise.reject(e);
-      }
-    };
+  const updatePermissions = permissions => {
+    mutate({ ...data,
+      permissions
+    }, false);
   };
 
-  var moveCard = function moveCard(indexFrom, indexTo) {
+  const getUpdatedCardFunc = stack => async fields => {
+    const {
+      cards: newCards
+    } = await reportUpdateCard(user, id, stack, fields);
+    const updatedCard = newCards.find(i => i.stack === stack);
+    const index = data.cards.findIndex(i => i.stack === stack);
+    if (index >= 0) Object.keys(fields).forEach(key => {
+      data.cards[index][key] = updatedCard[key];
+    });
+    mutate({ ...data
+    }, false);
+  };
+
+  const moveCard = (indexFrom, indexTo) => {
     if (indexTo < 0 || indexFrom < 0) return;
-    var stack = items[indexFrom].card.stack;
+    const {
+      stack
+    } = items[indexFrom].card;
     moveItem(indexFrom, indexTo);
     reportUpdateCard(user, id, stack, {
       index: indexTo
-    })["catch"](console.log);
+    }).catch(console.log);
   };
 
-  var deleteDashboard = function deleteDashboard() {
-    try {
-      return Promise.resolve(deleteReport(user, id)).then(function () {
-        push(routes.reports(user));
-      });
-    } catch (e) {
-      return Promise.reject(e);
-    }
+  const deleteDashboard = async () => {
+    await deleteReport(user, id);
+    push(routes.reports(user));
   };
 
-  var renderFilters = function renderFilters() {
+  const renderFilters = () => {
     if (!Object.keys(fields).length) return null;
-    var hasSelectField = Object.keys(fields).some(function (key) {
-      return fields[key].type === 'select';
-    });
+    const hasSelectField = Object.keys(fields).some(key => fields[key].type === 'select');
     return /*#__PURE__*/React__default.createElement(StackFilters, {
       fields: fields,
       form: form,
@@ -7476,22 +6478,18 @@ var Details$3 = function Details() {
     });
   };
 
-  var toggleAddStackModal = function toggleAddStackModal(event) {
+  const toggleAddStackModal = event => {
     if (event === null || event === void 0 ? void 0 : event.target) event.preventDefault();
-    setIsShowStacksModal(function (isShow) {
-      return !isShow;
-    });
+    setIsShowStacksModal(isShow => !isShow);
   };
 
-  var onBlurDescription = function onBlurDescription() {
+  const onBlurDescription = () => {
     var _data$description4;
 
     if (!((_data$description4 = data.description) === null || _data$description4 === void 0 ? void 0 : _data$description4.length)) setIsShowDesc(false);
   };
 
-  var addDesc = function addDesc() {
-    return setIsShowDesc(true);
-  };
+  const addDesc = () => setIsShowDesc(true);
 
   if ((error === null || error === void 0 ? void 0 : error.status) === 403) return /*#__PURE__*/React__default.createElement(AccessForbidden, null, t('youDontHaveAnAccessToThisDashboard'), ".", isSignedIn() && /*#__PURE__*/React__default.createElement(Fragment, null, /*#__PURE__*/React__default.createElement("br", null), /*#__PURE__*/React__default.createElement(Link, {
     to: routes.reports(currentUserName)
@@ -7500,8 +6498,8 @@ var Details$3 = function Details() {
     to: routes.reports(currentUserName)
   }, t('goToMyDashboards')), "."));
   if (!data) return /*#__PURE__*/React__default.createElement(Loader$6, null);
-  var isUserOwner = currentUserName === user;
-  var CardWrapComponent = isUserOwner ? DnDItem : Fragment;
+  const isUserOwner = currentUserName === user;
+  const CardWrapComponent = isUserOwner ? DnDItem : Fragment;
   return /*#__PURE__*/React__default.createElement("div", {
     className: css$_.details
   }, /*#__PURE__*/React__default.createElement(Yield, {
@@ -7522,8 +6520,8 @@ var Details$3 = function Details() {
     readOnly: currentUserName !== data.user,
     placeholder: t('newDashboard')
   }), /*#__PURE__*/React__default.createElement("span", {
-    className: "mdi mdi-lock" + (data["private"] ? '' : '-open')
-  })), data["private"] && /*#__PURE__*/React__default.createElement(PermissionUsers, {
+    className: `mdi mdi-lock${data.private ? '' : '-open'}`
+  })), data.private && /*#__PURE__*/React__default.createElement(PermissionUsers, {
     className: css$_.permissions,
     permissions: data.permissions
   }), /*#__PURE__*/React__default.createElement("div", {
@@ -7535,10 +6533,10 @@ var Details$3 = function Details() {
   }, /*#__PURE__*/React__default.createElement("span", {
     className: "mdi mdi-plus"
   }), t('addStack')), isUserOwner && /*#__PURE__*/React__default.createElement(Share, {
-    instancePath: user + "/d/" + data.id,
+    instancePath: `${user}/d/${data.id}`,
     onUpdatePrivate: onChangePrivate,
     className: css$_.share,
-    defaultIsPrivate: data["private"],
+    defaultIsPrivate: data.private,
     defaultPermissions: data.permissions,
     onUpdatePermissions: updatePermissions
   }), isUserOwner && /*#__PURE__*/React__default.createElement(Dropdown, {
@@ -7578,21 +6576,19 @@ var Details$3 = function Details() {
     className: css$_.fields
   }, renderFilters())), /*#__PURE__*/React__default.createElement("div", {
     className: cx(css$_.cards)
-  }, items.map(function (item) {
-    return /*#__PURE__*/React__default.createElement(CardWrapComponent, _extends({
-      key: item.card.stack
-    }, isUserOwner ? {
-      id: item.id,
-      onMoveItem: moveCard
-    } : {}), /*#__PURE__*/React__default.createElement(Card, {
-      activeTab: activeTab,
-      filters: form,
-      deleteCard: isUserOwner && getDeleteCardFunc(item.card.stack),
-      data: item.card,
-      updateCard: isUserOwner && getUpdatedCardFunc(item.card.stack),
-      moveAvailable: isUserOwner
-    }));
-  }))), !items.length && !(data === null || data === void 0 ? void 0 : data.cards) && /*#__PURE__*/React__default.createElement("div", {
+  }, items.map(item => /*#__PURE__*/React__default.createElement(CardWrapComponent, Object.assign({
+    key: item.card.stack
+  }, isUserOwner ? {
+    id: item.id,
+    onMoveItem: moveCard
+  } : {}), /*#__PURE__*/React__default.createElement(Card, {
+    activeTab: activeTab,
+    filters: form,
+    deleteCard: isUserOwner && getDeleteCardFunc(item.card.stack),
+    data: item.card,
+    updateCard: isUserOwner && getUpdatedCardFunc(item.card.stack),
+    moveAvailable: isUserOwner
+  }))))), !items.length && !(data === null || data === void 0 ? void 0 : data.cards) && /*#__PURE__*/React__default.createElement("div", {
     className: css$_.empty
   }, t('thereAreNoStacksYet'), " ", /*#__PURE__*/React__default.createElement("br", null), t('youCanSendStacksYouWantToBeHereLaterOrAddItRightNow'), isUserOwner && /*#__PURE__*/React__default.createElement(Fragment, null, ' ', /*#__PURE__*/React__default.createElement("a", {
     className: css$_.addButton,
@@ -7605,11 +6601,9 @@ var Details$3 = function Details() {
   }));
 };
 
-var css$$ = {"reports":"_30ROl"};
+var css$$ = {"reports":"_styles-module__reports__30ROl"};
 
-var Reports = function Reports(_ref) {
-  _objectDestructuringEmpty(_ref);
-
+const Reports = ({}) => {
   return /*#__PURE__*/React__default.createElement("div", {
     className: css$$.reports
   }, /*#__PURE__*/React__default.createElement(Switch, null, /*#__PURE__*/React__default.createElement(Route, {
@@ -7622,8 +6616,8 @@ var Reports = function Reports(_ref) {
   })));
 };
 
-function _extends$7() {
-  _extends$7 = Object.assign || function (target) {
+function _extends$6() {
+  _extends$6 = Object.assign || function (target) {
     for (var i = 1; i < arguments.length; i++) {
       var source = arguments[i];
 
@@ -7637,7 +6631,7 @@ function _extends$7() {
     return target;
   };
 
-  return _extends$7.apply(this, arguments);
+  return _extends$6.apply(this, arguments);
 }
 
 var _ref$6 = /*#__PURE__*/createElement("path", {
@@ -7710,7 +6704,7 @@ var _ref5 = /*#__PURE__*/createElement("defs", null, /*#__PURE__*/createElement(
 })));
 
 function SvgLogo(props) {
-  return /*#__PURE__*/createElement("svg", _extends$7({
+  return /*#__PURE__*/createElement("svg", _extends$6({
     width: 179,
     height: 48,
     viewBox: "0 0 179 48",
@@ -7718,14 +6712,14 @@ function SvgLogo(props) {
   }, props), _ref$6, _ref2$3, _ref3$2, _ref4$1, _ref5);
 }
 
-var css$10 = {"header":"_3C4T1","logo":"_1jfuS","buttons":"_2EQYi","button":"_3cb7N"};
+var css$10 = {"header":"_styles-module__header__3C4T1","logo":"_styles-module__logo__1jfuS","buttons":"_styles-module__buttons__2EQYi","button":"_styles-module__button__3cb7N"};
 
-var Header = function Header(_ref) {
-  var className = _ref.className;
-
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
+const Header = ({
+  className
+}) => {
+  const {
+    t
+  } = useTranslation();
   return /*#__PURE__*/React__default.createElement("div", {
     className: cx(css$10.header, className)
   }, /*#__PURE__*/React__default.createElement(Link, {
@@ -7742,10 +6736,11 @@ var Header = function Header(_ref) {
   }, t('logIn'))));
 };
 
-var css$11 = {"layout":"_23bi3","header":"_1chFa","main":"_70hee"};
+var css$11 = {"layout":"_styles-module__layout__23bi3","header":"_styles-module__header__1chFa","main":"_styles-module__main__70hee"};
 
-var UnAuthorizedLayout = function UnAuthorizedLayout(_ref) {
-  var children = _ref.children;
+const UnAuthorizedLayout = ({
+  children
+}) => {
   return /*#__PURE__*/React__default.createElement("div", {
     className: css$11.layout
   }, /*#__PURE__*/React__default.createElement(Header, {
@@ -7755,24 +6750,18 @@ var UnAuthorizedLayout = function UnAuthorizedLayout(_ref) {
   }, children));
 };
 
-var css$12 = {"infoButton":"_2zmYM"};
+var css$12 = {"infoButton":"_style-module__infoButton__2zmYM"};
 
-var SettingsInformation = function SettingsInformation(_ref) {
-  var className = _ref.className,
-      renderModalContent = _ref.renderModalContent;
+const SettingsInformation = ({
+  className,
+  renderModalContent
+}) => {
+  const {
+    t
+  } = useTranslation();
+  const [isShowModal, setIsShowModal] = useState(false);
 
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
-
-  var _useState = useState(false),
-      isShowModal = _useState[0],
-      setIsShowModal = _useState[1];
-
-  var toggleModal = function toggleModal() {
-    return setIsShowModal(function (value) {
-      return !value;
-    });
-  };
+  const toggleModal = () => setIsShowModal(value => !value);
 
   return /*#__PURE__*/React__default.createElement(Fragment, null, /*#__PURE__*/React__default.createElement(Button, {
     className: cx(css$12.infoButton, className),

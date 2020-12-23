@@ -53,6 +53,7 @@ const StackFilters = ({className, fields, form, onChange, onApply, isSidebar, di
 
                     case 'select':
                         return <SelectField
+                            size="small"
                             key={`select-${key}`}
                             align="bottom"
                             className={cx(css.field, css.select)}

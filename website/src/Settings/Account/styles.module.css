@@ -1,0 +1,153 @@
+@import "styles/variables.css";
+@import "styles/media.css";
+.section {
+    &:nth-child(n+2) {
+        margin-top: 30px;
+    }
+    @media (--mobile) {
+        margin-top: 8px;
+    }
+    &-title {
+        font-size: 12px;
+        line-height: 14px;
+        text-transform: uppercase;
+        color: var(--color-light-gray);
+        & + .item {
+            @media (--mobile) {
+                margin-top: 14px;
+            }
+        }
+    }
+}
+.item {
+    width: 300px;
+    display: flex;
+    align-items: flex-start;
+    &:nth-child(n+2) {
+        @media (--mobile) {
+            margin-top: 20px;
+        }
+        @media (--desktop) {
+            margin-top: 16px;
+        }
+    }
+}
+.label, .value {
+    height: 20px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--color-dark-gray);
+}
+.label {
+    flex-shrink: 0;
+}
+.value {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin-left: 8px;
+    &:global(.password) {
+        line-height: 24px;
+    }
+}
+.edit {
+    flex-shrink: 0;
+    margin-left: 2px;
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+    line-height: 20px;
+    text-align: center;
+    color: var(--color-light-gray);
+    opacity: .6;
+    cursor: pointer;
+    transition: opacity .2s;
+    &:hover {
+        opacity: 1;
+    }
+}
+.fields {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-width: 0;
+    margin-left: 4px;
+    margin-top: -5px;
+    &:not(.password) {
+        position: relative;
+        .field {
+            padding-bottom: 0;
+        }
+        & .buttons {
+            position: absolute;
+            top: 0;
+            left: 100%;
+            margin-left: 10px;
+        }
+    }
+    &.password {
+        .field {
+            padding-bottom: 10px;
+        }
+    }
+}
+.field {
+    width: 100%;
+}
+.buttons {
+    display: flex;
+    align-items: center;
+}
+.button {
+    width: auto;
+}
+.apitoken {
+    display: flex;
+    align-items: center;
+    margin-top: 14px;
+}
+.token {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 24px;
+    color: var(--color-dark-gray);
+}
+.copy {
+    flex-shrink: 0;
+}
+.copy-button {
+    height: 20px;
+    width: 20px;
+    margin-left: 4px;
+    font-size: 14px;
+    line-height: 20px;
+    text-align: center;
+    color: var(--color-light-gray);
+    opacity: .6;
+    transition: opacity .2s;
+    cursor: pointer;
+    &:hover {
+        opacity: 1;
+    }
+}
+.reset {
+    max-width: 340px;
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 18px;
+    color: var(--color-light-gray);
+    & > a {
+        transition: color .2s;
+    }
+}
+.logout {
+    margin-top: 30px;
+    font-size: 12px;
+    line-height: 18px;
+    & > a {
+        color: var(--color-light-blue);
+        transition: color .2s;
+        &:hover {
+            color: var(--color-blue);
+        }
+    }
+}

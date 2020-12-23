@@ -42,10 +42,10 @@
     &-single {
       :global(.select-field-selector) {
         display: flex;
+        align-items: center;
         overflow-x: auto;
-        height: 32px;
         padding: 8px 10px 6px 12px;
-        border: 1px solid rgba(180, 184, 199, 0.5);
+        border: 1px solid var(--color-light-gray);
         box-sizing: border-box;
         border-radius: 4px;
         transition: border-color .2s;
@@ -89,7 +89,7 @@
         :global(.select-field-selection-item),
         :global(.select-field-selection-placeholder) {
           position: absolute;
-          top: 8px;
+          top: calc(50% - 8px);
           left: 12px;
           right: 10px;
           pointer-events: none;
@@ -114,8 +114,8 @@
     }
     &-multiple :global(.select-field-selector) {
       display: flex;
+      align-items: center;
       overflow-x: auto;
-      height: 32px;
       padding: 8px 10px 6px 12px;
       border: 1px solid var(--color-light-blue);
       box-sizing: border-box;
@@ -179,7 +179,7 @@
         pointer-events: none;
         position: absolute;
         right: 5px;
-        top: 5px;
+        top: calc(50% - 11px);
         &-icon::after {
           content: '';
           border: 5px solid transparent;

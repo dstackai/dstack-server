@@ -310,7 +310,6 @@ const Details = ({
 
         if (tabs.length) {
             attachments.some((attach, index) => {
-
                 if (tab
                     && attach.params[tab.value]?.type !== 'tab'
                     && attach.params[tab.key]?.title !== tab.value

@@ -41,6 +41,27 @@
             margin-right: 6px;
         }
     }
+    &:global(.small) {
+        & :global(.select-field) {
+            & :global(.select-field-selector) {
+                height: 32px;
+            }
+        }
+    }
+    &:global(.middle) {
+        & :global(.select-field) {
+            & :global(.select-field-selector) {
+                height: 40px;
+            }
+        }
+    }
+    &:global(.normal) {
+        & :global(.select-field) {
+            & :global(.select-field-selector) {
+                height: 50px;
+            }
+        }
+    }
 }
 .label {
     font-size: 12px;
@@ -50,7 +71,7 @@
 }
 
 
-body :global {
+:global {
     .select-field {
         position: relative;
         font-size: 14px;
@@ -93,8 +114,8 @@ body :global {
         &-single {
             .select-field-selector {
                 display: flex;
+                align-items: center;
                 overflow-x: auto;
-                height: 32px;
                 padding: 8px 10px 6px 12px;
                 border: 1px solid rgba(180, 184, 199, 0.5);
                 box-sizing: border-box;
@@ -140,7 +161,7 @@ body :global {
                 .select-field-selection-item,
                 .select-field-selection-placeholder {
                     position: absolute;
-                    top: 8px;
+                    top: calc(50% - 8px);
                     left: 12px;
                     right: 10px;
                     pointer-events: none;
@@ -165,8 +186,8 @@ body :global {
         }
         &-multiple .select-field-selector {
             display: flex;
+            align-items: center;
             overflow-x: auto;
-            height: 32px;
             padding: 8px 10px 6px 12px;
             border: 1px solid var(--color-light-blue);
             box-sizing: border-box;
@@ -230,7 +251,7 @@ body :global {
                 pointer-events: none;
                 position: absolute;
                 right: 5px;
-                top: 5px;
+                top: calc(50% - 11px);
                 &-icon::after {
                     content: '';
                     border: 5px solid transparent;

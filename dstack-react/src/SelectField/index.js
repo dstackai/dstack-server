@@ -10,6 +10,7 @@ import './test.css';
 const allValue = 'all';
 
 type Props = {
+    size?: 'normal' | 'middle' | 'small',
     className?: string,
     disabled?: boolean,
     placeholder?: string,
@@ -27,6 +28,7 @@ type Props = {
 
 const SelectField = ({
     align = 'left',
+    size = 'normal',
     label,
     disabled,
     placeholder,
@@ -66,7 +68,7 @@ const SelectField = ({
     ));
 
     return (
-        <div className={cx(css.field, className, align, {disabled})}>
+        <div className={cx(css.field, className, size, align, {disabled})}>
             <Select
                 value={propValue}
                 // animation={useAnim ? 'slide-up' : null}

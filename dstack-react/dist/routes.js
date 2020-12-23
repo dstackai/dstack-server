@@ -79,6 +79,12 @@ var routes = {
   },
   settings: function settings() {
     return '/settings';
+  },
+  accountSettings: function accountSettings() {
+    return '/settings/account';
+  },
+  usersSettings: function usersSettings() {
+    return '/settings/users';
   }
 };
 

@@ -1,0 +1,24 @@
+@import "styles/variables.css";
+@import "styles/media.css";
+.dialog {
+    width: 440px !important;
+}
+.form {
+    padding-top: 20px;
+}
+.field {
+    max-width: 275px;
+    &.select {
+        max-width: 130px;
+    }
+}
+.buttons {
+    display: flex;
+    margin-top: 20px;
+}
+.button {
+    &:nth-child(n+2) {
+        margin-left: 10px;
+    }
+}
+

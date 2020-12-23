@@ -29,6 +29,9 @@ export const isValidUserName = userName => {
 };
 
 export const isEmail = value => {
+    if (!value)
+        return true;
+
     return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(value);
 };
 
@@ -47,7 +50,7 @@ export const isValidStackName = value => {
 export const isValidEmail = mail => {
     const errors = {invalidEmailAddress: 'invalidEmailAddress'};
 
-    if (!isEmail(mail))
+    if (mail && !isEmail(mail))
         return {
             isValid: false,
             error: errors.invalidEmailAddress,
