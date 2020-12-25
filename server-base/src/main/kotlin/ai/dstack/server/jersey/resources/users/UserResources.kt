@@ -68,14 +68,11 @@ class UserResources {
                 badCredentials()
             } else {
                 ok(UserStatus(user.name, user.token, user.email, user.verified,
-                    SettingsInfo(
-                        GeneralInfo(user.settings.general.defaultAccessLevel.name.toLowerCase()),
-                        NotificationsInfo(
-                            user.settings.notifications.newsletter
-                        )
-                    ),
-                    user.createdDate.toString(),
-                    user.role.code
+                        SettingsInfo(
+                                GeneralInfo(user.settings.general.defaultAccessLevel.name.toLowerCase())
+                        ),
+                        user.createdDate.toString(),
+                        user.role.code
                 ))
             }
         }
@@ -125,20 +122,19 @@ class UserResources {
                             val token = UUID.randomUUID().toString()
                             val userNamePostfix = if (!verified) "?$verificationCode" else ""
                             user = User(
-                                payload.name!! + userNamePostfix,
-                                payload.email,
-                                payload.password!!,
-                                token,
-                                verificationCode,
-                                verified,
-                                // TODO: Reconsider registration after introducing user management
-                                UserRole.Write,
-                                LocalDate.now(ZoneOffset.UTC),
-                                Settings(
-                                    General(AccessLevel.Public),
-                                    Notifications(newsletter = true)
-                                ),
-                                payload.name
+                                    payload.name!! + userNamePostfix,
+                                    payload.email,
+                                    payload.password!!,
+                                    token,
+                                    verificationCode,
+                                    verified,
+                                    // TODO: Reconsider registration after introducing user management
+                                    UserRole.Write,
+                                    LocalDate.now(ZoneOffset.UTC),
+                                    Settings(
+                                            General(AccessLevel.Public)
+                                    ),
+                                    payload.name
                             )
                             userService.create(user)
                             if (verified) {
@@ -148,10 +144,10 @@ class UserResources {
                             }
                             val session = createSession(user)
                             ok(
-                                AuthStatus(
-                                    session.id,
-                                    user.verified
-                                )
+                                    AuthStatus(
+                                            session.id,
+                                            user.verified
+                                    )
                             )
                         }
                     } catch (e: EntityAlreadyExists) {
@@ -184,16 +180,16 @@ class UserResources {
             if (unverifiedUser != null && !unverifiedUser.verified) {
                 try {
                     val verifiedUser = User(
-                        userName,
-                        unverifiedUser.email,
-                        unverifiedUser.password,
-                        unverifiedUser.token,
-                        unverifiedUser.verificationCode,
-                        true,
-                        unverifiedUser.role,
-                        LocalDate.now(ZoneOffset.UTC),
-                        unverifiedUser.settings,
-                        userName
+                            userName,
+                            unverifiedUser.email,
+                            unverifiedUser.password,
+                            unverifiedUser.token,
+                            unverifiedUser.verificationCode,
+                            true,
+                            unverifiedUser.role,
+                            LocalDate.now(ZoneOffset.UTC),
+                            unverifiedUser.settings,
+                            userName
                     )
                     userService.create(verifiedUser)
                     userService.delete(unverifiedUser)
@@ -206,7 +202,7 @@ class UserResources {
             } else if (unverifiedUser != null && unverifiedUser.verified) {
                 val session = createSession(unverifiedUser)
                 ok(AuthStatus(session.id, true))
-            }else {
+            } else {
                 badCredentials()
             }
         }
@@ -271,19 +267,16 @@ class UserResources {
             sessionService.renew(session)
             val userName = if (user.verified) user.name else user.name.substringBefore("?")
             ok(
-                SessionStatus(
-                    userName,
-                    user.token,
-                    user.email,
-                    user.verified,
-                    SettingsInfo(
-                        GeneralInfo(user.settings.general.defaultAccessLevel.name.toLowerCase()),
-                        NotificationsInfo(
-                            user.settings.notifications.newsletter
-                        )
-                    ),
-                    user.role.code
-                )
+                    SessionStatus(
+                            userName,
+                            user.token,
+                            user.email,
+                            user.verified,
+                            SettingsInfo(
+                                    GeneralInfo(user.settings.general.defaultAccessLevel.name.toLowerCase())
+                            ),
+                            user.role.code
+                    )
             )
         }
     }
@@ -355,21 +348,19 @@ class UserResources {
             } else {
                 sessionService.renew(session)
                 userService.update(
-                    user.copy(
-                        settings = user.settings.copy(
-                            general = user.settings.general.copy(
-                                defaultAccessLevel =
-                                when (payload.general?.defaultAccessLevel) {
-                                    "private" -> AccessLevel.Private
-                                    "public" -> AccessLevel.Public
-                                    else -> user.settings.general.defaultAccessLevel
-                                }
-                            ),
-                            notifications = user.settings.notifications.copy(
-                                newsletter = payload.notifications?.newsletter ?: user.settings.notifications.newsletter
-                            )
+                        user.copy(
+                                settings = user.settings.copy(
+                                        general = user.settings.general.copy(
+                                                defaultAccessLevel =
+                                                when (payload.general?.defaultAccessLevel) {
+                                                    "private" -> AccessLevel.Private
+                                                    "internal" -> AccessLevel.Internal
+                                                    "public" -> AccessLevel.Public
+                                                    else -> user.settings.general.defaultAccessLevel
+                                                }
+                                        )
+                                )
                         )
-                    )
                 )
                 ok()
             }
@@ -408,10 +399,7 @@ class UserResources {
             ok(UsersStatus(users.map {
                 UserStatus(user.name, user.token, user.email, user.verified,
                         SettingsInfo(
-                                GeneralInfo(user.settings.general.defaultAccessLevel.name.toLowerCase()),
-                                NotificationsInfo(
-                                        user.settings.notifications.newsletter
-                                )
+                                GeneralInfo(user.settings.general.defaultAccessLevel.name.toLowerCase())
                         ),
                         user.createdDate.toString(),
                         user.role.code
@@ -444,7 +432,7 @@ class UserResources {
                     } else {
                         try {
                             sessionService.renew(session)
-                            val verificationCode =  UUID.randomUUID().toString()
+                            val verificationCode = UUID.randomUUID().toString()
                             val token = UUID.randomUUID().toString()
                             val password = getRandomSpecialChars(8)
                             user = User(
@@ -457,13 +445,12 @@ class UserResources {
                                     UserRole.Write,
                                     LocalDate.now(ZoneOffset.UTC),
                                     Settings(
-                                            General(AccessLevel.Public),
-                                            Notifications(newsletter = true)
+                                            General(AccessLevel.Public)
                                     ),
                                     payload.name
                             )
                             userService.create(user)
-                            if (config.emailEnabled) {
+                            if (config.emailEnabled && user.email != null) {
                                 emailService.sendVerificationEmail(user)
                             }
                             ok(VerificationCodeStatus(payload.name,
@@ -503,10 +490,44 @@ class UserResources {
                     userNotFound()
                 } else {
                     sessionService.renew(session)
-                    val verificationCode =  UUID.randomUUID().toString()
+                    val verificationCode = UUID.randomUUID().toString()
                     user = user.copy(verificationCode = verificationCode)
                     userService.update(user)
-                    if (config.emailEnabled) {
+                    if (config.emailEnabled && user.email != null) {
+                        emailService.sendVerificationEmail(user)
+                    }
+                    ok(VerificationCodeStatus(user.name,
+                            "${config.address}/auth/verify?user=${payload.name}&code=${user.verificationCode}")
+                    )
+                }
+            }
+        }
+
+    }
+
+    @POST
+    @Path("admin/edit")
+    @Consumes(JSON_UTF8)
+    @Produces(JSON_UTF8)
+    fun reset(payload: EditUserPayload?, @Context headers: HttpHeaders): Response {
+        return if (payload.isMalformed) {
+            malformedRequest()
+        } else {
+            val session = headers.bearer?.let { sessionService.get(it) }
+            val u = session?.let { userService.get(it.userName) }
+            logger.debug { "session: ${headers.bearer}" }
+            return if (session == null || !session.valid || u == null || u.role != UserRole.Admin) {
+                badCredentials()
+            } else {
+                var user = userService.get(payload!!.name!!)
+                if (user == null) {
+                    userNotFound()
+                } else {
+                    sessionService.renew(session)
+                    user = user.copy(email = payload.email?.let { if (it.isBlank()) null else it } ?: user.email,
+                            role = payload.role?.let { UserRole.fromCode(it) } ?: user.role)
+                    userService.update(user)
+                    if (config.emailEnabled && !payload.email.isNullOrBlank()) {
                         emailService.sendVerificationEmail(user)
                     }
                     ok(VerificationCodeStatus(user.name,
@@ -568,11 +589,17 @@ val ResetVerificationCodePayload?.isMalformed
     get() = this == null
             || this.name.isMalformedUserName
 
+val EditUserPayload?.isMalformed
+    get() = this == null
+            || this.name.isMalformedUserName
+            || (this.email == null && this.role == null)
+            || (this.role != null && UserRole.values().map { it.name.toUpperCase() }.contains(this.role.toUpperCase()))
+
 val String?.isMalformedEmail: Boolean
     get() {
         // https://stackoverflow.com/questions/1819142/how-should-i-validate-an-e-mail-address
         return isNullOrBlank() || !this!!.matches(
-            "^(?:[a-zA-Z0-9!#\$%&'*+/=?^_`{|}~-]+(?:\\.[a-zA-Z0-9!#\$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])$".toRegex()
+                "^(?:[a-zA-Z0-9!#\$%&'*+/=?^_`{|}~-]+(?:\\.[a-zA-Z0-9!#\$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])$".toRegex()
         )
     }
 
@@ -604,13 +631,10 @@ val UpdateSettingsPayload?.isMalformed
             this == null || this.user == null
             )
             || (this.general?.defaultAccessLevel != null && !setOf(
-        "private",
-        "public"
+            "private",
+            "public"
     ).contains(this.general.defaultAccessLevel))
-            || (
-            this.general?.defaultAccessLevel == null
-                    && this.notifications?.newsletter == null
-            )
+            || this.general?.defaultAccessLevel == null
 
 val ResetPasswordPayload?.isMalformed
     get() = this?.email.isNullOrBlank() || this?.password.isNullOrBlank() || this?.code.isNullOrBlank()

@@ -8,7 +8,7 @@ data class Head(
 data class Stack(
     val userName: String,
     val name: String,
-    val private: Boolean,
+    val accessLevel: AccessLevel,
     val head: Head?,
     val readme: String?
 ) {

@@ -56,11 +56,6 @@ internal fun userNotFound() = response(
     OpStatus("user not found")
 )
 
-internal fun dashboardNotFound() = response(
-    Response.Status.NOT_FOUND,
-    OpStatus("dashboard not found")
-)
-
 internal fun userEmailAlreadyRegistered() =
     response(
         Response.Status.BAD_REQUEST,
@@ -87,21 +82,11 @@ internal fun jobIsNotInProgress() = response(
     OpStatus("job is not in progress")
 )
 
-internal fun cardNotFound() = response(
-    Response.Status.NOT_FOUND,
-    OpStatus("card not found")
-)
-
 internal fun attachmentAlreadyExists(): Response =
     response(
         Response.Status.BAD_REQUEST,
         OpStatus("attachment already exists")
     )
-
-internal fun commentNotFound() = response(
-    Response.Status.NOT_FOUND,
-    OpStatus("comment not found")
-)
 
 internal fun frameNotFound() = response(
     Response.Status.NOT_FOUND,

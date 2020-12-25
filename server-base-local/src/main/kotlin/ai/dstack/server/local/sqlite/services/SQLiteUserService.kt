@@ -4,7 +4,6 @@ import ai.dstack.server.model.*
 import ai.dstack.server.services.EntityAlreadyExists
 import ai.dstack.server.services.UserService
 import ai.dstack.server.local.sqlite.model.UserItem
-import ai.dstack.server.local.sqlite.model.UserItemSettingNotifications
 import ai.dstack.server.local.sqlite.model.UserItemSettings
 import ai.dstack.server.local.sqlite.model.UserItemSettingsGeneral
 import ai.dstack.server.local.sqlite.repositories.UserRepository
@@ -50,12 +49,7 @@ class SQLiteUserService (private val repository: UserRepository) : UserService {
             createdDate = createdDate,
             settings = settings.let {
                 UserItemSettings(
-                    UserItemSettingsGeneral(it.general.defaultAccessLevel),
-                    it.notifications.let { n ->
-                        UserItemSettingNotifications(
-                            n.newsletter
-                        )
-                    }
+                    UserItemSettingsGeneral(it.general.defaultAccessLevel)
                 )
             },
             unverifiedName = unverifiedName
@@ -87,12 +81,7 @@ class SQLiteUserService (private val repository: UserRepository) : UserService {
                 // No role code means, the user was created before introducing roles. Consider these users to be admins.
                 u.role?.let { UserRole.fromCode(it) } ?: UserRole.Admin,
                 u.createdDate, u.settings.let { s ->
-                    Settings(
-                        General(s.general.defaultAccessLevel),
-                        s.notifications.let { n ->
-                            Notifications(n.newsletter)
-                        }
-                    )
+                    Settings(General(s.general.defaultAccessLevel))
                 }, u.unverifiedName
             )
         }

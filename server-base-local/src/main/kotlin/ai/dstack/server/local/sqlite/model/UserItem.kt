@@ -7,22 +7,13 @@ import javax.persistence.*
 @Embeddable
 data class UserItemSettings(
     @Embedded
-    val general: UserItemSettingsGeneral,
-    @Embedded
-    val notifications: UserItemSettingNotifications
+    val general: UserItemSettingsGeneral
 )
 
 @Embeddable
 data class UserItemSettingsGeneral(
     @Column(name = "default_access_level")
     val defaultAccessLevel: AccessLevel
-)
-
-@Embeddable
-data class UserItemSettingNotifications(
-    @Deprecated("Gonna be removed in October")
-    @Column
-    val newsletter: Boolean
 )
 
 @Entity

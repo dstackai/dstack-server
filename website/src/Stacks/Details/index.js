@@ -31,6 +31,11 @@ type Props = {
     updatePermissions: Function,
 }
 
+const categoryMap = {
+    app: 'applications',
+    mlModel: 'models',
+};
+
 const Details = ({
     fetchDetails,
     fetchFrame,
@@ -172,7 +177,7 @@ const Details = ({
                 <Fragment>
                     <br />
 
-                    <Link to={routes.stacks(currentUser)}>
+                    <Link to={routes.categoryStacks(currentUser, params.category)}>
                         {t('goToMyStacks')}
                     </Link>
                 </Fragment>
@@ -185,7 +190,7 @@ const Details = ({
             {' '}
             {isSignedIn() && (
                 <Fragment>
-                    <Link to={routes.stacks(currentUser)}>
+                    <Link to={routes.categoryStacks(currentUser, params.category)}>
                         {t('goToMyStacks')}
                     </Link>.
                 </Fragment>
@@ -221,7 +226,7 @@ const Details = ({
                 currentUser={currentUser}
                 currentUserToken={currentUserToken}
                 toggleUpload={toggleUploadModal}
-                backUrl={routes.stacks(params.user)}
+                backUrl={routes.categoryStacks(currentUser, categoryMap[category])}
                 setPrivate={setPrivate}
                 updatePermissions={updatePermissions}
                 user={params.user}
@@ -251,7 +256,7 @@ const Details = ({
 export default connect(
     (state, props) => {
         const frame = state.stacks.details.frame;
-        const stack = props.location.pathname.replace(/^\//, '');
+        const stack = `${props.match.params.user}/${props.match.params.stack}`;
 
         return {
             data: get(state.stacks.details.data, stack),

@@ -75,7 +75,7 @@ const SignUp = ({loading, fetchUser, errors, signUp, history: {push}}: Props) =>
                         });
 
                         if (form.code)
-                            push(routes.stacks(data.user));
+                            push(routes.categoryStacks(data.user, 'applications'));
                         else
                             push(routes.confirmEmailMessage());
                     },

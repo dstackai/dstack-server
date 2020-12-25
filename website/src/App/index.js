@@ -8,7 +8,7 @@ import '@mdi/font/css/materialdesignicons.min.css';
 import '@dstackai/dstack-react/dist/index.css';
 
 import {NotFound, Loader, UnAuthorizedLayout,
-    appStoreActionTypes, useAppStore, Jobs, Reports} from '@dstackai/dstack-react';
+    appStoreActionTypes, useAppStore} from '@dstackai/dstack-react';
 import DefaultLayout from 'layouts/Default';
 
 import Login from 'Auth/Login';
@@ -121,7 +121,7 @@ const App = ({fetchUser, fetchConfigInfo, userData, userLoading, history: {push}
                         <Redirect
                             exact
                             from="/"
-                            to={routes.stacks(userData.user)}
+                            to={routes.categoryStacks(userData.user, 'applications')}
                         />
                     )}
 
@@ -142,8 +142,6 @@ const App = ({fetchUser, fetchConfigInfo, userData, userLoading, history: {push}
                         <Switch>
                             <DefaultLayoutRoute path={routes.notFound()} component={NotFound} />
                             <DefaultLayoutRoute path={routes.settings()} component={Settings} />
-                            <DefaultLayoutRoute path={routes.reports()} component={Reports} />
-                            <DefaultLayoutRoute path={routes.jobs()} component={Jobs} />
                             <DefaultLayoutRoute path={routes.stacks()} component={Stacks} />
                         </Switch>
                     )}
@@ -151,8 +149,6 @@ const App = ({fetchUser, fetchConfigInfo, userData, userLoading, history: {push}
                     {!isSignedIn() && (
                         <Switch>
                             <UnAuthorizedLayoutRoute path={routes.notFound()} component={NotFound} />
-                            <UnAuthorizedLayoutRoute path={routes.reports()} component={Reports} />
-                            <UnAuthorizedLayoutRoute path={routes.jobs()} component={Jobs} />
                             <UnAuthorizedLayoutRoute path={routes.stacks()} component={Stacks} />
                         </Switch>
                     )}

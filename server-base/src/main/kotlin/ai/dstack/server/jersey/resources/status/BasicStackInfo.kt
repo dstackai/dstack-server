@@ -16,7 +16,10 @@ data class BasicStackInfo(
     @JsonProperty("user")
     val userName: String,
     val name: String,
-    val private: Boolean,
+    @Deprecated("Must be dropped eventually")
+    val private: Boolean?,
+    @JsonProperty("access_level")
+    val accessLevel: String?,
     val head: HeadInfo?,
     val permissions: List<PermissionInfo>?
 )

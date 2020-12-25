@@ -6,10 +6,8 @@ import {Link} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
 import Button from '../../Button';
 import Modal from '../../Modal';
-import Dropdown from '../../Dropdown';
 import SearchField from '../../SearchField';
 import StackListItem from '../ListItem';
-import Tabs from '../Details/components/Tabs';
 import getStackCategory from '../../utils/getStackCategory';
 import routes from '../../routes';
 import css from './styles.module.css';
@@ -23,6 +21,7 @@ type Props = {
     data: Array<Stack>,
     loading: boolean,
     currentUser?: string,
+    category: string,
 };
 
 const List = ({
@@ -31,41 +30,19 @@ const List = ({
     deleteStack,
     currentUser,
     user,
+    category,
 }: Props) => {
     const {t} = useTranslation();
 
-    const tabsMap = {
-        chart: {
-            label: t('chart_plural'),
-            value: 'chart',
-        },
-
-        table: {
-            label: t('dataSet_plural'),
-            value: 'table',
-        },
-
-        mlModel: {
-            label: t('mlModel_plural'),
-            value: 'mlModel',
-        },
-
-        app: {
-            label: t('application_plural'),
-            value: 'app',
-        },
+    const categoryMap = {
+        applications: 'app',
+        models: 'mlModel',
     };
 
-    const [tabs, setTabs] = useState([]);
-    const [activeTab, setActiveTab] = useState(null);
-    const [stacksByCategories, setStacksByCategories] = useState({});
     const [deletingStack, setDeletingStack] = useState(null);
     const [isShowWelcomeModal, setIsShowWelcomeModal] = useState(false);
     const [search, setSearch] = useState('');
     const isInitialMount = useRef(true);
-    const [sorting, setSorting] = useState(null);
-
-    const sortingItems = {lastSource: {title: t('lastChanged')}};
 
     const showWelcomeModal = () => setIsShowWelcomeModal(true);
     const onChangeSearch = value => setSearch(value);
@@ -82,32 +59,6 @@ const List = ({
             if (!localStorage.getItem('welcome-modal-is-showing') && !loading && !data.length)
                 showWelcomeModal();
         }
-
-        if (data && data.length) {
-            const stacksByCategories = {};
-            const tabs = [];
-
-            data.forEach(stack => {
-                const category = getStackCategory({
-                    application: stack.head?.preview?.application,
-                    contentType: stack.head?.preview?.content_type,
-                });
-
-                if (category && !tabs.find(i => i.value === tabsMap[category].value))
-                    tabs.push(tabsMap[category]);
-
-                if (Array.isArray(stacksByCategories[category]))
-                    stacksByCategories[category].push(stack);
-                else
-                    stacksByCategories[category] = [stack];
-            });
-
-            setTabs(tabs);
-            setStacksByCategories(stacksByCategories);
-
-            if (!activeTab || !tabs.find(i => i.value === tabsMap[activeTab].value))
-                setActiveTab(tabs[0].value);
-        }
     }, [data]);
 
     const deleteItem = () => {
@@ -123,12 +74,14 @@ const List = ({
     const getItems = () => {
         let filteredItems = [];
 
-        let items = [];
+        const items = data.filter(stack => {
+            const stackCategory = getStackCategory({
+                application: stack.head?.preview?.application,
+                contentType: stack.head?.preview?.content_type,
+            });
 
-        if (activeTab && stacksByCategories[activeTab])
-            items = stacksByCategories[activeTab];
-        else
-            items = data;
+            return stackCategory === categoryMap[category];
+        });
 
         if (items && items.length) {
             if (search.length)
@@ -146,10 +99,10 @@ const List = ({
         <div className={css.list}>
             <div className={css.header}>
                 <div className={css.title}>
-                    {currentUser === user
-                        ? t('stacks')
-                        : t('stacksOf', {name: user})
-                    }
+                    {{
+                        applications: t('application_plural'),
+                        models: t('mlModel_plural'),
+                    }[category]}
                 </div>
 
                 {Boolean(data.length) && (
@@ -169,27 +122,6 @@ const List = ({
                 )}
             </div>
 
-            {!(!loading && !Boolean(data.length)) && false && (
-                <div className={css.controls}>
-                    <Dropdown
-                        className={css.sorting}
-                        items={
-                            Object.keys(sortingItems).map(key => ({
-                                title: sortingItems[key].title,
-                                onClick: () => setSorting(key),
-                            }))
-                        }
-                    >
-                        <button
-                            className={css.sortingButton}
-                        >
-                            {sorting ? sortingItems[sorting].title : t('sort')}
-                            <span className="mdi mdi-chevron-down" />
-                        </button>
-                    </Dropdown>
-                </div>
-            )}
-
             {loading && !Boolean(data.length) && (
                 <div className={cn(css.itemList)}>
                     {new Array(12).fill({}).map((i, index) => (
@@ -207,15 +139,6 @@ const List = ({
                 </div>
             )}
 
-            {!!tabs.length && (
-                <Tabs
-                    className={css.tabs}
-                    items={tabs}
-                    value={activeTab}
-                    onChange={tab => setActiveTab(tab)}
-                />
-            )}
-
             {Boolean(data.length && items.length) && (
                 <div className={css.itemList}>
                     {items.map((item, index) => <StackListItem
@@ -230,7 +153,10 @@ const List = ({
             )}
 
             {Boolean(data.length && !items.length) && <div className={css.text}>
-                {t('noStacksAreFoundedMatchedTheSearchCriteria')}
+                {{
+                    applications: t('noApplicationsMatchingTheSearchCriteria'),
+                    models: t('noMlModelsMatchingTheSearchCriteria'),
+                }[category]}
             </div>}
 
             <Modal

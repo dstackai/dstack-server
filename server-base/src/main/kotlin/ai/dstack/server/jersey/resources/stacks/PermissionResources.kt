@@ -31,9 +31,6 @@ class PermissionResources {
     private lateinit var stackService: StackService
 
     @Inject
-    private lateinit var dashboardService: DashboardService
-
-    @Inject
     private lateinit var permissionService: PermissionService
 
     @Inject
@@ -67,14 +64,9 @@ class PermissionResources {
                 userNotFound()
             } else {
                 val (u, obj) = payload.path!!.parseStackPath()
-                val isDashboard = obj.startsWith("d/")
-                val (stack, dashboard) = Pair(
-                    if (!isDashboard) stackService.get(u, obj) else null,
-                    if (isDashboard) dashboardService.get(u, obj.substringAfter("d/")) else null
-                )
+                val stack = stackService.get(u, obj)
                 when {
-                    !isDashboard && stack == null -> stackNotFound()
-                    isDashboard && dashboard == null -> dashboardNotFound()
+                    stack == null -> stackNotFound()
                     u != user.name -> badCredentials()
                     else -> {
                         sessionService.renew(session)
@@ -118,14 +110,9 @@ class PermissionResources {
                 userNotVerified()
             } else {
                 val (u, obj) = payload!!.path!!.parseStackPath()
-                val isDashboard = obj.startsWith("d/")
-                val (stack, dashboard) = Pair(
-                    if (!isDashboard) stackService.get(u, obj) else null,
-                    if (isDashboard) dashboardService.get(u, obj.substringAfter("d/")) else null
-                )
+                val stack = stackService.get(u, obj)
                 when {
-                    !isDashboard && stack == null -> stackNotFound()
-                    isDashboard && dashboard == null -> dashboardNotFound()
+                    stack == null -> stackNotFound()
                     u != user.name -> badCredentials()
                     else -> {
                         sessionService.renew(session)

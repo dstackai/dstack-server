@@ -36,7 +36,7 @@ const List = ({
     currentUserToken,
 }: Props) => {
     const {t} = useTranslation();
-    const {user} = useParams();
+    const {user, category} = useParams();
     const [, dispatch] = useAppStore();
 
 
@@ -63,7 +63,7 @@ const List = ({
             {' '}
             {isSignedIn() && (
                 <Fragment>
-                    <Link to={routes.stacks(currentUser)}>
+                    <Link to={routes.stacks(currentUser, 'applications')}>
                         {t('goToMyStacks')}
                     </Link>.
                 </Fragment>
@@ -78,6 +78,7 @@ const List = ({
 
             <StackList
                 user={user}
+                category={category}
                 data={data}
                 loading={loading}
                 currentUser={currentUser}

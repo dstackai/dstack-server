@@ -59,13 +59,7 @@ class StackResources {
     private lateinit var permissionService: PermissionService
 
     @Inject
-    private lateinit var emailService: EmailService
-
-    @Inject
     private lateinit var config: AppConfig
-
-    @Inject
-    private lateinit var cardService: CardService
 
     companion object : KLogging()
 
@@ -103,10 +97,10 @@ class StackResources {
             if (stack != null) {
                 val session = headers.bearer?.let { sessionService.get(it) }
                 val userByToken = headers.bearer?.let { if (session == null) userService.findByToken(it) else null }
-                val public = !stack.private
                 val owner = (session != null && (session.userName == stack.userName))
                         || userByToken != null && userByToken.name == stack.userName
-                val permitted = public
+                val permitted = stack.accessLevel == AccessLevel.Public
+                        || (stack.accessLevel == AccessLevel.Internal && userByToken != null)
                         || (session != null &&
                         (session.userName == stack.userName
                                 || permissionService.get(stack.path, session.userName) != null))
@@ -120,7 +114,12 @@ class StackResources {
                     val status = GetStackStatus(
                             StackInfo(stack.userName,
                                     stack.name,
-                                    stack.private,
+                                    when (stack.accessLevel) {
+                                        AccessLevel.Private -> true
+                                        AccessLevel.Public -> false
+                                        else -> null
+                                    },
+                                    stack.accessLevel.code,
                                     head?.let {
                                         val attachments = attachmentService.findByFrame(it.path)
                                         FrameInfo(
@@ -188,8 +187,9 @@ class StackResources {
                     }.filterNotNull()
                 } else emptySequence()
                 val permittedStacks = stacks.filter { stack ->
-                    val public = !stack.private
-                    val permitted = public || session != null &&
+                    val permitted = stack.accessLevel == AccessLevel.Public
+                            || (stack.accessLevel == AccessLevel.Internal && session != null)
+                            || session != null &&
                             (session.userName == stack.userName
                                     || permissionService.get(stack.path, session.userName) != null)
                     permitted
@@ -203,12 +203,19 @@ class StackResources {
                     // TODO: Store preview in frame and not load attachments each time
                     val attachments = stack.head?.id?.let { attachmentService.findByFrame(stack.path + "/" + it) }
                     BasicStackInfo(
-                            stack.userName, stack.name, stack.private,
+                            stack.userName, stack.name,
+                            when (stack.accessLevel) {
+                                AccessLevel.Private -> true
+                                AccessLevel.Public -> false
+                                else -> null
+                            },
+                            stack.accessLevel.code,
                             stack.head?.let { h ->
                                 HeadInfo(h.id, h.timestampMillis,
-                                    attachments?.firstOrNull()?.let { a ->
-                                        PreviewInfo(a.application, a.contentType)
-                                    }) },
+                                        attachments?.firstOrNull()?.let { a ->
+                                            PreviewInfo(a.application, a.contentType)
+                                        })
+                            },
                             if (owner) permissionService.findByPath(stack.path)
                                     .map {
                                         PermissionInfo(
@@ -228,8 +235,10 @@ class StackResources {
     @Consumes(JSON_UTF8)
     fun push(payload: PushPayload?, @Context headers: HttpHeaders): Response {
         logger.debug {
-            "payload: ${payload?.copy(attachments = payload.attachments?.map { it.copy(data = if (it.data != null) "(hidden)" else null) }
-                    ?.toList())}"
+            "payload: ${
+                payload?.copy(attachments = payload.attachments?.map { it.copy(data = if (it.data != null) "(hidden)" else null) }
+                        ?.toList())
+            }"
         }
         return if (payload.isMalformed) {
             malformedRequest()
@@ -244,8 +253,7 @@ class StackResources {
                 badCredentials()
             } else {
                 if (stack == null) {
-                    val isPrivate = user.settings.general.defaultAccessLevel == AccessLevel.Private
-                    stack = Stack(user.name, s, isPrivate, null, null)
+                    stack = Stack(user.name, s, user.settings.general.defaultAccessLevel, null, null)
                     stackService.create(stack)
                 }
                 if (frame == null) {
@@ -342,9 +350,10 @@ class StackResources {
                 if (session == null || !session.valid) {
                     badCredentials()
                 } else {
-                    val isPrivate =
-                            !payload.private!! || user.settings.general.defaultAccessLevel == AccessLevel.Private
-                    val stack = Stack(user.name, payload.name!!, isPrivate, null, payload.readme)
+                    val accessLevel = payload.accessLevel?.let { AccessLevel.fromCode(it) }
+                            ?: payload.private?.let { if (it) AccessLevel.Private else AccessLevel.Public }
+                            ?: user.settings.general.defaultAccessLevel
+                    val stack = Stack(user.name, payload.name!!, accessLevel, null, payload.readme)
                     try {
                         sessionService.renew(session)
                         stackService.create(stack)
@@ -397,7 +406,6 @@ class StackResources {
         frameService.deleteByStackPath(stack.path)
         attachmentService.deleteByStackPath(stack.path)
         permissionService.deleteByPath(stack.path)
-        cardService.deleteByStackPath(stack.path)
         fileService.delete(stack.path)
     }
 
@@ -431,7 +439,9 @@ class StackResources {
                             } else {
                                 stackService.update(
                                         stack.copy(
-                                                private = payload.private ?: stack.private,
+                                                accessLevel = payload.private?.let { if (it) AccessLevel.Private else AccessLevel.Public }
+                                                        ?: payload.accessLevel?.let { AccessLevel.fromCode(it) }
+                                                        ?: stack.accessLevel,
                                                 head = Head(head.id, head.timestampMillis),
                                                 readme = payload.readme
                                                         ?: (if (payload.readme?.isEmpty() == true) null else payload.readme)
@@ -441,7 +451,10 @@ class StackResources {
                             }
                         } else {
                             if (payload.private != null || payload.readme != null) {
-                                stackService.update(stack.copy(private = payload.private ?: stack.private,
+                                stackService.update(stack.copy(
+                                        accessLevel = payload.private?.let { if (it) AccessLevel.Private else AccessLevel.Public }
+                                                ?: payload.accessLevel?.let { AccessLevel.fromCode(it) }
+                                                ?: stack.accessLevel,
                                         readme = payload.readme
                                                 ?: (if (payload.readme?.isEmpty() == true) null else payload.readme)))
                             }
@@ -471,18 +484,7 @@ private val UpdateStackPayload?.isMalformed
             || stack.isMalformedStackPath
             || (private == null && head == null && readme == null)
 
-private val DeleteCommentPayload?.isMalformed
-    get() = this?.id.isNullOrBlank()
-
-private val EditCommentPayload?.isMalformed
-    get() = this?.id.isNullOrBlank() || this?.text.isNullOrBlank()
-
 const val STACK_NAME_PATTERN = "[a-zA-Z0-9-_/]{3,255}\$"
-
-val CreateCommentPayload?.isMalformed
-    get() = this == null
-            || this.stack.isMalformedStackPath
-            || this.text.isNullOrBlank()
 
 val UpdatePermissionPayload?.isMalformed
     get() = this == null
@@ -525,8 +527,10 @@ val PushPayload?.isMalformed: Boolean
         // TODO: Do additional validation for parameters
         val containsMalformedAttachments = this?.attachments?.any {
             (it.data == null && it.length == null) ||
-                    it.params?.values?.any { p -> !(p is String || p is Number || p is Boolean
-                            || (p is Map<*, *> && p["type"] != null)) } == true
+                    it.params?.values?.any { p ->
+                        !(p is String || p is Number || p is Boolean
+                                || (p is Map<*, *> && p["type"] != null))
+                    } == true
         } == true
         val missingIndex = this?.index == null
         val missingSingleAttachment = this?.attachments?.size != 1

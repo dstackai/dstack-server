@@ -237,14 +237,14 @@ const Details = ({
                 </div>
             </div>
 
-            <StackFrames
-                frames={get(data, 'frames', [])}
-                frame={currentFrameId}
-                headId={headId}
-                onMarkAsHead={onChangeHeadFrame}
-                onChange={onChangeFrame}
-                className={css.revisions}
-            />
+            {/*<StackFrames*/}
+            {/*    frames={get(data, 'frames', [])}*/}
+            {/*    frame={currentFrameId}*/}
+            {/*    headId={headId}*/}
+            {/*    onMarkAsHead={onChangeHeadFrame}*/}
+            {/*    onChange={onChangeFrame}*/}
+            {/*    className={css.revisions}*/}
+            {/*/>*/}
 
             {Boolean(tabs.length) && <Tabs
                 className={css.tabs}

@@ -2,18 +2,26 @@ package ai.dstack.server.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-data class Notifications(
-    @Deprecated("Gonna be removed in October")
-    @Evolution(default = true, booleanDefault = true)
-    val newsletter: Boolean
-)
-
 enum class AccessLevel {
     @JsonProperty("private")
     Private,
 
+    @JsonProperty("internal")
+    Internal,
+
     @JsonProperty("public")
-    Public
+    Public;
+
+    companion object {
+        fun fromCode(code: String): AccessLevel {
+            return AccessLevel.values().find { it.name.equals(code, ignoreCase = true) }!!
+        }
+    }
+
+    val code: String
+        get() {
+            return name.toLowerCase()
+        }
 }
 
 data class General(
@@ -22,6 +30,5 @@ data class General(
 )
 
 data class Settings(
-    val general: General,
-    val notifications: Notifications
+    val general: General
 )

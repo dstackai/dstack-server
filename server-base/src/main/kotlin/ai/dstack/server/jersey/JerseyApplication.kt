@@ -31,7 +31,6 @@ class JerseyApplication {
                     PermissionResources::class.java,
                     FrameResources::class.java,
                     AttachResources::class.java,
-                    DashboardResources::class.java,
                     UserResources::class.java,
                     SupportResources::class.java,
                     ConfigResources::class.java,

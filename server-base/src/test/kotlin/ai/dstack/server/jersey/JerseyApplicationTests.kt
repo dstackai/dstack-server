@@ -6,7 +6,6 @@ import ai.dstack.server.jersey.resources.payload.*
 import ai.dstack.server.jersey.resources.status.*
 import ai.dstack.server.jersey.services.*
 import ai.dstack.server.model.*
-import ai.dstack.server.model.Stack
 import ai.dstack.server.services.*
 import com.fasterxml.jackson.databind.JsonNode
 import com.google.common.truth.Truth
@@ -38,8 +37,6 @@ class JerseyApplicationTests : JerseyTest() {
     private lateinit var frameService: InMemoryFrameService
     private lateinit var attachmentService: InMemoryAttachmentService
     private lateinit var fileService: InMemoryFileService
-    private lateinit var dashboardService: InMemoryDashboardService
-    private lateinit var cardService: InMemoryCardService
     private lateinit var jobService: InMemoryJobService
     private lateinit var userService: InMemoryUserService
     private lateinit var sessionService: InMemorySessionService
@@ -56,8 +53,6 @@ class JerseyApplicationTests : JerseyTest() {
         frameService = InMemoryFrameService()
         attachmentService = InMemoryAttachmentService()
         fileService = InMemoryFileService()
-        dashboardService = InMemoryDashboardService()
-        cardService = InMemoryCardService()
         userService = InMemoryUserService()
         jobService = InMemoryJobService()
         sessionService = InMemorySessionService()
@@ -67,8 +62,6 @@ class JerseyApplicationTests : JerseyTest() {
                     override fun configure() {
                         bind(appConfig).to(AppConfig::class.java)
                         bind(stackService).to(StackService::class.java)
-                        bind(cardService).to(CardService::class.java)
-                        bind(dashboardService).to(DashboardService::class.java)
                         bind(sessionService).to(SessionService::class.java)
                         bind(frameService).to(FrameService::class.java)
                         bind(attachmentService).to(AttachmentService::class.java)
@@ -96,8 +89,6 @@ class JerseyApplicationTests : JerseyTest() {
                 newsletterService
         )
 
-        dashboardService.reset()
-        cardService.reset()
         stackService.reset()
         frameService.reset()
         attachmentService.reset()
@@ -172,7 +163,6 @@ class JerseyApplicationTests : JerseyTest() {
         Truth.assertThat(rememberResponseSessionStatus.user).isEqualTo("test_user")
         Truth.assertThat(rememberResponseSessionStatus.email).isEqualTo("test@gmail.com")
         Truth.assertThat(rememberResponseSessionStatus.settings.general.defaultAccessLevel).isEqualTo("public")
-        Truth.assertThat(rememberResponseSessionStatus.settings.notifications.newsletter).isEqualTo(true)
         Truth.assertThat(rememberResponseSessionStatus.token).isEqualTo(verifiedUser.token)
         Truth.assertThat(rememberResponseSessionStatus.verified).isTrue()
 
@@ -191,7 +181,6 @@ class JerseyApplicationTests : JerseyTest() {
         Truth.assertThat(infoUserStatus.user).isEqualTo("test_user")
         Truth.assertThat(infoUserStatus.email).isEqualTo("test@gmail.com")
         Truth.assertThat(infoUserStatus.settings.general.defaultAccessLevel).isEqualTo("public")
-        Truth.assertThat(infoUserStatus.settings.notifications.newsletter).isEqualTo(true)
         Truth.assertThat(infoUserStatus.token).isEqualTo(verifiedUser.token)
         Truth.assertThat(infoUserStatus.createdDate).isEqualTo(LocalDate.now().toString())
         Truth.assertThat(infoUserStatus.verified).isTrue()
@@ -210,8 +199,7 @@ class JerseyApplicationTests : JerseyTest() {
         val testUser = User(
                 "test_user", "test@gmail.com", "test",
                 "test_token", "test_code", true, UserRole.Admin,
-                LocalDate.now(), Settings(General(AccessLevel.Public),
-                Notifications(true)), "test_user"
+                LocalDate.now(), Settings(General(AccessLevel.Public)), "test_user"
         )
         userService.create(testUser)
 
@@ -343,122 +331,11 @@ class JerseyApplicationTests : JerseyTest() {
     }
 
     @Test
-    fun testDashboards() {
-        val testUser = User(
-                "test_user", "test@gmail.com", "test",
-                "test_token", "test_code", true, UserRole.Admin,
-                LocalDate.now(), Settings(General(AccessLevel.Public),
-                Notifications(true)), "test_user"
-        )
-        userService.create(testUser)
-        val testSession = Session(
-                "test_session", "test_user", LocalDateTime.now(ZoneOffset.UTC).plusMinutes(60).toEpochSecond(ZoneOffset.UTC)
-        )
-        sessionService.create(testSession)
-        // TODO: Submit stacks via push
-        val testStack1 = Stack(
-                "test_user", "test_stack_1", false, null, null
-        )
-        stackService.create(testStack1)
-        val testStack2 = Stack(
-                "test_user", "test_stack_2", false, null, null
-        )
-        stackService.create(testStack2)
-        val testStack3 = Stack(
-                "test_user", "test_stack_3", false, null, null
-        )
-        stackService.create(testStack3)
-        val testStack4 = Stack(
-                "test_user", "test_stack_4", false, null, null
-        )
-        stackService.create(testStack4)
-
-        val createDashboardResponse: Response = target("/dashboards/create").request()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + testSession.id)
-                .post(
-                        Entity.json(
-                                CreateDashboardPayload("test_user", null, null, false)
-                        )
-                )
-        Truth.assertThat(createDashboardResponse.status).isEqualTo(Response.Status.OK.statusCode)
-        val createDashboardStatus = createDashboardResponse.entity<GetDashboardStatus>()
-        Truth.assertThat(createDashboardStatus.dashboard.id).isNotNull()
-        Truth.assertThat(createDashboardStatus.dashboard.title).isEqualTo(null)
-        Truth.assertThat(createDashboardStatus.dashboard.private).isEqualTo(false)
-
-        val insertCardsResponse: Response = target("/dashboards/cards/insert").request()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + testSession.id)
-                .post(
-                        Entity.json(
-                                InsertCardsPayload("test_user", createDashboardStatus.dashboard.id,
-                                        0, listOf(
-                                        InsertCardsPayloadCard("test_user/test_stack_1", null, "test description 1", null),
-                                        InsertCardsPayloadCard("test_user/test_stack_2", null, "test description 2", 2)
-                                ))
-                        )
-                )
-        Truth.assertThat(insertCardsResponse.status).isEqualTo(Response.Status.OK.statusCode)
-        val updateDashboardStatus = insertCardsResponse.entity<UpdateDashboardStatus>()
-        Truth.assertThat(updateDashboardStatus.dashboard.id).isEqualTo(createDashboardStatus.dashboard.id)
-        Truth.assertThat(updateDashboardStatus.dashboard.cards).containsExactly(
-                CardInfo("test_user/test_stack_1", 0, "test_stack_1", "test description 1", 1, null),
-                CardInfo("test_user/test_stack_2", 1, "test_stack_2", "test description 2", 2, null)
-        )
-
-        val insertCardsResponse2: Response = target("/dashboards/cards/insert").request()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + testSession.id)
-                .post(
-                        Entity.json(
-                                InsertCardsPayload("test_user", createDashboardStatus.dashboard.id,
-                                        0, listOf(
-                                        InsertCardsPayloadCard("test_user/test_stack_3", null, "test description 3", 2),
-                                        InsertCardsPayloadCard("test_user/test_stack_4", null, null, null)
-                                ))
-                        )
-                )
-        Truth.assertThat(insertCardsResponse2.status).isEqualTo(Response.Status.OK.statusCode)
-        val updateDashboardStatus2 = insertCardsResponse2.entity<UpdateDashboardStatus>()
-        Truth.assertThat(updateDashboardStatus2.dashboard.id).isEqualTo(createDashboardStatus.dashboard.id)
-        Truth.assertThat(updateDashboardStatus2.dashboard.cards).containsExactly(
-                CardInfo("test_user/test_stack_3", 0, "test_stack_3", "test description 3", 2, null),
-                CardInfo("test_user/test_stack_4", 1, "test_stack_4", null, 1, null),
-                CardInfo("test_user/test_stack_1", 2, "test_stack_1", "test description 1", 1, null),
-                CardInfo("test_user/test_stack_2", 3, "test_stack_2", "test description 2", 2, null)
-        )
-
-        val updateDashboardResponse: Response = target("/dashboards/update").request()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + testSession.id)
-                .post(
-                        Entity.json(
-                                UpdateDashboardPayload("test_user", createDashboardStatus.dashboard.id,
-                                        null, "new description", null)
-                        )
-                )
-        Truth.assertThat(updateDashboardResponse.status).isEqualTo(Response.Status.OK.statusCode)
-
-        val getDashboardResponse = target("/dashboards/test_user/${createDashboardStatus.dashboard.id}")
-                .request()
-                .get()
-        Truth.assertThat(getDashboardResponse.status).isEqualTo(Response.Status.OK.statusCode)
-        val getDashboardStatus = getDashboardResponse.entity<GetDashboardStatus>()
-        Truth.assertThat(getDashboardStatus.dashboard.id).isEqualTo(createDashboardStatus.dashboard.id)
-        Truth.assertThat(getDashboardStatus.dashboard.title).isEqualTo(null)
-        Truth.assertThat(getDashboardStatus.dashboard.description).isEqualTo("new description")
-        Truth.assertThat(getDashboardStatus.dashboard.cards).containsExactly(
-                CardInfo("test_user/test_stack_3", 0, "test_stack_3", "test description 3", 2, null),
-                CardInfo("test_user/test_stack_4", 1, "test_stack_4", null, 1, null),
-                CardInfo("test_user/test_stack_1", 2, "test_stack_1", "test description 1", 1, null),
-                CardInfo("test_user/test_stack_2", 3, "test_stack_2", "test description 2", 2, null)
-        )
-    }
-
-    @Test
     fun testStacks() {
         val testUser = User(
                 "test_user", "test@gmail.com", "test",
                 "test_token", "test_code", true, UserRole.Admin,
-                LocalDate.now(), Settings(General(AccessLevel.Public),
-                Notifications(newsletter = true)), "test_user"
+                LocalDate.now(), Settings(General(AccessLevel.Public)), "test_user"
         )
         userService.create(testUser)
 
@@ -531,6 +408,7 @@ class JerseyApplicationTests : JerseyTest() {
                 )
 
         val updateStackPayload = UpdateStackPayload("test_user/test_stack",
+                null,
                 null,
                 null,
                 "Some readme"

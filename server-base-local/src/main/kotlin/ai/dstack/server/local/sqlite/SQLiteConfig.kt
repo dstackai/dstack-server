@@ -43,17 +43,7 @@ open class SQLiteConfig {
     open fun attachmentService(@Autowired repository: AttachmentRepository): AttachmentService {
         return SQLiteAttachmentService(repository)
     }
-
-    @Bean
-    open fun carService(@Autowired repository: CardRepository): CardService {
-        return SQLiteCardService(repository)
-    }
-
-    @Bean
-    open fun dashboardService(@Autowired repository: DashboardRepository): DashboardService {
-        return SQLiteDashboardService(repository)
-    }
-
+    
     @Bean
     open fun frameService(@Autowired repository: FrameRepository): FrameService {
         return SQLiteFrameService(repository)

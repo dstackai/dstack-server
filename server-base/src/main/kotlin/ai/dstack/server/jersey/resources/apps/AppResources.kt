@@ -9,6 +9,7 @@ import ai.dstack.server.jersey.resources.payload.ExecutePayload
 import ai.dstack.server.jersey.resources.stackNotFound
 import ai.dstack.server.jersey.resources.stacks.parseStackPath
 import ai.dstack.server.jersey.resources.status.toStatus
+import ai.dstack.server.model.AccessLevel
 import ai.dstack.server.services.*
 import mu.KLogging
 import javax.inject.Inject
@@ -58,8 +59,8 @@ class AppResources {
             return if (stack != null) {
                 val session = headers.bearer?.let { sessionService.get(it) }
                 val userByToken = headers.bearer?.let { if (session == null) userService.findByToken(it) else null }
-                val public = !stack.private
-                val permitted = public
+                val permitted = stack.accessLevel == AccessLevel.Public
+                        || (stack.accessLevel == AccessLevel.Internal && userByToken != null)
                         || (session != null &&
                         (session.userName == stack.userName
                                 || permissionService.get(stack.path, session.userName) != null))
@@ -110,8 +111,8 @@ class AppResources {
                 if (stack != null) {
                     val session = headers.bearer?.let { sessionService.get(it) }
                     val userByToken = headers.bearer?.let { if (session == null) userService.findByToken(it) else null }
-                    val public = !stack.private
-                    val permitted = public
+                    val permitted = stack.accessLevel == AccessLevel.Public
+                            || (stack.accessLevel == AccessLevel.Internal && userByToken != null)
                             || (session != null &&
                             (session.userName == stack.userName
                                     || permissionService.get(stack.path, session.userName) != null))

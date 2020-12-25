@@ -9,15 +9,9 @@ data class UpdateSettingsPayloadGeneral(
     val defaultAccessLevel: String?
 )
 
-data class UpdateSettingsPayloadNotifications(
-    @Deprecated("Gonna be removed in October")
-    val newsletter: Boolean?
-)
-
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class UpdateSettingsPayload(
     val user: String?,
-    val general: UpdateSettingsPayloadGeneral?,
-    val notifications: UpdateSettingsPayloadNotifications?
+    val general: UpdateSettingsPayloadGeneral?
 )

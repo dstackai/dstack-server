@@ -27,7 +27,10 @@ data class BasicFrameInfo(
 data class StackInfo(
     val user: String,
     val name: String,
-    val private: Boolean,
+    @Deprecated("Must be droppped eventually")
+    val private: Boolean?,
+    @JsonProperty("access_level")
+    val accessLevel: String,
     val head: FrameInfo?,
     val readme: String?,
     val permissions: List<PermissionInfo>?,

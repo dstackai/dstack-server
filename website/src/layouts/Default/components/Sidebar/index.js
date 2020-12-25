@@ -1,6 +1,6 @@
 import React, {useRef} from 'react';
 import {connect} from 'react-redux';
-import {Link, NavLink, useRouteMatch, useParams, useLocation} from 'react-router-dom';
+import {Link, NavLink, useParams, useLocation} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
 import cx from 'classnames';
 import {useAppStore, appStoreActionTypes, Tooltip} from '@dstackai/dstack-react';
@@ -9,6 +9,8 @@ import {useOnClickOutside} from '@dstackai/dstack-react/dist/hooks';
 import config from 'config';
 import routes from 'routes';
 import logo from 'assets/logo.svg';
+import {ReactComponent as Apps} from 'assets/applications.svg';
+import {ReactComponent as Models} from 'assets/models.svg';
 import logoCompact from 'assets/logo-compact.svg';
 import css from './styles.module.css';
 import {fetchList as fetchStacksList} from 'Stacks/List/actions';
@@ -27,7 +29,6 @@ const Sidebar = ({
     fetchStacksList, compact, toggleCollapse,
 }: Props) => {
     const {t} = useTranslation();
-    const {path} = useRouteMatch();
     const params = useParams();
     const {pathname} = useLocation();
     const [, dispatch] = useAppStore();
@@ -43,8 +44,8 @@ const Sidebar = ({
             item.onClick();
     };
 
-    const refreshStacks = () => {
-        if (pathname === routes.stacks(params.user)) {
+    const getRefreshStacks = (category: 'applications' | 'category') => () => {
+        if (pathname === routes.categoryStacks(params.user, category)) {
             dispatch({type: appStoreActionTypes.START_PROGRESS});
             fetchStacksList(params.user, () => {
                 dispatch({type: appStoreActionTypes.COMPLETE_PROGRESS});
@@ -54,29 +55,16 @@ const Sidebar = ({
 
     const menuItems = [
         {
-            icon: 'mdi-view-dashboard',
-            to: routes.stacks(currentUser),
-            label: t('stacks'),
-
-            isActive: () => (
-                new RegExp(path).test(routes.stacks())
-                && (!currentUser || (currentUser === params.user))
-                && !new RegExp(path + '$').test(routes.reports())
-            ),
-
-            onClick: refreshStacks,
+            svg: Apps,
+            to: routes.categoryStacks(currentUser, 'applications'),
+            label: t('application_plural'),
+            onClick: getRefreshStacks('applications'),
         },
-
         {
-            icon: 'mdi-chart-arc',
-            to: routes.reports(currentUser),
-            label: t('reports'),
-        },
-
-        {
-            icon: 'mdi-code-tags',
-            to: routes.jobs(currentUser),
-            label: t('jobs'),
+            svg: Models,
+            to: routes.categoryStacks(currentUser, 'models'),
+            label: t('mlModel_plural'),
+            onClick: getRefreshStacks('models'),
         },
     ];
 
@@ -105,7 +93,12 @@ const Sidebar = ({
                             activeClassName="active"
                             isActive={item.isActive}
                         >
-                            <span className={cx(css.icon, 'mdi', item.icon)} />
+                            {item.svg && (
+                                <item.svg className={css.icon} />
+                            )}
+                            {item.icon && (
+                                <span className={cx(css.icon, 'mdi', item.icon)} />
+                            )}
                             <span className={css.label}>{item.label}</span>
                             {/*<span className={css.count}>11</span>*/}
 
@@ -171,17 +164,10 @@ const Sidebar = ({
             </li>
         </ul>}
 
-        <Tooltip
-            overlayContent={compact ? t('uncollapse') : t('collapse')}
-            placement="rightTop"
-            trigger={compact ? ['hover'] : []}
-            align={{offset: [20, -10]}}
-        >
-            <button className={css.collapse} onClick={toggleCollapse}>
-                <span className={cx(css.icon, 'mdi mdi-chevron-double-left')} />
-                <span className={css.label}>{t('collapse')}</span>
-            </button>
-        </Tooltip>
+        <button className={css.collapse} onClick={toggleCollapse}>
+            <span className={cx(css.icon, 'mdi mdi-chevron-double-left')} />
+            <span className={css.label}>{t('collapse')}</span>
+        </button>
     </div>;
 };
 

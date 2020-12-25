@@ -19,9 +19,7 @@ function_data = sys.argv[3]
 with open("controller.pickle", "rb") as f:
     controller = cloudpickle.load(f)
 
-for c in controller.map.values():
-    for i in range(len(c._parents)):
-        c._parents[i] = controller.map[c._parents[i]._id]
+controller.init()
 
 if function_type == "source":
     t = function_data.rsplit(".", -1)
@@ -37,46 +35,59 @@ else:
 
 
 def apply(views, execution_id, stack_path, logs_handler):
-    executions = Path(executions_home)
-    executions.mkdir(exist_ok=True)
-    execution_file = executions / (execution_id + '.json')
+    with redirect_stdout(logs_handler):
+        executions = Path(executions_home)
+        executions.mkdir(exist_ok=True)
+        execution_file = executions / (execution_id + '.json')
 
-    execution = {
-        'stack': stack_path,
-        'id': execution_id,
-        'status': 'RUNNING' if apply else 'READY'
-    }
+        execution = {
+            'stack': stack_path,
+            'id': execution_id,
+            'status': 'RUNNING' if apply else 'READY'
+        }
 
-    try:
-        has_dependant = False
-        has_apply = False
-        for c in controller.map.values():
-            if isinstance(c, Apply):
-                has_apply = True
-            if c.is_dependent():
-                has_dependant = True
-        if has_dependant and not has_apply:
-            views = controller.list(views)
-            execution['views'] = [v.pack() for v in views]
-            execution_file.write_text(json.dumps(execution))
+        try:
+            has_dependant = False
+            has_apply = False
+            for c in controller.controls_by_id.values():
+                if isinstance(c, Apply):
+                    has_apply = True
+                if c.is_dependent():
+                    has_dependant = True
+            if has_dependant and not has_apply:
+                views = controller.list(views)
+                execution['views'] = [v.pack() for v in views]
+                execution_file.write_text(json.dumps(execution))
 
-        result = controller.apply(func, views)
-        execution['status'] = 'FINISHED'
-        output = {}
-        encoder = AutoHandler()
-        frame_data = encoder.encode(result, None, None)
-        output['application'] = frame_data.application
-        output['content_type'] = frame_data.content_type
-        output['data'] = frame_data.data.base64value()
-        execution['output'] = output
-    except Exception:
-        execution['status'] = 'FAILED'
-        execution['logs'] = str(traceback.format_exc())
+            result = controller.apply(func, views)
+            execution['status'] = 'FINISHED'
+            output = {}
+            encoder = AutoHandler()
+            frame_data = encoder.encode(result, None, None)
+            output['application'] = frame_data.application
+            output['content_type'] = frame_data.content_type
+            output['data'] = frame_data.data.base64value()
+            execution['output'] = output
+        except Exception:
+            execution['status'] = 'FAILED'
+            print(str(traceback.format_exc()))
 
     if 'views' not in execution:
         execution['views'] = [v.pack() for v in views]
     execution['logs'] = logs_handler.getvalue()
     execution_file.write_text(json.dumps(execution))
+
+
+def update(views):
+    with redirect_stdout(logs_handler):
+        try:
+            updated_views = controller.list(views)
+            status = 'READY'
+        except Exception:
+            updated_views = views
+            status = 'FAILED'
+            print(str(traceback.format_exc()))
+    print_views_stdout(updated_views, logs_handler, status)
 
 
 def parse_command(command):
@@ -88,8 +99,9 @@ def parse_command(command):
     return views, execution_id, stack_path
 
 
-def print_views_stdout(views, logs_handler):
+def print_views_stdout(views, logs_handler, status):
     execution = {
+        'status': status,
         'views': [v.pack() for v in (views or [])],
         'logs': logs_handler.getvalue()
     }
@@ -103,11 +115,7 @@ while True:
     views, execution_id, stack_path = parse_command(command)
     logs_handler = StringIO()
     if views and execution_id and stack_path:
-        with redirect_stdout(logs_handler):
-            apply(views, execution_id, stack_path, logs_handler)
+        apply(views, execution_id, stack_path, logs_handler)
     else:
         # TODO: Make it possible to transport the views state without transporting the entire data
-        # TODO: Handle exceptions
-        with redirect_stdout(logs_handler):
-            updated_views = controller.list(views)
-        print_views_stdout(updated_views, logs_handler)
+        update(views)

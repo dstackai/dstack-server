@@ -1,27 +1,19 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+val snapshotVersion = "0.2.dev1"
+
 plugins {
     java
     kotlin("jvm") version Deps.KOTLIN_VERSION
 }
 
-println()
-println("Printing all environment variables:\n")
-System.getenv().forEach {
-    println("\"${it.key}\" = \"${it.value}\"")
-}
-println()
-println("Printing all project properties:\n")
-project.properties.forEach {
-    println("\"${it.key}\" = \"${it.value}\"")
-}
-
 val globalArtifactsBuildDir: File by extra { buildDir }
+
 allprojects {
     apply(plugin = "idea")
 
     group = "ai.dstack"
-    version = project.findProperty("dstack_version")?.toString() ?: "0.1-SNAPSHOT"
+    version = project.findProperty("dstack_version")?.toString() ?: "$snapshotVersion-SNAPSHOT"
 
     repositories {
         maven { url = uri("https://kotlin.bintray.com/kotlinx") }

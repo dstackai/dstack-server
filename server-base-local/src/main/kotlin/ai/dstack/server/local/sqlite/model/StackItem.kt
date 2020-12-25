@@ -50,12 +50,20 @@ data class StackItem(
     @Column(name = "stack_name")
     val name: String,
 
+    @Deprecated("Must be dropped eventually")
     @Column
-    val private: Boolean,
+    val private: Boolean?,
+
+    @Column(name = "access_level")
+    val accessLevel: String?,
 
     @Embedded
     val head: StackItemHead?,
 
     @Column()
     val readme: String?
-)
+) {
+    fun effectiveAccessLevel(): String {
+        return accessLevel ?: if (private == true) "private" else "public"
+    }
+}

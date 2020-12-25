@@ -49,7 +49,7 @@ class LocalExecutionService @Autowired constructor(
                     receiveResponse(p)
                 }.toUpdatedViews()
 
-                Execution(stackPath, id, updatedViews.views, ExecutionStatus.Ready, null, updatedViews.logs)
+                Execution(stackPath, id, updatedViews.views, ExecutionStatus.fromCode(updatedViews.status), null, updatedViews.logs)
             }
         } else {
             Execution(stackPath, id = id, views = emptyList(), status = ExecutionStatus.Failed, output = null,
@@ -66,7 +66,8 @@ class LocalExecutionService @Autowired constructor(
 
     data class UpdatedViews (
         val views: List<Map<String, Any?>>,
-        val logs: String
+        val logs: String,
+        val status: String
     )
 
     private fun String?.toUpdatedViews() =
@@ -163,7 +164,7 @@ class LocalExecutionService @Autowired constructor(
     private fun destDir(attachment: Attachment) =
             File(config.appDirectory + "/" + attachment.filePath)
 
-    private val executorVersion = 4
+    private val executorVersion = 5
 
     private fun executorFile(attachment: Attachment) = File(destDir(attachment), "execute_v${executorVersion}.py")
 

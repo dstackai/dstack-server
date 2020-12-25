@@ -3,9 +3,10 @@ package ai.dstack.server.jersey.resources.payload
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 
-@Deprecated("Gonna be removed in October")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class DeleteCommentPayload(
-    val id: String?
+data class EditUserPayload(
+    val name: String?,
+    val email: String?,
+    val role: String?
 )

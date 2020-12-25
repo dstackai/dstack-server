@@ -126,10 +126,9 @@ interface EmailService {
         ): String {
             val encodedEmail = URLEncoder.encode(toEmail, "UTF-8")
             // TODO: cLeanup
-            val word = if (path.contains("/d/")) "dashboard" else "stack"
             return """Hello,
                 |
-                |The user ${fromUser.name} has invited you to see the '$path' $word. To see the $word, please follow this personal registration url:
+                |The user ${fromUser.name} has invited you to see the '$path' stack. To see the stack, please follow this personal registration url:
                 | 
                 |${config.address}/auth/signup?email=${encodedEmail}&code=${verificationCode}
                 |
@@ -145,10 +144,9 @@ interface EmailService {
         ): String {
             val encodedEmail = URLEncoder.encode(toEmail, "UTF-8")
             // TODO: cLeanup
-            val word = if (path.contains("/d/")) "dashboard" else "stack"
             return """<p>Hello,
                 |
-                |<p>The user ${fromUser.name} has invited you to see the '$path' $word. To see the $word, please follow this personal registration url:</p>
+                |<p>The user ${fromUser.name} has invited you to see the '$path' stack. To see the stack, please follow this personal registration url:</p>
                 | 
                 |<p><a href="${config.address}/auth/signup?email=${encodedEmail}&code=${verificationCode}">${config.address}/auth/signup?email=${encodedEmail}&code=${verificationCode}</a></p>
                 |
@@ -177,10 +175,9 @@ interface EmailService {
             config: AppConfig
         ): String {
             // TODO: cLeanup
-            val word = if (path.contains("/d/")) "dashboard" else "stack"
             return """<p>Hello, ${toUser.name}!</p>
                 |
-                |<p>The user ${fromUser.name} has invited you to see the '$path' $word. To see the $word, please follow this url:</p>
+                |<p>The user ${fromUser.name} has invited you to see the '$path' stack. To see the stack, please follow this url:</p>
                 | 
                 |<p><a href="${config.address}/$path">${config.address}/$path</a></p>
                 |
