@@ -7,22 +7,22 @@ import org.springframework.stereotype.Component
 class LocalCliAppConfig : AppConfig {
     override val hostName: String
         get() {
-            return System.getenv("dstack_host_name") ?: "localhost"
+            return System.getenv("DSTACK_HOST_NAME") ?: "localhost"
         }
 
     override val port: Int
         get() {
-            return System.getenv("dstack_port")?.toInt() ?: internalPort
+            return System.getenv("DSTACK_PORT")?.toInt() ?: internalPort
         }
 
     override val internalPort: Int
         get() {
-            return System.getenv("dstack_internal_port")?.toInt() ?: defaultInternalPort.toInt()
+            return System.getenv("DSTACK_INTERNAL_PORT")?.toInt() ?: defaultInternalPort.toInt()
         }
 
     override val ssl: Boolean
         get() {
-            return System.getenv("dstack_ssl")?.toBoolean() ?: false
+            return System.getenv("DSTACK_SSL")?.toBoolean() ?: false
         }
 
     override val address: String
@@ -34,7 +34,7 @@ class LocalCliAppConfig : AppConfig {
     override val homeDirectory: String
         get() {
             val dir = defaultHomeDirectory ?: "."
-            return System.getenv("dstack_home") ?: "$dir/.dstack"
+            return System.getenv("DSTACK_HOME") ?: "$dir/.dstack"
         }
 
     override val dataDirectory: String
@@ -64,52 +64,52 @@ class LocalCliAppConfig : AppConfig {
 
     override val adminEmail: String
         get() {
-            return System.getenv("dstack_admin_email")
+            return System.getenv("DSTACK_ADMIN_EMAIL")
         }
 
     override val smtpHost: String?
         get() {
-            return System.getenv("dstack_smtp_host")
+            return System.getenv("DSTACK_SMTP_HOST")
         }
 
     override val smtpPort: Int?
         get() {
-            return System.getenv("dstack_smtp_port").toInt()
+            return System.getenv("DSTACK_SMTP_PORT").toInt()
         }
 
     override val smtpUser: String?
         get() {
-            return System.getenv("dstack_smtp_user")
+            return System.getenv("DSTACK_SMTP_USER")
         }
 
     override val smtpPassword: String?
         get() {
-            return System.getenv("dstack_smtp_password")
+            return System.getenv("DSTACK_SMTP_PASSWORD")
         }
 
     override val smtpStartTLS: Boolean
         get() {
-            return System.getenv("dstack_smtp_starttls")?.toBoolean() ?: true
+            return System.getenv("DSTACK_SMTP_STARTTLS")?.toBoolean() ?: true
         }
 
     override val smtpFrom: String
         get() {
-            return System.getenv("dstack_smtp_from")
+            return System.getenv("DSTACK_SMTP_FROM")
         }
 
     override val user: String?
         get() {
-            return System.getenv("dstack_user") ?: defaultUser
+            return System.getenv("DSTACK_USER") ?: defaultUser
         }
 
     override val password: String?
         get() {
-            return System.getenv("dstack_password") ?: defaultPassword
+            return System.getenv("DSTACK_PASSWORD") ?: defaultPassword
         }
 
     override val pythonExecutable: String?
         get() {
-            return System.getenv("dstack_python_executable") ?: defaultPythonExecutable
+            return System.getenv("DSTACK_PYTHON_EXECUTABLE") ?: defaultPythonExecutable
         }
 
     override val emailEnabled: Boolean
