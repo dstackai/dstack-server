@@ -2,7 +2,9 @@ FROM python:3.8
 
 ADD requirements.txt /
 
-ENV DSTACK_PORT=""
+ENV PIP_URL_PRIMARY=https://test.pypi.org/simple/
+ENV PIP_URL_SECONDARY=https://pypi.org/simple/
+ENV DSTACK_PIP_VERSION=0.6dev22
 
 RUN uname -r \
   && cat /etc/os-release \
@@ -19,8 +21,10 @@ RUN uname -r \
   && pip3 install requests \
   && pip3 install deprecation \
   && pip3 install -r /requirements.txt \
-  && pip3 install --index-url https://test.pypi.org/simple/ --upgrade --no-cache-dir --extra-index-url=https://pypi.org/simple/ dstack==0.6dev22  \
+  && pip3 install --index-url ${PIP_URL_PRIMARY} --upgrade --no-cache-dir --extra-index-url=${PIP_URL_SECONDARY} dstack==${DSTACK_PIP_VERSION}  \
   && dstack server update \
   && cat /root/.dstack/config.yaml
+
+ENV DSTACK_PORT=""
 
 ENTRYPOINT dstack server start --port ${DSTACK_PORT:-8080}
