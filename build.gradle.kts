@@ -1,6 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val snapshotVersion = "0.2.dev5"
+val snapshotVersion = "0.2.dev6"
 
 plugins {
     java

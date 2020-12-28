@@ -536,7 +536,7 @@ class UserResources {
                     userNotFound()
                 } else {
                     sessionService.renew(session)
-                    user = user.copy(email = payload.email?.let { if (it.isBlank()) null else it } ?: user.email,
+                    user = user.copy(email = if (payload.email == null) user.email else if (payload.email.isBlank()) null else payload.email,
                             role = payload.role?.let { UserRole.fromCode(it) } ?: user.role)
                     userService.update(user)
                     if (config.emailEnabled && !payload.email.isNullOrBlank()) {
