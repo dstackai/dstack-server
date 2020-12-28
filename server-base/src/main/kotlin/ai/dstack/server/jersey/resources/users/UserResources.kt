@@ -72,7 +72,8 @@ class UserResources {
                                 GeneralInfo(user.settings.general.defaultAccessLevel.name.toLowerCase())
                         ),
                         user.createdDate.toString(),
-                        user.role.code
+                        user.role.code,
+                        null
                 ))
             }
         }
@@ -397,12 +398,13 @@ class UserResources {
             sessionService.renew(session)
             val users = userService.findAll()
             ok(UsersStatus(users.map {
-                UserStatus(user.name, user.token, user.email, user.verified,
+                UserStatus(it.name, it.token, it.email, it.verified,
                         SettingsInfo(
-                                GeneralInfo(user.settings.general.defaultAccessLevel.name.toLowerCase())
+                                GeneralInfo(it.settings.general.defaultAccessLevel.name.toLowerCase())
                         ),
-                        user.createdDate.toString(),
-                        user.role.code
+                        it.createdDate.toString(),
+                        it.role.code,
+                        it.verificationCode
                 )
             }.toList()))
         }
@@ -453,9 +455,14 @@ class UserResources {
                             if (config.emailEnabled && user.email != null) {
                                 emailService.sendVerificationEmail(user)
                             }
-                            ok(VerificationCodeStatus(payload.name,
-                                    "${config.address}/auth/verify?user=${payload.name}&code=${user.verificationCode}")
-                            )
+                            ok(UserStatus(user.name, user.token, user.email, user.verified,
+                                    SettingsInfo(
+                                            GeneralInfo(user.settings.general.defaultAccessLevel.name.toLowerCase())
+                                    ),
+                                    user.createdDate.toString(),
+                                    user.role.code,
+                                    user.verificationCode
+                            ))
                         } catch (e: EntityAlreadyExists) {
                             userAlreadyExists()
                         }
@@ -496,9 +503,14 @@ class UserResources {
                     if (config.emailEnabled && user.email != null) {
                         emailService.sendVerificationEmail(user)
                     }
-                    ok(VerificationCodeStatus(user.name,
-                            "${config.address}/auth/verify?user=${payload.name}&code=${user.verificationCode}")
-                    )
+                    ok(UserStatus(user.name, user.token, user.email, user.verified,
+                            SettingsInfo(
+                                    GeneralInfo(user.settings.general.defaultAccessLevel.name.toLowerCase())
+                            ),
+                            user.createdDate.toString(),
+                            user.role.code,
+                            user.verificationCode
+                    ))
                 }
             }
         }
@@ -530,9 +542,14 @@ class UserResources {
                     if (config.emailEnabled && !payload.email.isNullOrBlank()) {
                         emailService.sendVerificationEmail(user)
                     }
-                    ok(VerificationCodeStatus(user.name,
-                            "${config.address}/auth/verify?user=${payload.name}&code=${user.verificationCode}")
-                    )
+                    ok(UserStatus(user.name, user.token, user.email, user.verified,
+                            SettingsInfo(
+                                    GeneralInfo(user.settings.general.defaultAccessLevel.name.toLowerCase())
+                            ),
+                            user.createdDate.toString(),
+                            user.role.code,
+                            user.verificationCode
+                    ))
                 }
             }
         }
