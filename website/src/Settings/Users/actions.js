@@ -19,5 +19,41 @@ export default () => {
         });
     };
 
-    return {addUser};
+    const editUser = (params: {name: string}) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const request = await api.post(apiUrl + config.ADMIN_USERS_EDIT, params);
+
+                resolve(request.data);
+            } catch (e) {
+                reject(e);
+            }
+        });
+    };
+
+    const deleteUser = (params: {name: string}) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const request = await api.post(apiUrl + config.ADMIN_USERS_DELETE, params);
+
+                resolve(request.data);
+            } catch (e) {
+                reject(e);
+            }
+        });
+    };
+
+    const resetUserAuthCode = (params: {name: string}) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const request = await api.post(apiUrl + config.ADMIN_USERS_RESET, params);
+
+                resolve(request.data);
+            } catch (e) {
+                reject(e);
+            }
+        });
+    };
+
+    return {addUser, editUser, deleteUser, resetUserAuthCode};
 };

@@ -4,7 +4,7 @@ import React from 'react';
 import {Switch, Route, Redirect} from 'react-router-dom';
 import {NavLink} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
-import {Tabs} from '@dstackai/dstack-react';
+import {Tabs, useAppStore} from '@dstackai/dstack-react';
 import Account from './Account';
 import Users from './Users';
 import routes from 'routes';
@@ -16,6 +16,7 @@ type Props = {
 
 const Settings = ({}: Props) => {
     const {t} = useTranslation();
+    const [{currentUser: {data: userData}}] = useAppStore();
 
     return (
         <div className={css.settings}>
@@ -32,11 +33,14 @@ const Settings = ({}: Props) => {
                         activeClassName: 'active',
                     },
 
-                    {
-                        label: t('user_plural'),
-                        to: routes.usersSettings(),
-                        activeClassName: 'active',
-                    },
+                    ...(userData?.role === 'admin'
+                        ? [{
+                            label: t('user_plural'),
+                            to: routes.usersSettings(),
+                            activeClassName: 'active',
+                        }]
+                        : []
+                    ),
                 ]}
             />
 
@@ -44,7 +48,10 @@ const Settings = ({}: Props) => {
                 <Switch>
                     <Redirect exact from={routes.settings()} to={routes.accountSettings()} />
                     <Route path={routes.accountSettings()} component={Account} />
-                    <Route path={routes.usersSettings()} component={Users} />
+
+                    {userData?.role === 'admin' && (
+                        <Route path={routes.usersSettings()} component={Users} />
+                    )}
                 </Switch>
             </div>
         </div>

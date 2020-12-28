@@ -1,10 +1,10 @@
-const isValidUserName = userName => {
-  const errors = {
+var isValidUserName = function isValidUserName(userName) {
+  var errors = {
     notAllowedCharacters: 'notAllowedCharacters',
     tooShort: 'tooShort',
     tooLong: 'tooLong'
   };
-  const testRegexp = /^[a-zA-Z0-9-_]+$/;
+  var testRegexp = /^[a-zA-Z0-9-_]+$/;
   if (userName.length < 3) return {
     isValid: false,
     error: errors.tooShort
@@ -21,21 +21,21 @@ const isValidUserName = userName => {
     isValid: true
   };
 };
-const isEmail = value => {
+var isEmail = function isEmail(value) {
   if (!value) return true;
   return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(value);
 };
-const isRequired = value => {
+var isRequired = function isRequired(value) {
   return !(value === null || value === undefined || value === '');
 };
-const noSpaces = value => {
+var noSpaces = function noSpaces(value) {
   return /^[\S]*$/.test(value);
 };
-const isValidStackName = value => {
+var isValidStackName = function isValidStackName(value) {
   return /^[^\/]/.test(value) && /^[a-zA-Z0-9\/_]+$/.test(value);
 };
-const isValidEmail = mail => {
-  const errors = {
+var isValidEmail = function isValidEmail(mail) {
+  var errors = {
     invalidEmailAddress: 'invalidEmailAddress'
   };
   if (mail && !isEmail(mail)) return {
@@ -46,8 +46,8 @@ const isValidEmail = mail => {
     isValid: true
   };
 };
-const isValidPassword = password => {
-  const errors = {
+var isValidPassword = function isValidPassword(password) {
+  var errors = {
     mustNotBeEmpty: 'mustNotBeEmpty'
   };
   if (password.length === 0) return {

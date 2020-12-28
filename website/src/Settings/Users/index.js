@@ -6,6 +6,7 @@ import {Button, Avatar, Dropdown, useAppStore} from '@dstackai/dstack-react';
 import {dataFetcher} from '@dstackai/dstack-react/dist/utils';
 import config from 'config';
 import Edit from './Edit';
+import LinkModal from './LinkModal';
 import actions from './actions';
 import css from './styles.module.css';
 
@@ -17,18 +18,31 @@ const formModel = {
     role: '',
 };
 
+const getAuthLink = ({user, verification_code: code}) => {
+    return `${window.origin}/auth/verify?user=${user}&code=${code}`;
+};
+
 const Users = () => {
     const [showEdit, setShowEdit] = useState(false);
+    const [showLink, setShowLink] = useState(false);
+    const [linkData, setLinkData] = useState(formModel);
     const [editData, setEditData] = useState(formModel);
-    const [, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [{currentUser: {data: userData}}] = useAppStore();
     const {t} = useTranslation();
-    const {} = actions();
+    const {addUser, editUser, deleteUser, resetUserAuthCode} = actions();
 
-    // console.log(loading, addUser);
+    const {data, mutate} = useSWR([
+        config.API_URL + config.ADMIN_USERS_LIST,
+        dataFormat,
+    ], dataFetcher);
 
     const closeEdit = () => {
         setShowEdit(false);
+    };
+
+    const closeLinkModal = () => {
+        setShowLink(false);
     };
 
     const addNew = () => {
@@ -36,28 +50,105 @@ const Users = () => {
         setShowEdit(true);
     };
 
-    const submit = async data => {
+    const submit = async submitData => {
         setLoading(true);
 
-        data.asd = 0;
-        // const result = await addUser(data);
+        if (submitData.token)
+            editUser({
+                name: submitData.name,
+                email: submitData.email,
+                role: submitData.role,
+            })
+                .then(response => {
+                    setShowEdit(false);
 
-        // console.log(result);
+                    const userIndex = data.findIndex(i => i.user === submitData.name);
 
-        setLoading(false);
-        setShowEdit(false);
+                    if (userIndex >= 0)
+                        data[userIndex] = {
+                            ...data[userIndex],
+                            ...response,
+                        };
+
+                    mutate([...data]);
+                })
+                .finally(() => setLoading(false));
+        else
+            addUser(submitData)
+                .then(response => {
+                    setShowEdit(false);
+                    mutate([...data, response]);
+                    setLinkData(response);
+                    setShowLink(true);
+                })
+                .finally(() => setLoading(false));
+    };
+
+    const getSetUserRoleFunction = (user, role) => () => {
+        editUser({
+            name: user.user,
+            email: user.email,
+            role,
+        })
+            .then(response => {
+                const userIndex = data.findIndex(i => i.user === user.name);
+
+                if (userIndex >= 0)
+                    data[userIndex] = {
+                        ...data[userIndex],
+                        ...response,
+                    };
+
+                mutate([...data]);
+            });
+    };
+
+    const getDeleteUserFunction = name => () => {
+        deleteUser({name})
+            .then(() => {
+                mutate(data.filter(i => i.user !== name));
+            });
+    };
+
+    const getEditUserFunction = user => () => {
+        setEditData({
+            ...user,
+            name: user.user,
+        });
+
+        setShowEdit(true);
+    };
+
+    const refreshAuthCode = userName => {
+        resetUserAuthCode({name: userName})
+            .then(response => {
+                const userIndex = data.findIndex(i => i.user === userName);
+
+                if (userIndex >= 0)
+                    data[userIndex] = {
+                        ...data[userIndex],
+                        ...response,
+                    };
+
+                mutate([...data]);
+                
+                if (linkData)
+                    setLinkData(data[userIndex]);
+                
+                if (editData) {
+                    setEditData({
+                        ...data[userIndex],
+                        name: data[userIndex].user,
+                    });
+                }
+            });
     };
 
     const roleMap = {
         'admin': {title: t('admin')},
-        'white': {title: t('readAndWrite')},
+        'write': {title: t('readAndWrite')},
         'read': {title: t('readOnly')},
     };
-
-    const {data} = useSWR([
-        config.API_URL + config.ADMIN_USERS_LIST,
-        dataFormat,
-    ], dataFetcher);
 
     return (
         <div className={css.users}>
@@ -106,6 +197,13 @@ const Users = () => {
                                 <span className={css.text}>{item.email}</span>
                             </div>
 
+                            {/*{item.role === 'admin' && (*/}
+                            {/*    <div className={cn(css.cell, css.access)}>*/}
+                            {/*        {roleMap[item.role]?.title}*/}
+                            {/*    </div>*/}
+                            {/*)}*/}
+
+                            {/*{item.role !== 'admin' && (*/}
                             <div className={cn(css.cell, css.access)}>
                                 <Dropdown
                                     className={cn(css.dropdown)}
@@ -113,17 +211,17 @@ const Users = () => {
                                     items={[
                                         {
                                             title: t('admin'),
-                                            onClick: () => {},
+                                            onClick: getSetUserRoleFunction(item, 'admin'),
                                         },
 
                                         {
                                             title: t('readAndWrite'),
-                                            onClick: () => {},
+                                            onClick: getSetUserRoleFunction(item, 'write'),
                                         },
 
                                         {
                                             title: t('readOnly'),
-                                            onClick: () => {},
+                                            onClick: getSetUserRoleFunction(item, 'read'),
                                         },
                                     ]}
                                 >
@@ -141,6 +239,7 @@ const Users = () => {
                                         className={css.control}
                                         color="secondary"
                                         size="small"
+                                        onClick={getEditUserFunction(item)}
                                     >
                                         <span className="mdi mdi-pencil" />
                                     </Button>
@@ -149,11 +248,13 @@ const Users = () => {
                                         className={css.control}
                                         color="secondary"
                                         size="small"
+                                        onClick={getDeleteUserFunction(item.user)}
                                     >
                                         <span className="mdi mdi-delete" />
                                     </Button>
                                 </div>
                             </div>
+                            {/*)}*/}
                         </div>
                     ))}
                 </div>}
@@ -164,6 +265,16 @@ const Users = () => {
                 isShow={showEdit}
                 onClose={closeEdit}
                 submit={submit}
+                loading={loading}
+                getAuthLink={getAuthLink}
+                refresh={() => refreshAuthCode(editData.user)}
+            />
+
+            <LinkModal
+                onClose={closeLinkModal}
+                isShow={showLink}
+                link={linkData && getAuthLink(linkData)}
+                refresh={() => refreshAuthCode(linkData.user)}
             />
         </div>
     );

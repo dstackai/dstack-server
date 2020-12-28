@@ -50,6 +50,7 @@ function _extends() {
 }
 
 var isEmail = function isEmail(value) {
+  if (!value) return true;
   return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(value);
 };
 var isRequired = function isRequired(value) {
@@ -213,6 +214,9 @@ var actionsTypes = {
   FETCH_CURRENT_USER: 'app/user/FETCH',
   FETCH_CURRENT_USER_SUCCESS: 'app/user/FETCH_SUCCESS',
   FETCH_CURRENT_USER_FAIL: 'app/user/FETCH_FAIL',
+  FETCH_CONFIG_INFO: 'app/config/FETCH',
+  FETCH_CONFIG_INFO_SUCCESS: 'app/config/FETCH_SUCCESS',
+  FETCH_CONFIG_INFO_FAIL: 'app/config/FETCH_FAIL',
   START_PROGRESS: 'app/START_PROGRESS',
   SET_PROGRESS: 'app/SET_PROGRESS',
   COMPLETE_PROGRESS: 'app/COMPLETE_PROGRESS',

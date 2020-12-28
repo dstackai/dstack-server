@@ -1,6 +1,8 @@
 @import "styles/variables.css";
 @import "styles/media.css";
 .field {
+    position: relative;
+    padding-bottom: 16px;
     display: flex;
     * {
         box-sizing: border-box;
@@ -69,7 +71,15 @@
     color: var(--color-dark-gray);
     opacity: .7;
 }
-
+.error {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    color: var(--color-red);
+    font-size: 12px;
+    line-height: 14px;
+}
 
 :global {
     .select-field {

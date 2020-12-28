@@ -1,33 +1,30 @@
 @import "styles/variables.css";
 @import "styles/media.css";
 .dialog {
-    width: 440px !important;
+    padding-left: 40px;
+    padding-right: 40px;
+    width: 500px !important;
 }
-.form {
-    padding-top: 20px;
+.title {
+    font-size: 14px;
+    line-height: 22px;
 }
-.field {
-    max-width: 275px;
-    &.select {
-        max-width: 130px;
-    }
-}
+
 .fieldWrap {
-    max-width: 275px;
     margin-top: 12px;
     position: relative;
-    margin-bottom: 16px;
-    .field {
-        padding-bottom: 0 !important;
-        & input {
-            padding-right: 60px !important;
-        }
+}
+
+.field {
+    padding-bottom: 0 !important;
+    & input {
+        padding-right: 60px !important;
     }
 }
 
 .refresh {
     position: absolute;
-    top: calc(24px + (100% - 24px) / 2);
+    top: 50%;
     right: 36px;
     transform: translateY(-50%);
     line-height: 16px;
@@ -44,17 +41,9 @@
 
 .copy {
     position: absolute;
-    top: calc(24px + (100% - 24px) / 2);
+    top: 50%;
     right: 14px;
     transform: translateY(-50%);
 }
-.buttons {
-    display: flex;
-    margin-top: 20px;
-}
-.button {
-    &:nth-child(n+2) {
-        margin-left: 10px;
-    }
-}
+
 

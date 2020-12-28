@@ -10,7 +10,7 @@ type Props = {
     children?: Function,
     className?: string,
     copyText: string,
-    buttonTitle?: string,
+    buttonTitle?: ?string,
     successMessage?: string,
 };
 
@@ -29,12 +29,10 @@ const Copy = ({children, className, copyText, successMessage, buttonTitle}: Prop
             ? children({onClick: onCLick})
             : (
                 <div className={css.button} onClick={onCLick}>
-                    <span className={cx(css.icon, 'mdi mdi-content-copy')} />
+                    <span className={cx(css.icon, {[css.margin]: buttonTitle !== null}, 'mdi mdi-content-copy')} />
 
-                    {buttonTitle
-                        ? buttonTitle
-                        : t('copy')
-                    }
+                    {buttonTitle && buttonTitle}
+                    {buttonTitle === undefined && t('copy')}
                 </div>
             )
         }

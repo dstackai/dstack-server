@@ -37,9 +37,12 @@ const SelectField = ({
     mode,
     onChange,
     options = [],
+    errors = [],
     showSearch = true,
     ...props
 }: Props) => {
+    const hasErrors = Boolean(errors.length);
+    
     const onChangeHandle = (value: Array<string>) => {
         if (Array.isArray(value) && value.indexOf(allValue) >= 0)
             if (value.length > options.length)
@@ -101,6 +104,7 @@ const SelectField = ({
             </Select>
 
             {label && <label className={css.label}>{label}</label>}
+            {hasErrors && <div className={css.error}>{errors.join(', ')}</div>}
         </div>
     );
 };

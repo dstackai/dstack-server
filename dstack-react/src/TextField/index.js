@@ -1,5 +1,5 @@
 // @flow
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import cx from 'classnames';
 import css from './styles.module.css';
 
@@ -10,8 +10,36 @@ type Props = {
     errors?: Array<string>,
 }
 
-const TextField = ({label, className, size = 'normal', errors = [], ...props}: Props) => {
+const validateValue = value => {
+    if (typeof value === 'string' || value)
+        return value;
+    else
+        return '';
+} ;
+
+const TextField = ({
+    label,
+    className,
+    size = 'normal',
+    errors = [],
+    value: restValue,
+    onChange: restOnChange,
+    ...props
+}: Props) => {
+    const [value, setValue] = useState(() => validateValue(restValue));
     const hasErrors = Boolean(errors.length);
+
+    useEffect(() => {
+        if (restValue !== value)
+            setValue(validateValue(restValue));
+    }, [restValue]);
+
+    const onChange = e => {
+        setValue(e.target.value);
+
+        if (typeof restOnChange === 'function')
+            restOnChange(e);
+    };
 
     return (
         <div className={cx(css.field, className, size, {disabled: props.disabled})}>
@@ -22,6 +50,8 @@ const TextField = ({label, className, size = 'normal', errors = [], ...props}: P
                     {/*$FlowFixMe*/}
                     <input
                         className={cx({error: hasErrors})}
+                        value={value}
+                        onChange={onChange}
                         {...props}
                     />
                 </div>

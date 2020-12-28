@@ -11,6 +11,7 @@ type Props = {
     isShow?: boolean,
     className?: string,
     dialogClassName?: string,
+    titleClassName?: string,
     size?: 'confirmation' | 'small' | 'big',
     onClose: Function,
     children?: Node,
@@ -21,6 +22,7 @@ const Modal = ({
     title,
     className,
     dialogClassName,
+    titleClassName,
     size = 'big',
     onClose,
     isShow,
@@ -38,7 +40,7 @@ const Modal = ({
                 <div className={cx(css.dialog, size, dialogClassName)}>
                     {withCloseButton && <span className={cx(css.close, 'mdi mdi-close')} onClick={onClose} />}
 
-                    {title && <div className={css.title}>{title}</div>}
+                    {title && <div className={cx(css.title, titleClassName)}>{title}</div>}
                     {children}
                 </div>
             </div>

@@ -2,7 +2,7 @@
 import React, {useEffect} from 'react';
 import cn from 'classnames';
 import {useTranslation} from 'react-i18next';
-import {Modal, TextField, SelectField, Button} from '@dstackai/dstack-react';
+import {Modal, TextField, SelectField, Button, Copy} from '@dstackai/dstack-react';
 import {useForm} from '@dstackai/dstack-react/dist/hooks';
 import css from './styles.module.css';
 
@@ -11,28 +11,43 @@ type Props = {
     isShow: boolean,
     onClose: Function,
     submit: Function,
+    loading: boolean,
+    getAuthLink: Function,
 };
 
-const Edit = ({data = {}, isShow, onClose, submit}: Props) => {
-    const {form, setForm, onChange} = useForm({});
+const Edit = ({data = {}, isShow, onClose, submit, loading, refresh, getAuthLink}: Props) => {
+    const {form, setForm, formErrors, checkValidForm, onChange} = useForm(data, {
+        name: ['required'],
+        email: ['email'],
+        role: ['required'],
+    });
+
     const {t} = useTranslation();
 
     useEffect(() => {
         if (isShow)
             setForm(data);
+
     }, [isShow]);
 
+    const getErrorsText = fieldName => {
+        if (formErrors[fieldName] && formErrors[fieldName].length)
+            return [t(`formErrors.${formErrors[fieldName][0]}`)];
+    };
+
     const save = () => {
-        checkValidForm();
-        submit(form);
+        const isValid = checkValidForm();
+
+        if (isValid)
+            submit(form);
     };
 
     return (
         <Modal
-            title={t('addUser')}
+            title={data.token ? t('editUser') : t('addUser')}
             size="small"
             isShow={isShow}
-            onClose={onClose}
+            onClose={loading ? undefined : onClose}
             withCloseButton
             dialogClassName={css.dialog}
         >
@@ -44,7 +59,9 @@ const Edit = ({data = {}, isShow, onClose, submit}: Props) => {
                     label={t('username')}
                     name={'name'}
                     placeholder={t('enterUsernameWithoutSpaces')}
+                    errors={getErrorsText('name')}
                     onChange={onChange}
+                    readOnly={data.token}
                 />
 
                 <TextField
@@ -54,6 +71,7 @@ const Edit = ({data = {}, isShow, onClose, submit}: Props) => {
                     label={t('email')}
                     name={'email'}
                     onChange={onChange}
+                    errors={getErrorsText('email')}
                 />
 
                 <SelectField
@@ -64,6 +82,7 @@ const Edit = ({data = {}, isShow, onClose, submit}: Props) => {
                     name={'role'}
                     label={t('access')}
                     onChange={value => onChange('role', value)}
+                    errors={getErrorsText('role')}
 
                     options={[
                         {
@@ -81,17 +100,46 @@ const Edit = ({data = {}, isShow, onClose, submit}: Props) => {
                     ]}
                 />
 
+                {data.token && (
+                    <div className={css.fieldWrap}>
+                        <TextField
+                            label={t('loginLink')}
+                            size="middle"
+                            className={css.field}
+                            readOnly
+                            value={getAuthLink(data)}
+                        />
+
+                        {refresh && (
+                            <div
+                                className={css.refresh}
+                                onClick={refresh}
+                            >
+                                <span className={cn(css.icon, 'mdi mdi-refresh')} />
+                            </div>
+                        )}
+
+                        <Copy
+                            className={css.copy}
+                            buttonTitle={null}
+                            copyText={getAuthLink(data)}
+                        />
+                    </div>
+                )}
+
                 <div className={css.buttons}>
                     <Button
+                        disabled={loading}
                         className={css.button}
                         variant="contained"
                         color="primary"
                         onClick={save}
                     >
-                        {t('addUser')}
+                        {data.token ? t('save') : t('addUser')}
                     </Button>
 
                     <Button
+                        disabled={loading}
                         className={css.button}
                         variant="contained"
                         color="secondary"

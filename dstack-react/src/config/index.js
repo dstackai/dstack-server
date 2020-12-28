@@ -10,6 +10,9 @@ export default {
 
     ADMIN_USERS_LIST: '/users/admin/list',
     ADMIN_USERS_CREATE: '/users/admin/create',
+    ADMIN_USERS_EDIT: '/users/admin/edit',
+    ADMIN_USERS_DELETE: '/users/admin/delete',
+    ADMIN_USERS_RESET: '/users/admin/reset',
 
     USER_DATA_URL: '/users/remember',
     CONFIG_INFO_URL: '/config/info',
