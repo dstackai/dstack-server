@@ -444,7 +444,7 @@ class UserResources {
                                     token,
                                     verificationCode,
                                     true,
-                                    UserRole.fromCode(payload.role),
+                                    UserRole.fromCode(payload.role!!),
                                     LocalDate.now(ZoneOffset.UTC),
                                     Settings(
                                             General(AccessLevel.Public)
