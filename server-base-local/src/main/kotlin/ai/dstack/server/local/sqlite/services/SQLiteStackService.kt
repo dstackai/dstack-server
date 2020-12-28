@@ -15,7 +15,11 @@ class SQLiteStackService(private val repository: StackRepository) : StackService
         return repository.findById(mapId(user, name)).toNullable()?.toStack()
     }
 
-    override fun findByUser(user: String, consistent: Boolean): Sequence<Stack> {
+    override fun findAll(): Sequence<Stack> {
+        return repository.findAll().asSequence().map { it.toStack() }
+    }
+
+    override fun findByUser(user: String): Sequence<Stack> {
         return repository.findAllByUser(user).asSequence().map { it.toStack() }
     }
 

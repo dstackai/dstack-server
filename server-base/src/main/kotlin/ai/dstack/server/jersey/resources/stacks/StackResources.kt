@@ -167,65 +167,61 @@ class StackResources {
     @GET
     @Path("/{user}")
     @Produces(JSON_UTF8)
-    fun stacks(@PathParam("user") u: String?, @Context headers: HttpHeaders): Response {
-        logger.debug { "user: $u" }
-        return if (u.isNullOrBlank()) {
-            malformedRequest()
+    fun stacksByUser(@PathParam("user") u: String?, @Context headers: HttpHeaders): Response {
+        return stacks(headers)
+    }
+
+    @GET
+    @Produces(JSON_UTF8)
+    fun stacksNoUser(@Context headers: HttpHeaders): Response {
+        return stacks(headers)
+    }
+
+    private fun stacks(headers: HttpHeaders): Response {
+        val currentUserSession = headers.bearer?.let { sessionService.get(it) }
+        return if (currentUserSession != null && !currentUserSession.valid) {
+            badCredentials()
         } else {
-            val user = userService.get(u)
-            if (user == null) {
-                userNotFound()
-            } else {
-                val stacks = stackService.findByUser(u)
-                val session = headers.bearer?.let { sessionService.get(it) }
-                val owner = session != null && (user.name == session.userName)
-                val sharedStacks = if (owner) {
-                    // TODO: This is not optimal solution
-                    permissionService.findByIdentity(u).map { p ->
-                        val (u, s) = p.path.parseStackPath()
-                        stackService.get(u, s)
-                    }.filterNotNull()
-                } else emptySequence()
-                val permittedStacks = stacks.filter { stack ->
-                    val permitted = stack.accessLevel == AccessLevel.Public
-                            || (stack.accessLevel == AccessLevel.Internal && session != null)
-                            || session != null &&
-                            (session.userName == stack.userName
-                                    || permissionService.get(stack.path, session.userName) != null)
-                    permitted
-                }.plus(sharedStacks)
-                        .sortedWith(compareByDescending<Stack, Long?>(nullsFirst()) { it.head?.timestampMillis })
-                        .toList()
-                if (session != null) {
-                    sessionService.renew(session)
-                }
-                ok(GetStacksStatus(permittedStacks.map { stack ->
-                    // TODO: Store preview in frame and not load attachments each time
-                    val attachments = stack.head?.id?.let { attachmentService.findByFrame(stack.path + "/" + it) }
-                    BasicStackInfo(
-                            stack.userName, stack.name,
-                            when (stack.accessLevel) {
-                                AccessLevel.Private -> true
-                                AccessLevel.Public -> false
-                                else -> null
-                            },
-                            stack.accessLevel.code,
-                            stack.head?.let { h ->
-                                HeadInfo(h.id, h.timestampMillis,
-                                        attachments?.firstOrNull()?.let { a ->
-                                            PreviewInfo(a.application, a.contentType)
-                                        })
-                            },
-                            if (owner) permissionService.findByPath(stack.path)
-                                    .map {
-                                        PermissionInfo(
-                                                it.userName,
-                                                it.email
-                                        )
-                                    }.toList() else null
-                    )
-                }.toList()))
+            val allStacks = stackService.findAll()
+            val sharedWithCurrentUserStackPaths = currentUserSession?.let {
+                permissionService.findByIdentity(it.userName).map { p -> p.path }.filterNotNull()
+            }.orEmpty()
+            val comparatorByHeadComparator = compareByDescending<Stack, Long?>(nullsFirst()) { it.head?.timestampMillis }
+            val permittedStacks = allStacks.filter { stack ->
+                stack.accessLevel == AccessLevel.Public
+                        || (stack.accessLevel == AccessLevel.Internal && currentUserSession != null)
+                        || (currentUserSession != null && currentUserSession.userName == stack.userName)
+                        || sharedWithCurrentUserStackPaths.contains(stack.path)
+            }.sortedWith(comparatorByHeadComparator).toList()
+            if (currentUserSession != null) {
+                sessionService.renew(currentUserSession)
             }
+            ok(GetStacksStatus(permittedStacks.map { stack ->
+                // TODO: Store preview in frame and not load attachments each time
+                val attachments = stack.head?.id?.let { attachmentService.findByFrame(stack.path + "/" + it) }
+                BasicStackInfo(
+                        stack.userName, stack.name,
+                        when (stack.accessLevel) {
+                            AccessLevel.Private -> true
+                            AccessLevel.Public -> false
+                            else -> null
+                        },
+                        stack.accessLevel.code,
+                        stack.head?.let { h ->
+                            HeadInfo(h.id, h.timestampMillis,
+                                    attachments?.firstOrNull()?.let { a ->
+                                        PreviewInfo(a.application, a.contentType)
+                                    })
+                        },
+                        if (currentUserSession != null && currentUserSession.userName == stack.userName) {
+                            permissionService.findByPath(stack.path).map {
+                                PermissionInfo(it.userName, it.email)
+                            }.toList()
+                        } else {
+                            null
+                        }
+                )
+            }.toList()))
         }
     }
 

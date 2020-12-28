@@ -5,6 +5,7 @@ import ai.dstack.server.local.cli.config.Profile
 import ai.dstack.server.model.*
 import ai.dstack.server.services.AppConfig
 import ai.dstack.server.services.UserService
+import org.fusesource.jansi.AnsiConsole
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
 import java.io.File
@@ -25,21 +26,27 @@ open class Startup {
 
     @PostConstruct
     fun initialize() {
-        var user = userService.get("dstack")
+        val userName = appConfig.user ?: "dstack"
+        var user = userService.get(userName)
         if (user == null) {
             user = User(
-                name = "dstack",
+                name = userName,
                 email = null,
-                password = RandomString(8, ThreadLocalRandom.current()).nextString(),
+                password = appConfig.password ?: RandomString(8, ThreadLocalRandom.current()).nextString(),
                 token = UUID.randomUUID().toString(),
                 verificationCode = UUID.randomUUID().toString(),
                 verified = true,
                 role = UserRole.Admin,
                 createdDate = LocalDate.now(),
-                unverifiedName = "dstack",
+                unverifiedName = userName,
                 settings = Settings(General(AccessLevel.Public))
             )
             userService.create(user)
+        } else {
+            if (appConfig.password != null && user.password != appConfig.password) {
+                user = user.copy(password = appConfig.password!!)
+                userService.update(user)
+            }
         }
         var autoConfigure = false
         val defaultConfigFile = File(appConfig.homeDirectory + "/config.yaml")
@@ -54,13 +61,14 @@ open class Startup {
             defaultConfig["default"] = Profile(user.name, user.token, server)
             Config.write(defaultConfigFile, defaultConfig)
         }
+        AnsiConsole.systemInstall()
         val ANSI_RESET = "\u001B[0m"
         val ANSI_UNDERLINE = "\u001B[4m"
         val ANSI_BOLD = "\u001B[1m"
         val ANSI_BLUE = "\u001B[34m"
         val ANSI_BRIGHT_WHITE = "\u001B[33m"
         val ANSI_YELLOW = "\u001B[37m"
-        println("To access the application, open this URL in the browser: ${ANSI_BLUE}${ANSI_UNDERLINE}http://localhost:${appConfig.internalPort}/auth/verify?user=dstack&code=${user.verificationCode}&next=/${ANSI_RESET}")
+        println("To access the application, open this URL in the browser: ${ANSI_BLUE}${ANSI_UNDERLINE}http://localhost:${appConfig.internalPort}/auth/verify?user=${user.name}&code=${user.verificationCode}&next=/${ANSI_RESET}")
         if (autoConfigure) {
             println()
             println("The ${ANSI_BOLD}default${ANSI_RESET} profile in \"$defaultConfigFile\" is already configured. You are welcome to push your applications using Python package.")

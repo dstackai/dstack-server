@@ -197,9 +197,6 @@ class LocalSchedulerService @Autowired constructor(
             file.parentFile.mkdirs()
             file.writeText(job.code)
             file.deleteOnExit()
-            if (config.rscriptExecutable != null) {
-                commands.addAll(listOf("--rscript", config.rscriptExecutable!!))
-            }
             val p = ProcessBuilder(commands)
                     .directory(File(config.jobDirectory))
                     .start()

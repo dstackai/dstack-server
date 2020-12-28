@@ -72,7 +72,8 @@ class UserResources {
                                 GeneralInfo(user.settings.general.defaultAccessLevel.name.toLowerCase())
                         ),
                         user.createdDate.toString(),
-                        user.role.code
+                        user.role.code,
+                        null
                 ))
             }
         }
@@ -397,12 +398,13 @@ class UserResources {
             sessionService.renew(session)
             val users = userService.findAll()
             ok(UsersStatus(users.map {
-                UserStatus(user.name, user.token, user.email, user.verified,
+                UserStatus(it.name, it.token, it.email, it.verified,
                         SettingsInfo(
-                                GeneralInfo(user.settings.general.defaultAccessLevel.name.toLowerCase())
+                                GeneralInfo(it.settings.general.defaultAccessLevel.name.toLowerCase())
                         ),
-                        user.createdDate.toString(),
-                        user.role.code
+                        it.createdDate.toString(),
+                        it.role.code,
+                        it.verificationCode
                 )
             }.toList()))
         }
@@ -426,8 +428,8 @@ class UserResources {
                 if (user != null && user.verified) {
                     userAlreadyExists()
                 } else {
-                    user = payload.email?.let { userService.findByEmail(it) }
-                    if (payload.email != null && user != null && user.verified) {
+                    user = if (!payload.email.isNullOrBlank()) userService.findByEmail(payload.email) else null
+                    if (user != null && user.verified) {
                         userEmailAlreadyRegistered()
                     } else {
                         try {
@@ -437,12 +439,12 @@ class UserResources {
                             val password = getRandomSpecialChars(8)
                             user = User(
                                     payload.name!!,
-                                    payload.email,
+                                    if (!payload.email.isNullOrBlank()) payload.email else null,
                                     password,
                                     token,
                                     verificationCode,
                                     true,
-                                    UserRole.Write,
+                                    UserRole.fromCode(payload.role!!),
                                     LocalDate.now(ZoneOffset.UTC),
                                     Settings(
                                             General(AccessLevel.Public)
@@ -453,9 +455,14 @@ class UserResources {
                             if (config.emailEnabled && user.email != null) {
                                 emailService.sendVerificationEmail(user)
                             }
-                            ok(VerificationCodeStatus(payload.name,
-                                    "${config.address}/auth/verify?user=${payload.name}&code=${user.verificationCode}")
-                            )
+                            ok(UserStatus(user.name, user.token, user.email, user.verified,
+                                    SettingsInfo(
+                                            GeneralInfo(user.settings.general.defaultAccessLevel.name.toLowerCase())
+                                    ),
+                                    user.createdDate.toString(),
+                                    user.role.code,
+                                    user.verificationCode
+                            ))
                         } catch (e: EntityAlreadyExists) {
                             userAlreadyExists()
                         }
@@ -496,9 +503,14 @@ class UserResources {
                     if (config.emailEnabled && user.email != null) {
                         emailService.sendVerificationEmail(user)
                     }
-                    ok(VerificationCodeStatus(user.name,
-                            "${config.address}/auth/verify?user=${payload.name}&code=${user.verificationCode}")
-                    )
+                    ok(UserStatus(user.name, user.token, user.email, user.verified,
+                            SettingsInfo(
+                                    GeneralInfo(user.settings.general.defaultAccessLevel.name.toLowerCase())
+                            ),
+                            user.createdDate.toString(),
+                            user.role.code,
+                            user.verificationCode
+                    ))
                 }
             }
         }
@@ -530,9 +542,14 @@ class UserResources {
                     if (config.emailEnabled && !payload.email.isNullOrBlank()) {
                         emailService.sendVerificationEmail(user)
                     }
-                    ok(VerificationCodeStatus(user.name,
-                            "${config.address}/auth/verify?user=${payload.name}&code=${user.verificationCode}")
-                    )
+                    ok(UserStatus(user.name, user.token, user.email, user.verified,
+                            SettingsInfo(
+                                    GeneralInfo(user.settings.general.defaultAccessLevel.name.toLowerCase())
+                            ),
+                            user.createdDate.toString(),
+                            user.role.code,
+                            user.verificationCode
+                    ))
                 }
             }
         }
@@ -578,7 +595,6 @@ val RegisterPayload?.isMalformed
 val CreateUserPayload?.isMalformed
     get() = this == null
             || this.name.isMalformedUserName
-            || (this.email != null && this.email.isMalformedEmail)
             || this.role == null
 
 val DeleteUserPayload?.isMalformed
@@ -593,7 +609,7 @@ val EditUserPayload?.isMalformed
     get() = this == null
             || this.name.isMalformedUserName
             || (this.email == null && this.role == null)
-            || (this.role != null && UserRole.values().map { it.name.toUpperCase() }.contains(this.role.toUpperCase()))
+            || (this.role != null && !UserRole.values().map { it.name.toUpperCase() }.contains(this.role.toUpperCase()))
 
 val String?.isMalformedEmail: Boolean
     get() {

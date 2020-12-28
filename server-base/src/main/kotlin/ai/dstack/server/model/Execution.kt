@@ -19,17 +19,9 @@ enum class ExecutionStatus {
         }
 }
 
-data class ExecutionOutput(
-        val application: String,
-        val contentType: String,
-        val data: String? = null
-)
-
 data class Execution(
-        val stackPath: String,
         val id: String,
         val views: List<Map<String, Any?>>?,
         val status: ExecutionStatus,
-        val output: ExecutionOutput?,
         val logs: String?
 )

@@ -21,20 +21,27 @@ class LocalExecutionService @Autowired constructor(
         private val config: AppConfig,
         private val fileService: FileService
 ) : ExecutionService {
-    companion object : KLogging()
+    companion object : KLogging() {
+        const val EXECUTION_STAGE_ORIGINAL = "staged"
+        const val EXECUTION_STAGE_UPDATED = "running"
+        const val EXECUTION_STAGE_FINAL = "finished"
+    }
 
     private val executionHome = File(config.executionDirectory).absolutePath
 
-    override fun execute(stackPath: String, attachment: Attachment, views: List<Map<String, Any?>>?, apply: Boolean): Execution {
+    // TODO: Split into update (returning UpdateStatus) and apply (returning ExecutionStatus (stack, InputStream, and length))
+    override fun execute(stackPath: String, attachment: Attachment, views: List<Map<String, Any?>>?, apply: Boolean): Pair<Execution?, File?> {
         val id = UUID.randomUUID().toString()
         return if (config.pythonExecutable != null) {
             extractApplicationIfMissing(attachment)
 
-            val executionFile = executionFile(id)
+            val executionFile = executionFile(id, EXECUTION_STAGE_ORIGINAL)
             if (apply) {
-                writeExecutionFile(stackPath, executionFile, id, views)
+                writeStackPathFile(stackPath, id)
+                writeExecutionFile(executionFile, id, views)
             }
 
+            // TODO: Move to to ExecutionProcess and ExecutionProcessFactory
             val p = getProcess(attachment, stackPath)
             val command = mutableMapOf<String, Any?>()
             command["views"] = views
@@ -42,18 +49,16 @@ class LocalExecutionService @Autowired constructor(
                 command["id"] = id
                 command["stack"] = stackPath
                 sendCommand(p, command)
-                poll(id)!!
+                Pair(null, poll(id).second)
             } else {
                 val updatedViews = synchronized(p) {
                     sendCommand(p, command)
                     receiveResponse(p)
                 }.toUpdatedViews()
-
-                Execution(stackPath, id, updatedViews.views, ExecutionStatus.fromCode(updatedViews.status), null, updatedViews.logs)
+                Pair(Execution(id, updatedViews.views, ExecutionStatus.fromCode(updatedViews.status), updatedViews.logs), null)
             }
         } else {
-            Execution(stackPath, id = id, views = emptyList(), status = ExecutionStatus.Failed, output = null,
-                    logs = "The Python executable is not configured.")
+            Pair(Execution(id, emptyList(), ExecutionStatus.Failed, logs = "The Python executable is not configured."), null)
         }
     }
 
@@ -95,13 +100,31 @@ class LocalExecutionService @Autowired constructor(
         }
     }
 
-    override fun poll(id: String): Execution? {
-        val executionFile = executionFile(id)
+    // TODO: Introduce ExecutionStatus (stack, InputStream, and length)
+    override fun poll(id: String): Pair<String?, File?> {
+        return Pair(stackPath(id), executionFileIfExists(id, EXECUTION_STAGE_FINAL)
+                ?: executionFileIfExists(id, EXECUTION_STAGE_UPDATED)
+                ?: executionFileIfExists(id, EXECUTION_STAGE_ORIGINAL))
+    }
+
+    private fun stackPath(id: String): String? {
+        val stackPathFile = stackPathFile(id)
+        return if (stackPathFile.exists()) stackPathFile.readText() else null
+    }
+
+    private fun executionFileIfExists(id: String, stage: String): File? {
+        val executionFile = executionFile(id, stage)
         return if (executionFile.exists()) {
-            readExecution(executionFile, id)
+            executionFile
         } else {
             null
         }
+    }
+
+    private fun writeStackPathFile(stackPath: String, id: String) {
+        val stackPathFile = stackPathFile(id)
+        stackPathFile.parentFile.mkdirs()
+        stackPathFile.writeText(stackPath)
     }
 
     private val executionFileObjectMapper = ObjectMapper()
@@ -109,24 +132,9 @@ class LocalExecutionService @Autowired constructor(
     private val commandObjectMapper = ObjectMapper()
             .registerModule(KotlinModule())
 
-    private fun readExecution(executionFile: File, id: String): Execution {
-        val execution = executionFileObjectMapper.readValue(executionFile, Map::class.java)
-        val views = execution["views"] as List<Map<String, Any?>>?
-        return Execution(execution["stack"] as String, id, views,
-                ExecutionStatus.fromCode(execution["status"]!!.toString()),
-                execution["output"]?.let {
-                    val output = it as Map<*, *>
-                    ExecutionOutput(output["application"] as String,
-                            output["content_type"] as String,
-                            output["data"] as String?)
-                }, execution["logs"] as String?
-        )
-    }
-
-    private fun writeExecutionFile(stackPath: String, executionFile: File, id: String, views: List<Map<String, Any?>>?) {
+    private fun writeExecutionFile(executionFile: File, id: String, views: List<Map<String, Any?>>?) {
         executionFile.parentFile.mkdirs()
         val execution = mutableMapOf<String, Any?>()
-        execution["stack"] = stackPath
         execution["id"] = id
         if (views != null) {
             execution["views"] = views
@@ -164,11 +172,13 @@ class LocalExecutionService @Autowired constructor(
     private fun destDir(attachment: Attachment) =
             File(config.appDirectory + "/" + attachment.filePath)
 
-    private val executorVersion = 5
+    private val executorVersion = 12
 
     private fun executorFile(attachment: Attachment) = File(destDir(attachment), "execute_v${executorVersion}.py")
 
-    private fun executionFile(id: String) = File(File(config.executionDirectory), "$id.json")
+    private fun executionFile(id: String, stage: String) = File(File(File(config.executionDirectory), stage), "$id.json")
+
+    private fun stackPathFile(id: String) = File(File(File(config.executionDirectory), "meta"), "$id.txt")
 
     private fun newFile(destinationDir: File, zipEntry: ZipEntry): File {
         val destFile = File(destinationDir, zipEntry.name)

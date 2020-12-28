@@ -12,7 +12,11 @@ class InMemoryStackService: StackService {
         return stacks.find { it.userName == user && it.name == name }
     }
 
-    override fun findByUser(user: String, consistent: Boolean): Sequence<Stack> {
+    override fun findAll(): Sequence<Stack> {
+        return stacks.asSequence()
+    }
+
+    override fun findByUser(user: String): Sequence<Stack> {
         return stacks.filter { it.userName == user }.asSequence()
     }
 

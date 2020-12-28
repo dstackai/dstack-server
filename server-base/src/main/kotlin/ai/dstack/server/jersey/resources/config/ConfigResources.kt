@@ -27,9 +27,6 @@ class ConfigResources {
         if (config.pythonExecutable != null) {
             runtimes.add("python")
         }
-        if (config.rscriptExecutable != null) {
-            runtimes.add("r")
-        }
         runtimes
     }
 

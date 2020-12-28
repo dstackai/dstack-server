@@ -32,6 +32,9 @@ object Deps {
     // YAML
     val jackson_yaml = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$JACKSON_VERSION_MIN"
 
+    // Ansi
+    val jansi = "org.fusesource.jansi:jansi:2.1.1"
+
     // Logging
     val jcl_over_slf4j = "org.slf4j:jcl-over-slf4j:$SLF4J_VERSION"
     val slf4j_log4j12 = "org.slf4j:slf4j-log4j12:$SLF4J_VERSION"

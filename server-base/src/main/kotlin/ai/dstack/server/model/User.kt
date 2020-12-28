@@ -9,7 +9,7 @@ enum class UserRole {
 
     companion object {
         fun fromCode(code: String): UserRole {
-            return values().find { it.name.toLowerCase() == code }!!
+            return values().find { it.name.equals(code, ignoreCase = true) }!!
         }
     }
 

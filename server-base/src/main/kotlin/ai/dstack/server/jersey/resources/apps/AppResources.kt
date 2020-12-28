@@ -17,6 +17,7 @@ import javax.ws.rs.*
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.HttpHeaders
 import javax.ws.rs.core.Response
+import javax.ws.rs.core.StreamingOutput
 
 @Path("/apps")
 class AppResources {
@@ -74,9 +75,22 @@ class AppResources {
                         if (attachment != null) {
                             if (attachment.application == "application/python") {
                                 // TODO: Cache session, userByToken, stack, frame, attachment
-                                val execution = executionService.execute(stack.path, attachment,
+                                val pair = executionService.execute(stack.path, attachment,
                                         payload.views, payload.apply == true)
-                                ok(execution.toStatus())
+                                if (pair.first != null)
+                                    ok(pair.first!!.toStatus())
+                                else {
+                                    val streamingOutput = StreamingOutput { output ->
+                                        try {
+                                            pair.second!!.inputStream().copyTo(output)
+                                        } catch (e: Exception) {
+                                            throw WebApplicationException(e)
+                                        }
+                                    }
+                                    Response.ok(streamingOutput)
+                                            .header("content-type", "application/json;charset=UTF-8")
+                                            .header("content-length", pair.second!!.length()).build()
+                                }
                             } else {
                                 unsupportedApplication(attachment.application)
                             }
@@ -104,9 +118,9 @@ class AppResources {
         return if (id.isNullOrBlank()) {
             malformedRequest()
         } else {
-            val execution = executionService.poll(id)
-            if (execution != null) {
-                val (u, s) = execution.stackPath.parseStackPath()
+            val (stackPath, executionFile) = executionService.poll(id)
+            if (stackPath != null && executionFile != null) {
+                val (u, s) = stackPath.parseStackPath()
                 val stack = stackService.get(u, s)
                 if (stack != null) {
                     val session = headers.bearer?.let { sessionService.get(it) }
@@ -120,7 +134,16 @@ class AppResources {
                             (userByToken.name == stack.userName
                                     || permissionService.get(stack.path, userByToken.name) != null))
                     if (permitted) {
-                        ok(execution.toStatus())
+                        val streamingOutput = StreamingOutput { output ->
+                            try {
+                                executionFile.inputStream().copyTo(output)
+                            } catch (e: Exception) {
+                                throw WebApplicationException(e)
+                            }
+                        }
+                        Response.ok(streamingOutput)
+                                .header("content-type", "application/json;charset=UTF-8")
+                                .header("content-length", executionFile.length()).build()
                     } else {
                         badCredentials()
                     }

@@ -1,6 +1,8 @@
 package ai.dstack.server.services
 
 interface AppConfig {
+    val user: String?
+    val password: String?
     val hostName: String
     val ssl: Boolean
     val port: Int?
@@ -20,6 +22,5 @@ interface AppConfig {
     val smtpStartTLS: Boolean?
     val smtpFrom: String?
     val pythonExecutable: String?
-    val rscriptExecutable: String?
     val emailEnabled: Boolean
 }

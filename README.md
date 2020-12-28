@@ -7,7 +7,7 @@
 Installing and running `dstack` is very easy:
 
 ```bash
-pip install --index-url https://test.pypi.org/simple/ --upgrade --no-cache-dir --extra-index-url=https://pypi.org/simple/ dstack==0.6dev18
+pip install --index-url https://test.pypi.org/simple/ --upgrade --no-cache-dir --extra-index-url=https://pypi.org/simple/ dstack==0.6dev22
 dstack server start
 ```
 
@@ -21,8 +21,6 @@ The default profile in "~/.dstack/config.yaml" is already configured. You are we
 
 To access `dstack`, click the URL provided in the output. If you try to access `dstack` without using this URL, it will require you to sign up using a username and a password.
 ## Configuration
-
-For more details on how to install and run `dstack`, please check the [Installation](https://docs.dstack.ai/v/0.6.x/installation) documentation page.
 
 If you open the URL, you'll see the following interface:
 
@@ -53,7 +51,7 @@ def get_chart(symbols: ctrl.ComboBox):
     return fig
 
 
-app = ds.app(get_chart, symbols=ctrl.ComboBox(["FB", "AMZN", "AAPL", "NFLX", "GOOG"], require_apply=False))
+app = ds.app(get_chart, symbols=ctrl.ComboBox(["FB", "AMZN", "AAPL", "NFLX", "GOOG"]))
 
 result = ds.push("faang", app)
 print(result.url)
@@ -63,11 +61,9 @@ If you run it and click the provided URL, you'll see the application:
 
 ![](https://gblobscdn.gitbook.com/assets%2F-LyOZaAwuBdBTEPqqlZy%2F-MOewQku261UjWNNtZlD%2F-MOf161glUdXH5cSOiX0%2FScreenshot%202020-12-16%20at%2011.09.52.png)
 
-To learn about how this application works and to see other examples, please check out the [Tutorials](https://docs.dstack.ai/v/0.6.x/tutorials-1) documentation page.
+To learn about how this application works and to see other examples, please check out the [Tutorials](https://docs.dstack.ai/tutorials) documentation page.
 
-To learn in more detail about what applications consist of and how to use all their features, check out the [Applications](https://docs.dstack.ai/v/0.6.x/applications) documentation page.
-
-Wanna know how to deploy ML models and use them from applications? Read the [ML Models](https://docs.dstack.ai/v/0.6.x/ml-models) page.
+To learn in more detail about what applications consist of and how to use all their features, check out the [Concepts](https://docs.dstack.ai/concepts) documentation page.
 
 ## Feedback
 
@@ -77,7 +73,7 @@ Do you have any feedback either minor or critical? Please, file [an issue](https
 
 ## Documentation
 
-For more details on the API and code samples, check out the [docs](https://docs.dstack.ai/v/0.6.x/).
+For more details on the API and code samples, check out the [docs](https://docs.dstack.ai/).
 
 ## Contribution
 

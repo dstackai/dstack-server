@@ -34,14 +34,16 @@ else:
         func = cloudpickle.load(f)
 
 
-def apply(views, execution_id, stack_path, logs_handler):
+def apply(views, execution_id, logs_handler):
     with redirect_stdout(logs_handler):
         executions = Path(executions_home)
         executions.mkdir(exist_ok=True)
-        execution_file = executions / (execution_id + '.json')
+        running_executions = executions / "running"
+        running_executions.mkdir(exist_ok=True)
+        finished_executions = executions / "finished"
+        finished_executions.mkdir(exist_ok=True)
 
         execution = {
-            'stack': stack_path,
             'id': execution_id,
             'status': 'RUNNING' if apply else 'READY'
         }
@@ -57,7 +59,8 @@ def apply(views, execution_id, stack_path, logs_handler):
             if has_dependant and not has_apply:
                 views = controller.list(views)
                 execution['views'] = [v.pack() for v in views]
-                execution_file.write_text(json.dumps(execution))
+                running_execution_file = running_executions / (execution_id + '.json')
+                running_execution_file.write_text(json.dumps(execution))
 
             result = controller.apply(func, views)
             execution['status'] = 'FINISHED'
@@ -75,10 +78,11 @@ def apply(views, execution_id, stack_path, logs_handler):
     if 'views' not in execution:
         execution['views'] = [v.pack() for v in views]
     execution['logs'] = logs_handler.getvalue()
-    execution_file.write_text(json.dumps(execution))
+    finished_execution_file = finished_executions / (execution_id + '.json')
+    finished_execution_file.write_text(json.dumps(execution))
 
 
-def update(views):
+def update(views, logs_handler):
     with redirect_stdout(logs_handler):
         try:
             updated_views = controller.list(views)
@@ -94,9 +98,8 @@ def parse_command(command):
     command_json = json.loads(command)
     _views = command_json.get("views")
     execution_id = command_json.get("id")
-    views = [unpack_view(v) for v in _views] if _views else None
-    stack_path = command_json.get("stack")
-    return views, execution_id, stack_path
+    views = [unpack_view(v) for v in _views] if _views is not None else None
+    return views, execution_id
 
 
 def print_views_stdout(views, logs_handler, status):
@@ -111,11 +114,11 @@ def print_views_stdout(views, logs_handler, status):
 
 while True:
     # TODO: Support timeout in future
-    command = sys.stdin.readline()
-    views, execution_id, stack_path = parse_command(command)
+    command = sys.stdin.readline().strip()
+    views, execution_id = parse_command(command)
     logs_handler = StringIO()
-    if views and execution_id and stack_path:
-        apply(views, execution_id, stack_path, logs_handler)
+    if execution_id:
+        apply(views, execution_id, logs_handler)
     else:
         # TODO: Make it possible to transport the views state without transporting the entire data
-        update(views)
+        update(views, logs_handler)

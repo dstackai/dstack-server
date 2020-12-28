@@ -5,6 +5,7 @@ dependencies {
     compile(Deps.commons_io)
     compile(Deps.commons_cli)
     compile(Deps.jackson_yaml)
+    compile(Deps.jansi)
     compile(project(":server-base-local"))
 }
 

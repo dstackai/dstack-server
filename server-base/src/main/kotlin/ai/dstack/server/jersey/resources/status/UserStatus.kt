@@ -10,5 +10,7 @@ data class UserStatus(
     val settings: SettingsInfo,
     @JsonProperty("created_date")
     val createdDate: String,
-    val role: String
+    val role: String,
+    @JsonProperty("verification_code")
+    val verificationCode: String?
 )

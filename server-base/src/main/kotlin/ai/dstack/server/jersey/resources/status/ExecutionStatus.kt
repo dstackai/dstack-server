@@ -18,15 +18,12 @@ data class ExecutionStatus(
         val id: String,
         val views: List<Map<String, Any?>>?,
         val status: String,
-        val output: ExecutionOutputInfo?,
         val logs: String?
 )
 
 fun Execution.toStatus(): ExecutionStatus {
     return ExecutionStatus(this.id, this.views?.map {
         it.toMap()
-    }?.toList(), this.status.code, this.output?.let {
-        ExecutionOutputInfo(it.application, it.contentType, it.data)
-    }, this.logs)
+    }?.toList(), this.status.code, this.logs)
 }
 

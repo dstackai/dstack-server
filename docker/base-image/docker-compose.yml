@@ -1,0 +1,10 @@
+version: '3'
+services:
+  dstack:
+    image: "dstack:latest"
+    ports:
+      - "${DSTACK_PORT}:${DSTACK_PORT}"
+    environment:
+      - DSTACK_PORT
+      - DSTACK_USER
+      - DSTACK_PASSWORD

@@ -20,8 +20,11 @@ fun main(args: Array<String>) {
     val pythonExecutable = Option("y", "python", true, "path to python executable")
     options.addOption(pythonExecutable)
 
-    val rscriptExecutable = Option("a", "rscript", true, "path to R executable")
-    options.addOption(rscriptExecutable)
+    val user = Option("u", "user", true, "the admin username")
+    options.addOption(user)
+
+    val password = Option("s", "password", true, "the admin password")
+    options.addOption(password)
 
     val parser: CommandLineParser = DefaultParser()
     val formatter = HelpFormatter()
@@ -45,8 +48,12 @@ fun main(args: Array<String>) {
         LocalCliAppConfig.defaultPythonExecutable = cmd.getOptionValue("python")
     }
 
-    if (cmd.hasOption("rscript")) {
-        LocalCliAppConfig.defaultRscriptExecutable = cmd.getOptionValue("rscript")
+    if (cmd.hasOption("user")) {
+        LocalCliAppConfig.defaultUser = cmd.getOptionValue("user")
+    }
+
+    if (cmd.hasOption("password")) {
+        LocalCliAppConfig.defaultPassword = cmd.getOptionValue("password")
     }
 
     val application = SpringApplication(Application::class.java)

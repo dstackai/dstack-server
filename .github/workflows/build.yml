@@ -53,6 +53,55 @@ jobs:
         run: chmod +x gradlew
       - name: Build with Gradle
         run: ./gradlew build
+  
+  build-docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Grant execute permission to build scripts
+        run: |
+          chmod +x docker/base-image/variables.sh
+          chmod +x docker/base-image/build.sh 
+      - name: Build base image
+        run: docker/base-image/build.sh
+  
+  
+  publish-docker-snaphost:
+    needs: publish-snapshot
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Grant execute permission to build scripts
+        run: |
+          chmod +x docker/base-image/variables.sh
+          chmod +x docker/base-image/build.sh 
+          chmod +x docker/base-image/publish.sh
+      - name: Build base image
+        run: docker/base-image/build.sh
+      - name: Publish base image
+        run: docker/base-image/publish.sh
+        env:
+          DOCKER_PASS: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+  publish-docker-release:
+    needs: publish-release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Grant execute permission to build scripts
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          chmod +x docker/base-image/variables.sh
+          chmod +x docker/base-image/release.sh
+      - name: Release base image
+        run: docker/base-image/release.sh
+        env:
+          DOCKER_PASS: ${{ secrets.DOCKERHUB_PASSWORD }}
 
   publish-snapshot:
     needs: build-server
