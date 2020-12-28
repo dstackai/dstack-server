@@ -444,7 +444,7 @@ class UserResources {
                                     token,
                                     verificationCode,
                                     true,
-                                    UserRole.Write,
+                                    UserRole.fromCode(payload.role),
                                     LocalDate.now(ZoneOffset.UTC),
                                     Settings(
                                             General(AccessLevel.Public)
@@ -609,7 +609,7 @@ val EditUserPayload?.isMalformed
     get() = this == null
             || this.name.isMalformedUserName
             || (this.email == null && this.role == null)
-            || (this.role != null && UserRole.values().map { it.name.toUpperCase() }.contains(this.role.toUpperCase()))
+            || (this.role != null && !UserRole.values().map { it.name.toUpperCase() }.contains(this.role.toUpperCase()))
 
 val String?.isMalformedEmail: Boolean
     get() {
