@@ -27,8 +27,8 @@ class LocalCliAppConfig : AppConfig {
 
     override val address: String
         get() {
-            val p = if (port == 80 && !ssl || port == 443 && ssl) "" else port!!.toString()
-            return ((if (ssl) "https" else "http") + "://") + hostName + ":$p"
+            val p = if (port == 80 && !ssl || port == 443 && ssl) "" else port.toString()
+            return ((if (ssl) "https" else "http") + "://") + hostName + (if (p.isNotBlank()) ":$p" else "")
         }
 
     override val homeDirectory: String
