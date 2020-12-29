@@ -72,6 +72,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
 
+    outputs:
+      tag: ${{ steps.save-tag.outputs.tag }}
+
     steps:
       - uses: actions/checkout@v2
       - name: Grant execute permission to build scripts
@@ -85,6 +88,10 @@ jobs:
         run: docker/base-image/publish.sh
         env:
           DOCKER_PASS: ${{ secrets.DOCKERHUB_PASSWORD }}
+      - name: Save Docker timestamp tag
+        run: echo "::set-output name=tag::$(echo $TIMESTAMPED_TAG)"
+        shell: bash
+        id: save-tag
 
   publish-docker-release:
     needs: publish-release
