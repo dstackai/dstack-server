@@ -68,12 +68,9 @@ jobs:
   
   
   publish-docker-snaphost:
-    needs: publish-snapshot
+    needs: publish-server-snapshot
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
-
-    outputs:
-      tag: ${{ steps.save-tag.outputs.tag }}
 
     steps:
       - uses: actions/checkout@v2
@@ -85,13 +82,11 @@ jobs:
       - name: Build base image
         run: docker/base-image/build.sh
       - name: Publish base image
-        run: docker/base-image/publish.sh
+        run: |
+          TIMESTAMP=${{needs.publish-server-snapshot.outputs.timestamp}}
+          docker/base-image/publish.sh
         env:
           DOCKER_PASS: ${{ secrets.DOCKERHUB_PASSWORD }}
-      - name: Save Docker timestamp tag
-        run: echo "::set-output name=tag::$(echo $TIMESTAMPED_TAG)"
-        shell: bash
-        id: save-tag
 
   publish-docker-release:
     needs: publish-release
@@ -110,10 +105,14 @@ jobs:
         env:
           DOCKER_PASS: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-  publish-snapshot:
+  publish-server-snapshot:
     needs: build-server
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
+
+    outputs:
+      timestamp: ${{ steps.build.outputs.timestamp }}
+      dstack_version: ${{ steps.build.outputs.dstack_version }}
 
     steps:
       - uses: actions/checkout@v2
@@ -129,13 +128,17 @@ jobs:
         run: |
           mkdir server-local-cli/src/main/resources/website
           cp -a website-dist/** server-local-cli/src/main/resources/website
-      - name: Publish with Gradle
-        run: ./gradlew publish
-        env:
-          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.GPG_PRIVATE_KEY }}
-          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.PASSPHRASE }}
+      - name: Build with Gradle
+        id: build
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          echo "TIMESTAMP=$TIMESTAMP" >> $GITHUB_ENV
+          VERSION=$(./gradlew properties -no-daemon --console=plain -q | grep "^version:" | awk '{printf $2}')
+          SNAPSHOT_VERSION=$(echo $SNAPSHOT_VERSION | awk '{p=index($1,"-");printf substr($1,0,p-1)}')
+          DSTACK_VERSION="${SNAPSHOT_VERSION}.dev${TIMESTAMP}"
+          ./gradlew -Pdstack_version=$DSTACK_VERSION build
+          echo "::set-output name=timestamp::$(echo $TIMESTAMP)"
+          echo "::set-output name=dstack_version::$(echo $DSTACK_VERSION)"
       - name: Set up Python 3.6
         uses: actions/setup-python@v2
         with:
@@ -149,9 +152,8 @@ jobs:
           pip install deprecation
           pip install dstack
           dstack config add --user dstack --token ${{ secrets.DSTACK_TOKEN_STGN }} --server https://api.stgn.dstack.ai
-          VERSION=$(./gradlew properties -no-daemon --console=plain -q | grep "^version:" | awk '{printf $2}')
-          NUM_VERSION=$(echo $VERSION | awk '{p=index($1,"-");printf substr($1,0,p-1)}')
-          python -c "from dstack import push_frame; from dstack.cli.installer import Installer; from pathlib import Path; print(push_frame(Installer._STACK, Path('server-local-cli/build/libs/server-local-cli-$VERSION.jar'), version='$NUM_VERSION', jdk_version='8', jdk_compatible_versions='1.8.0_.*'))"
+          DSTACK_VERSION=${{ steps.build.outputs.dstack_version }}
+          python -c "from dstack import push_frame; from dstack.cli.installer import Installer; from pathlib import Path; print(push_frame(Installer._STACK, Path('server-local-cli/build/libs/server-local-cli-$DSTACK_VERSION.jar'), version='$DSTACK_VERSION', jdk_version='8', jdk_compatible_versions='1.8.0_.*'))"
 
   create-release:
     runs-on: ubuntu-latest
@@ -193,7 +195,7 @@ jobs:
       - name: Publish with Gradle
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
-          ./gradlew -Pdstack_version=$VERSION clean publish -Dorg.gradle.internal.http.socketTimeout=120000 -Dorg.gradle.internal.http.connectionTimeout=120000
+          ./gradlew -Pdstack_version=$VERSION clean build -Dorg.gradle.internal.http.socketTimeout=120000 -Dorg.gradle.internal.http.connectionTimeout=120000
         env:
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
