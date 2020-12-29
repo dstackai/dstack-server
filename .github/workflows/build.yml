@@ -82,10 +82,9 @@ jobs:
       - name: Build base image
         run: docker/base-image/build.sh
       - name: Publish base image
-        run: |
-          TIMESTAMP=${{needs.publish-server-snapshot.outputs.timestamp}}
-          docker/base-image/publish.sh
+        run: docker/base-image/publish.sh
         env:
+          TIMESTAMP: ${{needs.publish-server-snapshot.outputs.timestamp}}
           DOCKER_PASS: ${{ secrets.DOCKERHUB_PASSWORD }}
 
   publish-docker-release:
@@ -132,7 +131,6 @@ jobs:
         id: build
         run: |
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          echo "TIMESTAMP=$TIMESTAMP" >> $GITHUB_ENV
           VERSION=$(./gradlew properties -no-daemon --console=plain -q | grep "^version:" | awk '{printf $2}')
           SNAPSHOT_VERSION=$(echo $VERSION | awk '{p=index($1,"-");printf substr($1,0,p-1)}')
           DSTACK_VERSION="${SNAPSHOT_VERSION}.dev${TIMESTAMP}"
