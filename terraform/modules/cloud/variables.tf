@@ -6,7 +6,11 @@ variable "az_count" {
 }
 
 variable "image_name" {
-  default = "dstackai/dstack:latest-master"
+  default = "dstackai/dstack"
+}
+
+variable "image_tag" {
+  default = "20201229173047"
 }
 
 variable "container_port" {
