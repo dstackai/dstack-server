@@ -45,7 +45,7 @@ resource "aws_ecs_task_definition" "main" {
     name = "${var.prefix}-cloud-efs-dstack"
     efs_volume_configuration {
       file_system_id = aws_efs_file_system.main.id
-      root_directory = "/root/.dstack/"
+      root_directory = "/"
     }
   }
 }
