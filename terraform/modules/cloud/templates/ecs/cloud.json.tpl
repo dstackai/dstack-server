@@ -5,6 +5,7 @@
         {"name": "DSTACK_USER", "value": "foo"},
         {"name": "DSTACK_PASSWORD", "value": "bar"},
         {"name": "DSTACK_PORT", "value": "${port}"},
+        {"name": "DSTACK_INTERNAL_PORT", "value": "${container_port}"},
         {"name": "DSTACK_SSL", "value": "${ssl}"},
         {"name": "DSTACK_HOST_NAME", "value": "${host_name}"}
     ],

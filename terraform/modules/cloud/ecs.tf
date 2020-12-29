@@ -9,7 +9,7 @@ data "template_file" "main" {
     prefix = var.prefix
     image = "${var.image_name}:${var.image_tag}"
     port = "443"
-    container_port = var.container_port
+    container_port = "80"
     ssl = "true"
     host_name = var.domain_name
     fargate_cpu = var.fargate_cpu
@@ -69,7 +69,7 @@ resource "aws_ecs_service" "main" {
   load_balancer {
     target_group_arn = aws_alb_target_group.main.id
     container_name = "${var.prefix}-cloud"
-    container_port = var.container_port
+    container_port = "80"
   }
 
   depends_on = [

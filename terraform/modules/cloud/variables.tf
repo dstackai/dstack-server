@@ -10,11 +10,7 @@ variable "image_name" {
 }
 
 variable "image_tag" {
-  default = "20201229173047"
-}
-
-variable "container_port" {
-  default = 80
+  default = "20201229232839"
 }
 
 variable "fargate_cpu" {
