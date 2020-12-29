@@ -73,7 +73,7 @@ const List = ({
     return (
         <Fragment>
             <Helmet>
-                <title>dstack.ai | {user}</title>
+                <title>dstack.ai | {user || ''}</title>
             </Helmet>
 
             <StackList

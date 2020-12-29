@@ -42,7 +42,11 @@ export const fetchList = (userName, onSuccess: Function) => async (dispatch: Fun
     dispatch({type: actionsTypes.FETCH});
 
     try {
-        const request = await api.get(config.STACKS_LIST(userName));
+        const request = await api.get((
+            userName
+                ? config.USER_STACK_LIST(userName)
+                : config.STACK_LIST
+        ));
 
         dispatch({
             type: actionsTypes.FETCH_SUCCESS,

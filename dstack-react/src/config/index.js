@@ -20,7 +20,8 @@ export default {
     UPDATE_SETTINGS_URL: '/users/update/settings',
     CHECK_USER: userName => `/users/exists/${userName}`,
 
-    STACKS_LIST: userName => `/stacks/${userName}`,
+    STACK_LIST: '/stacks',
+    USER_STACK_LIST: userName => `/stacks/${userName}`,
     DELETE_STACK: () => '/stacks/delete',
     STACK_DETAILS: (userName, stack) => `/stacks/${userName}/${stack}`,
     STACK_FRAME: (userName, stack, frameId) => `/frames/${userName}/${stack}/${frameId}`,

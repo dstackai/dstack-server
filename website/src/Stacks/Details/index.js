@@ -177,7 +177,7 @@ const Details = ({
                 <Fragment>
                     <br />
 
-                    <Link to={routes.categoryStacks(currentUser, params.category)}>
+                    <Link to={routes.categoryStacks(params.category)}>
                         {t('goToMyStacks')}
                     </Link>
                 </Fragment>
@@ -190,7 +190,7 @@ const Details = ({
             {' '}
             {isSignedIn() && (
                 <Fragment>
-                    <Link to={routes.categoryStacks(currentUser, params.category)}>
+                    <Link to={routes.categoryStacks(params.category)}>
                         {t('goToMyStacks')}
                     </Link>.
                 </Fragment>
@@ -226,7 +226,7 @@ const Details = ({
                 currentUser={currentUser}
                 currentUserToken={currentUserToken}
                 toggleUpload={toggleUploadModal}
-                backUrl={routes.categoryStacks(currentUser, categoryMap[category])}
+                backUrl={routes.categoryStacks(categoryMap[category])}
                 setPrivate={setPrivate}
                 updatePermissions={updatePermissions}
                 user={params.user}

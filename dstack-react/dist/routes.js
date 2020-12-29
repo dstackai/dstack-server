@@ -30,7 +30,17 @@ var routes = {
 
     return "/" + user;
   },
-  categoryStacks: function categoryStacks(user, category) {
+  userStacks: function userStacks() {
+    return '/';
+  },
+  categoryStacks: function categoryStacks(category) {
+    if (category === void 0) {
+      category = ':category(applications|models)';
+    }
+
+    return "/" + category;
+  },
+  categoryUserStacks: function categoryUserStacks(user, category) {
     if (user === void 0) {
       user = ':user';
     }

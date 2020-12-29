@@ -18,14 +18,13 @@ import {fetchList as fetchStacksList} from 'Stacks/List/actions';
 
 type Props = {
     className?: string,
-    currentUser?: string,
     toggleMenu: Function,
     isShow: boolean,
     userLoading: boolean,
 }
 
 const Sidebar = ({
-    className, currentUser, isShow, toggleMenu, userLoading,
+    className, isShow, toggleMenu, userLoading,
     fetchStacksList, compact, toggleCollapse,
 }: Props) => {
     const {t} = useTranslation();
@@ -45,7 +44,7 @@ const Sidebar = ({
     };
 
     const getRefreshStacks = (category: 'applications' | 'category') => () => {
-        if (pathname === routes.categoryStacks(params.user, category)) {
+        if (pathname === routes.categoryStacks(category)) {
             dispatch({type: appStoreActionTypes.START_PROGRESS});
             fetchStacksList(params.user, () => {
                 dispatch({type: appStoreActionTypes.COMPLETE_PROGRESS});
@@ -56,13 +55,13 @@ const Sidebar = ({
     const menuItems = [
         {
             svg: Apps,
-            to: routes.categoryStacks(currentUser, 'applications'),
+            to: routes.categoryStacks('applications'),
             label: t('application_plural'),
             onClick: getRefreshStacks('applications'),
         },
         {
             svg: Models,
-            to: routes.categoryStacks(currentUser, 'models'),
+            to: routes.categoryStacks('models'),
             label: t('mlModel_plural'),
             onClick: getRefreshStacks('models'),
         },

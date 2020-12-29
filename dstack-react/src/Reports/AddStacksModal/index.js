@@ -39,7 +39,7 @@ const AddStacksModal = ({
 
     const {data} = useSWR(
         [
-            apiUrl + config.STACKS_LIST(params.user),
+            apiUrl + config.USER_STACK_LIST(params.user),
             dataFormat,
         ],
         dataFetcher,

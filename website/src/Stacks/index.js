@@ -13,6 +13,7 @@ const Stacks = ({}: Props) => {
         <div className={css.stacks}>
             <Switch>
                 <Route path={routes.categoryStacks()} exact component={List} />
+                <Route path={routes.categoryUserStacks()} exact component={List} />
                 <Route path={routes.stackDetails()} component={Details} />
             </Switch>
         </div>

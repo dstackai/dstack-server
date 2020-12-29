@@ -121,7 +121,7 @@ const App = ({fetchUser, fetchConfigInfo, userData, userLoading, history: {push}
                         <Redirect
                             exact
                             from="/"
-                            to={routes.categoryStacks(userData.user, 'applications')}
+                            to={routes.categoryStacks('applications')}
                         />
                     )}
 
@@ -143,6 +143,7 @@ const App = ({fetchUser, fetchConfigInfo, userData, userLoading, history: {push}
                             <DefaultLayoutRoute path={routes.notFound()} component={NotFound} />
                             <DefaultLayoutRoute path={routes.settings()} component={Settings} />
                             <DefaultLayoutRoute path={routes.stacks()} component={Stacks} />
+                            <DefaultLayoutRoute path={routes.userStacks()} component={Stacks} />
                         </Switch>
                     )}
 
@@ -150,6 +151,7 @@ const App = ({fetchUser, fetchConfigInfo, userData, userLoading, history: {push}
                         <Switch>
                             <UnAuthorizedLayoutRoute path={routes.notFound()} component={NotFound} />
                             <UnAuthorizedLayoutRoute path={routes.stacks()} component={Stacks} />
+                            <UnAuthorizedLayoutRoute path={routes.userStacks()} component={Stacks} />
                         </Switch>
                     )}
 

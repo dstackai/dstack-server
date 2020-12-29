@@ -219,7 +219,8 @@ var config = {
   CHECK_USER: function CHECK_USER(userName) {
     return "/users/exists/" + userName;
   },
-  STACKS_LIST: function STACKS_LIST(userName) {
+  STACK_LIST: '/stacks',
+  USER_STACK_LIST: function USER_STACK_LIST(userName) {
     return "/stacks/" + userName;
   },
   DELETE_STACK: function DELETE_STACK() {
@@ -2789,7 +2790,17 @@ var routes = {
 
     return "/" + user;
   },
-  categoryStacks: function categoryStacks(user, category) {
+  userStacks: function userStacks() {
+    return '/';
+  },
+  categoryStacks: function categoryStacks(category) {
+    if (category === void 0) {
+      category = ':category(applications|models)';
+    }
+
+    return "/" + category;
+  },
+  categoryUserStacks: function categoryUserStacks(user, category) {
     if (user === void 0) {
       user = ':user';
     }
@@ -6776,7 +6787,7 @@ var AddStacksModal = function AddStacksModal(_ref) {
 
   var currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
 
-  var _useSWR = useSWR([apiUrl + config.STACKS_LIST(params.user), dataFormat$4], fetcher),
+  var _useSWR = useSWR([apiUrl + config.USER_STACK_LIST(params.user), dataFormat$4], fetcher),
       data = _useSWR.data;
 
   React.useEffect(function () {

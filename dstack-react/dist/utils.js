@@ -258,7 +258,8 @@ var config = {
   CHECK_USER: function CHECK_USER(userName) {
     return "/users/exists/" + userName;
   },
-  STACKS_LIST: function STACKS_LIST(userName) {
+  STACK_LIST: '/stacks',
+  USER_STACK_LIST: function USER_STACK_LIST(userName) {
     return "/stacks/" + userName;
   },
   DELETE_STACK: function DELETE_STACK() {
