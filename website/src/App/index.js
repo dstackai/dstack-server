@@ -64,7 +64,7 @@ type Props = {
     userData: ?{user: string},
 }
 
-const App = ({fetchUser, fetchConfigInfo, userData, userLoading, history: {push}}: Props) => {
+const App = ({fetchUser, fetchConfigInfo, userLoading, history: {push}}: Props) => {
     const [loading, setLoading] = useState(true);
     const [, dispatch] = useAppStore();
     const isInitialMount = useRef(true);
@@ -117,18 +117,10 @@ const App = ({fetchUser, fetchConfigInfo, userData, userLoading, history: {push}
         <div className={css.app}>
             {!loading && (
                 <Switch>
-                    {isSignedIn() && userData && (
-                        <Redirect
-                            exact
-                            from="/"
-                            to={routes.categoryStacks('applications')}
-                        />
-                    )}
-
                     <Redirect
                         exact
                         from="/"
-                        to={routes.authLogin()}
+                        to={routes.categoryStacks('applications')}
                     />
 
                     <Route path={routes.authLogin()} component={Login}/>
