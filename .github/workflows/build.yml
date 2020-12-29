@@ -134,7 +134,7 @@ jobs:
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           echo "TIMESTAMP=$TIMESTAMP" >> $GITHUB_ENV
           VERSION=$(./gradlew properties -no-daemon --console=plain -q | grep "^version:" | awk '{printf $2}')
-          SNAPSHOT_VERSION=$(echo $SNAPSHOT_VERSION | awk '{p=index($1,"-");printf substr($1,0,p-1)}')
+          SNAPSHOT_VERSION=$(echo $VERSION | awk '{p=index($1,"-");printf substr($1,0,p-1)}')
           DSTACK_VERSION="${SNAPSHOT_VERSION}.dev${TIMESTAMP}"
           ./gradlew -Pdstack_version=$DSTACK_VERSION build
           echo "::set-output name=timestamp::$(echo $TIMESTAMP)"
@@ -192,15 +192,10 @@ jobs:
         run: |
           mkdir server-local-cli/src/main/resources/website
           cp -a website-dist/** server-local-cli/src/main/resources/website
-      - name: Publish with Gradle
+      - name: Build with Gradle
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
           ./gradlew -Pdstack_version=$VERSION clean build -Dorg.gradle.internal.http.socketTimeout=120000 -Dorg.gradle.internal.http.connectionTimeout=120000
-        env:
-          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.GPG_PRIVATE_KEY }}
-          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.PASSPHRASE }}
       - name: Set up Python 3.6
         uses: actions/setup-python@v2
         with:
