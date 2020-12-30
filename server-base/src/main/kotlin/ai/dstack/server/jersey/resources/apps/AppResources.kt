@@ -58,54 +58,65 @@ class AppResources {
         } else {
             val stack = stackService.get(payload.user!!, payload.stack!!)
             return if (stack != null) {
-                val session = headers.bearer?.let { sessionService.get(it) }
-                val userByToken = headers.bearer?.let { if (session == null) userService.findByToken(it) else null }
-                val permitted = stack.accessLevel == AccessLevel.Public
-                        || (stack.accessLevel == AccessLevel.Internal && userByToken != null)
-                        || (session != null &&
-                        (session.userName == stack.userName
-                                || permissionService.get(stack.path, session.userName) != null))
-                        || (userByToken != null &&
-                        (userByToken.name == stack.userName
-                                || permissionService.get(stack.path, userByToken.name) != null))
-                if (permitted) {
-                    val frame = frameService.get(stack.path, payload.frame!!)
-                    if (frame != null) {
-                        val attachment = attachmentService.get(frame.path, payload.attachment!!)
-                        if (attachment != null) {
-                            if (attachment.application == "application/python") {
-                                // TODO: Cache session, userByToken, stack, frame, attachment
-                                val pair = executionService.execute(stack.path, attachment,
-                                        payload.views, payload.apply == true)
-                                if (pair.first != null)
-                                    ok(pair.first!!.toStatus())
-                                else {
-                                    val streamingOutput = StreamingOutput { output ->
-                                        try {
-                                            pair.second!!.inputStream().copyTo(output)
-                                        } catch (e: Exception) {
-                                            throw WebApplicationException(e)
+                val currentUser = headers.getCurrentUser()
+                return if (headers.bearer != null && currentUser == null) {
+                    badCredentials()
+                } else {
+                    val owner = currentUser == stack.userName
+                    val permitted = stack.accessLevel == AccessLevel.Public
+                            || owner
+                            || (stack.accessLevel == AccessLevel.Internal && currentUser != null)
+                            || (currentUser != null && permissionService.get(stack.path, currentUser) != null)
+                    if (permitted) {
+                        val frame = frameService.get(stack.path, payload.frame!!)
+                        if (frame != null) {
+                            val attachment = attachmentService.get(frame.path, payload.attachment!!)
+                            if (attachment != null) {
+                                if (attachment.application == "application/python") {
+                                    // TODO: Cache session, userByToken, stack, frame, attachment
+                                    val pair = executionService.execute(stack.path, attachment,
+                                            payload.views, payload.apply == true)
+                                    if (pair.first != null)
+                                        ok(pair.first!!.toStatus())
+                                    else {
+                                        val streamingOutput = StreamingOutput { output ->
+                                            try {
+                                                pair.second!!.inputStream().copyTo(output)
+                                            } catch (e: Exception) {
+                                                throw WebApplicationException(e)
+                                            }
                                         }
+                                        Response.ok(streamingOutput)
+                                                .header("content-type", "application/json;charset=UTF-8")
+                                                .header("content-length", pair.second!!.length()).build()
                                     }
-                                    Response.ok(streamingOutput)
-                                            .header("content-type", "application/json;charset=UTF-8")
-                                            .header("content-length", pair.second!!.length()).build()
+                                } else {
+                                    unsupportedApplication(attachment.application)
                                 }
                             } else {
-                                unsupportedApplication(attachment.application)
+                                attachmentNotFound()
                             }
                         } else {
-                            attachmentNotFound()
+                            frameNotFound()
                         }
                     } else {
-                        frameNotFound()
+                        badCredentials()
                     }
-                } else {
-                    badCredentials()
                 }
             } else {
                 stackNotFound()
             }
+        }
+    }
+
+    private fun HttpHeaders.getCurrentUser(): String? {
+        return bearer?.let {
+            sessionService.get(it)?.let { session ->
+                if (session.valid) {
+                    sessionService.renew(session)
+                    session.userName
+                } else null
+            } ?: userService.findByToken(it)?.name
         }
     }
 
@@ -123,29 +134,29 @@ class AppResources {
                 val (u, s) = stackPath.parseStackPath()
                 val stack = stackService.get(u, s)
                 if (stack != null) {
-                    val session = headers.bearer?.let { sessionService.get(it) }
-                    val userByToken = headers.bearer?.let { if (session == null) userService.findByToken(it) else null }
-                    val permitted = stack.accessLevel == AccessLevel.Public
-                            || (stack.accessLevel == AccessLevel.Internal && userByToken != null)
-                            || (session != null &&
-                            (session.userName == stack.userName
-                                    || permissionService.get(stack.path, session.userName) != null))
-                            || (userByToken != null &&
-                            (userByToken.name == stack.userName
-                                    || permissionService.get(stack.path, userByToken.name) != null))
-                    if (permitted) {
-                        val streamingOutput = StreamingOutput { output ->
-                            try {
-                                executionFile.inputStream().copyTo(output)
-                            } catch (e: Exception) {
-                                throw WebApplicationException(e)
-                            }
-                        }
-                        Response.ok(streamingOutput)
-                                .header("content-type", "application/json;charset=UTF-8")
-                                .header("content-length", executionFile.length()).build()
-                    } else {
+                    val currentUser = headers.getCurrentUser()
+                    return if (headers.bearer != null && currentUser == null) {
                         badCredentials()
+                    } else {
+                        val owner = currentUser == stack.userName
+                        val permitted = stack.accessLevel == AccessLevel.Public
+                                || owner
+                                || (stack.accessLevel == AccessLevel.Internal && currentUser != null)
+                                || (currentUser != null && permissionService.get(stack.path, currentUser) != null)
+                        if (permitted) {
+                            val streamingOutput = StreamingOutput { output ->
+                                try {
+                                    executionFile.inputStream().copyTo(output)
+                                } catch (e: Exception) {
+                                    throw WebApplicationException(e)
+                                }
+                            }
+                            Response.ok(streamingOutput)
+                                    .header("content-type", "application/json;charset=UTF-8")
+                                    .header("content-length", executionFile.length()).build()
+                        } else {
+                            badCredentials()
+                        }
                     }
                 } else {
                     stackNotFound()

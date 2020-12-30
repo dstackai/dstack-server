@@ -1,5 +1,7 @@
 package ai.dstack.server.jersey.resources.stacks
 
+import ai.dstack.server.chainIf
+import ai.dstack.server.chainIfNotNull
 import ai.dstack.server.model.*
 import ai.dstack.server.model.Stack
 import ai.dstack.server.services.*
@@ -95,68 +97,65 @@ class StackResources {
         } else {
             val stack = stackService.get(u, s)
             if (stack != null) {
-                val session = headers.bearer?.let { sessionService.get(it) }
-                val userByToken = headers.bearer?.let { if (session == null) userService.findByToken(it) else null }
-                val owner = (session != null && (session.userName == stack.userName))
-                        || userByToken != null && userByToken.name == stack.userName
-                val permitted = stack.accessLevel == AccessLevel.Public
-                        || (stack.accessLevel == AccessLevel.Internal && userByToken != null)
-                        || (session != null &&
-                        (session.userName == stack.userName
-                                || permissionService.get(stack.path, session.userName) != null))
-                        || (userByToken != null &&
-                        (userByToken.name == stack.userName
-                                || permissionService.get(stack.path, userByToken.name) != null))
-                if (permitted) {
-                    val head = stack.head?.let { frameService.get(stack.path, it.id) }
-                    val frames = frameService.findByStackPath(stack.path)
-                    session?.let { sessionService.renew(it) }
-                    val status = GetStackStatus(
-                            StackInfo(stack.userName,
-                                    stack.name,
-                                    when (stack.accessLevel) {
-                                        AccessLevel.Private -> true
-                                        AccessLevel.Public -> false
-                                        else -> null
-                                    },
-                                    stack.accessLevel.code,
-                                    head?.let {
-                                        val attachments = attachmentService.findByFrame(it.path)
-                                        FrameInfo(
-                                                it.id, it.timestampMillis,
-                                                attachments.map { a ->
-                                                    AttachmentInfo(
-                                                            a.application,
-                                                            a.contentType,
-                                                            a.params,
-                                                            a.settings,
-                                                            a.length
-                                                    )
-                                                }, it.params
-                                        )
-                                    },
-                                    stack.readme,
-                                    if (owner) permissionService.findByPath(stack.path)
-                                            .map {
-                                                PermissionInfo(
-                                                        it.userName,
-                                                        it.email
-                                                )
-                                            }.toList() else null,
-                                    frames.map {
-                                        BasicFrameInfo(
-                                                it.id,
-                                                it.timestampMillis,
-                                                it.params
-                                        )
-                                    }
-                            )
-                    )
-                    analyticsService.track("Stack Resources", "stacks/:user/:stack", "Get Stack",
-                            status, request.remoteAddr)
-                    ok(status)
-                } else {
+                val currentUser = headers.getCurrentUser()
+                return if (headers.bearer != null && currentUser == null) {
                     badCredentials()
+                } else {
+                    val owner = currentUser == stack.userName
+                    val permitted = stack.accessLevel == AccessLevel.Public
+                            || owner
+                            || (stack.accessLevel == AccessLevel.Internal && currentUser != null)
+                            || (currentUser != null && permissionService.get(stack.path, currentUser) != null)
+                    if (permitted) {
+                        val head = stack.head?.let { frameService.get(stack.path, it.id) }
+                        val frames = frameService.findByStackPath(stack.path)
+                        val status = GetStackStatus(
+                                StackInfo(stack.userName,
+                                        stack.name,
+                                        when (stack.accessLevel) {
+                                            AccessLevel.Private -> true
+                                            AccessLevel.Public -> false
+                                            else -> null
+                                        },
+                                        stack.accessLevel.code,
+                                        head?.let {
+                                            val attachments = attachmentService.findByFrame(it.path)
+                                            FrameInfo(
+                                                    it.id, it.timestampMillis,
+                                                    attachments.map { a ->
+                                                        AttachmentInfo(
+                                                                a.application,
+                                                                a.contentType,
+                                                                a.params,
+                                                                a.settings,
+                                                                a.length
+                                                        )
+                                                    }, it.params
+                                            )
+                                        },
+                                        stack.readme,
+                                        if (owner) permissionService.findByPath(stack.path)
+                                                .map {
+                                                    PermissionInfo(
+                                                            it.userName,
+                                                            it.email
+                                                    )
+                                                }.toList() else null,
+                                        frames.map {
+                                            BasicFrameInfo(
+                                                    it.id,
+                                                    it.timestampMillis,
+                                                    it.params
+                                            )
+                                        }
+                                )
+                        )
+                        analyticsService.track("Stack Resources", "stacks/:user/:stack", "Get Stack",
+                                status, request.remoteAddr)
+                        ok(status)
+                    } else {
+                        badCredentials()
+                    }
                 }
             } else {
                 stackNotFound()
@@ -164,11 +163,22 @@ class StackResources {
         }
     }
 
+    private fun HttpHeaders.getCurrentUser(): String? {
+        return bearer?.let {
+            sessionService.get(it)?.let { session ->
+                if (session.valid) {
+                    sessionService.renew(session)
+                    session.userName
+                } else null
+            } ?: userService.findByToken(it)?.name
+        }
+    }
+
     @GET
     @Path("/{user}")
     @Produces(JSON_UTF8)
     fun stacksByUser(@PathParam("user") u: String?, @Context headers: HttpHeaders): Response {
-        return stacks(headers)
+        return stacks(headers, u)
     }
 
     @GET
@@ -177,25 +187,24 @@ class StackResources {
         return stacks(headers)
     }
 
-    private fun stacks(headers: HttpHeaders): Response {
-        val currentUserSession = headers.bearer?.let { sessionService.get(it) }
-        return if (currentUserSession != null && !currentUserSession.valid) {
+    private fun stacks(headers: HttpHeaders, user: String? = null): Response {
+        val currentUser = headers.getCurrentUser()
+        return if (headers.bearer != null && currentUser == null) {
             badCredentials()
         } else {
-            val allStacks = stackService.findAll()
-            val sharedWithCurrentUserStackPaths = currentUserSession?.let {
-                permissionService.findByIdentity(it.userName).map { p -> p.path }.filterNotNull()
+            val allStacks = stackService.findAll().chainIfNotNull(user) {
+                filter { it.userName == user }
+            }
+            val sharedWithCurrentUserStackPaths = currentUser?.let {
+                permissionService.findByIdentity(it).map { p -> p.path }.filterNotNull()
             }.orEmpty()
             val comparatorByHeadComparator = compareByDescending<Stack, Long?>(nullsFirst()) { it.head?.timestampMillis }
             val permittedStacks = allStacks.filter { stack ->
                 stack.accessLevel == AccessLevel.Public
-                        || (stack.accessLevel == AccessLevel.Internal && currentUserSession != null)
-                        || (currentUserSession != null && currentUserSession.userName == stack.userName)
+                        || (stack.accessLevel == AccessLevel.Internal && currentUser != null)
+                        || (currentUser == stack.userName)
                         || sharedWithCurrentUserStackPaths.contains(stack.path)
             }.sortedWith(comparatorByHeadComparator).toList()
-            if (currentUserSession != null) {
-                sessionService.renew(currentUserSession)
-            }
             ok(GetStacksStatus(permittedStacks.map { stack ->
                 // TODO: Store preview in frame and not load attachments each time
                 val attachments = stack.head?.id?.let { attachmentService.findByFrame(stack.path + "/" + it) }
@@ -213,7 +222,7 @@ class StackResources {
                                         PreviewInfo(a.application, a.contentType)
                                     })
                         },
-                        if (currentUserSession != null && currentUserSession.userName == stack.userName) {
+                        if (currentUser == stack.userName) {
                             permissionService.findByPath(stack.path).map {
                                 PermissionInfo(it.userName, it.email)
                             }.toList()
@@ -446,7 +455,7 @@ class StackResources {
                                 ok()
                             }
                         } else {
-                            if (payload.private != null || payload.readme != null) {
+                            if (payload.private != null || payload.accessLevel != null || payload.readme != null) {
                                 stackService.update(stack.copy(
                                         accessLevel = payload.private?.let { if (it) AccessLevel.Private else AccessLevel.Public }
                                                 ?: payload.accessLevel?.let { AccessLevel.fromCode(it) }
