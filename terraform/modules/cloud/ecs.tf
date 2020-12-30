@@ -7,12 +7,28 @@ data "template_file" "main" {
 
   vars = {
     prefix = var.prefix
-    image_name = var.image_name
-    container_port = var.container_port
+    image = "${var.image_name}:${var.image_tag}"
+    port = "443"
+    container_port = "80"
+    ssl = "true"
+    host_name = var.domain_name
     fargate_cpu = var.fargate_cpu
     fargate_memory = var.fargate_memory
     aws_region = data.aws_region.current.name
   }
+}
+
+resource "aws_efs_file_system" "main" {
+  creation_token = "${var.prefix}-cloud-efs"
+
+}
+
+resource "aws_efs_mount_target" "mount" {
+  count = length(aws_subnet.private.*.id)
+  file_system_id = aws_efs_file_system.main.id
+  subnet_id = element(aws_subnet.private.*.id, count.index)
+  security_groups = [
+    aws_security_group.efs.id]
 }
 
 resource "aws_ecs_task_definition" "main" {
@@ -24,6 +40,14 @@ resource "aws_ecs_task_definition" "main" {
   cpu = var.fargate_cpu
   memory = var.fargate_memory
   container_definitions = data.template_file.main.rendered
+
+  volume {
+    name = "${var.prefix}-cloud-efs-dstack"
+    efs_volume_configuration {
+      file_system_id = aws_efs_file_system.main.id
+      root_directory = "/"
+    }
+  }
 }
 
 resource "aws_ecs_service" "main" {
@@ -32,6 +56,8 @@ resource "aws_ecs_service" "main" {
   task_definition = aws_ecs_task_definition.main.arn
   desired_count = 1
   launch_type = "FARGATE"
+
+  platform_version = "1.4.0"
 
   network_configuration {
     security_groups = [
@@ -43,12 +69,14 @@ resource "aws_ecs_service" "main" {
   load_balancer {
     target_group_arn = aws_alb_target_group.main.id
     container_name = "${var.prefix}-cloud"
-    container_port = var.container_port
+    container_port = "80"
   }
 
   depends_on = [
     aws_alb_listener.main,
     aws_iam_role_policy_attachment.ecs_task_execution_role,
-    aws_iam_role.ecs_task_execution_role]
+    aws_iam_role.ecs_task_execution_role,
+    aws_efs_file_system.main,
+    aws_efs_mount_target.mount]
 }
 

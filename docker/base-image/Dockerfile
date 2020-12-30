@@ -25,6 +25,4 @@ RUN uname -r \
   && dstack server update \
   && cat /root/.dstack/config.yaml
 
-ENV DSTACK_PORT=""
-
-ENTRYPOINT dstack server start --port ${DSTACK_PORT:-8080}
+ENTRYPOINT dstack server start

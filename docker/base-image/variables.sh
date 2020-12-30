@@ -1,6 +1,5 @@
 #!/bin/bash
 
-TIMESTAMP=$(date +%Y%m%d%H%M%S)  
 DOCKER=docker
 IMAGE_NAME=dstack
 TIMESTAMPED_TAG=$TIMESTAMP

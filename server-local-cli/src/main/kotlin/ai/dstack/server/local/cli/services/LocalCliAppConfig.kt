@@ -7,34 +7,34 @@ import org.springframework.stereotype.Component
 class LocalCliAppConfig : AppConfig {
     override val hostName: String
         get() {
-            return System.getenv("DSTACK_HOST_NAME") ?: "localhost"
+            return getEnvIfNotEmpty("DSTACK_HOST_NAME") ?: "localhost"
         }
 
     override val port: Int
         get() {
-            return System.getenv("DSTACK_PORT")?.toInt() ?: internalPort
+            return getEnvIfNotEmpty("DSTACK_PORT")?.toInt() ?: internalPort
         }
 
     override val internalPort: Int
         get() {
-            return System.getenv("DSTACK_INTERNAL_PORT")?.toInt() ?: defaultInternalPort.toInt()
+            return getEnvIfNotEmpty("DSTACK_INTERNAL_PORT")?.toInt() ?: defaultInternalPort.toInt()
         }
 
     override val ssl: Boolean
         get() {
-            return System.getenv("DSTACK_SSL")?.toBoolean() ?: false
+            return getEnvIfNotEmpty("DSTACK_SSL")?.toBoolean() ?: false
         }
 
     override val address: String
         get() {
-            val p = if (port == 80 && !ssl || port == 443 && ssl) "" else port!!.toString()
-            return ((if (ssl) "https" else "http") + "://") + hostName + ":$p"
+            val p = if (port == 80 && !ssl || port == 443 && ssl) "" else port.toString()
+            return ((if (ssl) "https" else "http") + "://") + hostName + (if (p.isNotBlank()) ":$p" else "")
         }
 
     override val homeDirectory: String
         get() {
             val dir = defaultHomeDirectory ?: "."
-            return System.getenv("DSTACK_HOME") ?: "$dir/.dstack"
+            return getEnvIfNotEmpty("DSTACK_HOME") ?: "$dir/.dstack"
         }
 
     override val dataDirectory: String
@@ -62,60 +62,65 @@ class LocalCliAppConfig : AppConfig {
             return "${homeDirectory}/executions"
         }
 
-    override val adminEmail: String
+    override val adminEmail: String?
         get() {
-            return System.getenv("DSTACK_ADMIN_EMAIL")
+            return getEnvIfNotEmpty("DSTACK_ADMIN_EMAIL")
         }
 
     override val smtpHost: String?
         get() {
-            return System.getenv("DSTACK_SMTP_HOST")
+            return getEnvIfNotEmpty("DSTACK_SMTP_HOST")
         }
 
     override val smtpPort: Int?
         get() {
-            return System.getenv("DSTACK_SMTP_PORT").toInt()
+            return getEnvIfNotEmpty("DSTACK_SMTP_PORT")?.toInt()
         }
 
     override val smtpUser: String?
         get() {
-            return System.getenv("DSTACK_SMTP_USER")
+            return getEnvIfNotEmpty("DSTACK_SMTP_USER")
         }
 
     override val smtpPassword: String?
         get() {
-            return System.getenv("DSTACK_SMTP_PASSWORD")
+            return getEnvIfNotEmpty("DSTACK_SMTP_PASSWORD")
         }
 
     override val smtpStartTLS: Boolean
         get() {
-            return System.getenv("DSTACK_SMTP_STARTTLS")?.toBoolean() ?: true
+            return getEnvIfNotEmpty("DSTACK_SMTP_STARTTLS")?.toBoolean() ?: true
         }
 
-    override val smtpFrom: String
+    override val smtpFrom: String?
         get() {
-            return System.getenv("DSTACK_SMTP_FROM")
+            return getEnvIfNotEmpty("DSTACK_SMTP_FROM")
         }
 
     override val user: String?
         get() {
-            return System.getenv("DSTACK_USER") ?: defaultUser
+            return getEnvIfNotEmpty("DSTACK_USER") ?: defaultUser
         }
 
     override val password: String?
         get() {
-            return System.getenv("DSTACK_PASSWORD") ?: defaultPassword
+            return getEnvIfNotEmpty("DSTACK_PASSWORD") ?: defaultPassword
         }
 
     override val pythonExecutable: String?
         get() {
-            return System.getenv("DSTACK_PYTHON_EXECUTABLE") ?: defaultPythonExecutable
+            return getEnvIfNotEmpty("DSTACK_PYTHON_EXECUTABLE") ?: defaultPythonExecutable
         }
 
     override val emailEnabled: Boolean
         get() {
             return smtpHost != null
         }
+
+    private fun getEnvIfNotEmpty(name: String): String? {
+        val e = System.getenv(name)
+        return if (!e.isNullOrBlank()) e else null
+    }
 
     companion object {
         var defaultUser: String? = null

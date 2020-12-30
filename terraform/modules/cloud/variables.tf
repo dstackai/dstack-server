@@ -6,11 +6,10 @@ variable "az_count" {
 }
 
 variable "image_name" {
-  default = "dstackai/dstack:latest-master"
+  default = "dstackai/dstack"
 }
 
-variable "container_port" {
-  default = 80
+variable "image_tag" {
 }
 
 variable "fargate_cpu" {

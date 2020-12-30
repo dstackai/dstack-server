@@ -478,7 +478,7 @@ private val DeleteStackPayload?.isMalformed
 private val UpdateStackPayload?.isMalformed
     get() = this == null
             || stack.isMalformedStackPath
-            || (private == null && head == null && readme == null)
+            || (private == null && accessLevel == null && head == null && readme == null)
 
 const val STACK_NAME_PATTERN = "[a-zA-Z0-9-_/]{3,255}\$"
 
