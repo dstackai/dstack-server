@@ -10,6 +10,8 @@
         padding-left: 100px;
         padding-right: 100px;
         max-width: 1240px;
+        margin-left: auto;
+        margin-right: auto;
     }
 }
 .header {

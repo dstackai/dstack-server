@@ -1,9 +1,9 @@
 import React, {useRef} from 'react';
 import {connect} from 'react-redux';
-import {Link, NavLink, useParams, useLocation} from 'react-router-dom';
+import {Link, NavLink, useParams, useLocation, useHistory} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
 import cx from 'classnames';
-import {useAppStore, appStoreActionTypes, Tooltip} from '@dstackai/dstack-react';
+import {useAppStore, appStoreActionTypes, Dropdown, Avatar} from '@dstackai/dstack-react';
 import {isSignedIn} from '@dstackai/dstack-react/dist/utils';
 import {useOnClickOutside} from '@dstackai/dstack-react/dist/hooks';
 import config from 'config';
@@ -14,6 +14,7 @@ import {ReactComponent as Models} from 'assets/models.svg';
 import logoCompact from 'assets/logo-compact.svg';
 import css from './styles.module.css';
 import {fetchList as fetchStacksList} from 'Stacks/List/actions';
+import {logOut} from 'App/actions';
 
 
 type Props = {
@@ -21,17 +22,23 @@ type Props = {
     toggleMenu: Function,
     isShow: boolean,
     userLoading: boolean,
+    logOut: Function,
 }
 
 const Sidebar = ({
     className, isShow, toggleMenu, userLoading,
-    fetchStacksList, compact, toggleCollapse,
+    fetchStacksList, compact, toggleCollapse, logOut,
 }: Props) => {
     const {t} = useTranslation();
     const params = useParams();
     const {pathname} = useLocation();
-    const [, dispatch] = useAppStore();
+    const [{currentUser: {data: userData}}, dispatch] = useAppStore();
     const sidebarRef = useRef(null);
+    const {push} = useHistory();
+
+    const logOutHandle = () => {
+        logOut(() => push('/'));
+    };
 
     useOnClickOutside(sidebarRef, () => isShow && toggleMenu());
 
@@ -80,93 +87,98 @@ const Sidebar = ({
         {isSignedIn() && !userLoading && <ul className={css.links}>
             {menuItems.map((item, index) => (
                 <li key={index} className={css.item}>
-                    <Tooltip
-                        overlayContent={item.label}
-                        placement="rightTop"
-                        trigger={compact ? ['hover'] : []}
-                        align={{offset: [20, -10]}}
+                    <NavLink
+                        onClick={getMenuItemClick(item)}
+                        to={item.to}
+                        activeClassName="active"
+                        isActive={item.isActive}
                     >
-                        <NavLink
-                            onClick={getMenuItemClick(item)}
-                            to={item.to}
-                            activeClassName="active"
-                            isActive={item.isActive}
-                        >
-                            {item.svg && (
-                                <item.svg className={css.icon} />
-                            )}
-                            {item.icon && (
-                                <span className={cx(css.icon, 'mdi', item.icon)} />
-                            )}
+                        {item.svg && (
+                            <span className={css.icon}>
+                                <item.svg />
+                            </span>
+                        )}
+
+                        {item.icon && (
+                            <span className={cx(css.icon, 'mdi', item.icon)} />
+                        )}
+
+                        <span className={css.labelWrap}>
                             <span className={css.label}>{item.label}</span>
                             {/*<span className={css.count}>11</span>*/}
 
                             {item.beta && <sub className={cx(css.sub, 'green-text')}>
                                 {t('beta')}
                             </sub>}
-                        </NavLink>
-                    </Tooltip>
+                        </span>
+                    </NavLink>
                 </li>
             ))}
 
             <li className={css.itemSeparator} />
 
             <li className={css.item}>
-                <Tooltip
-                    overlayContent={t('settings')}
-                    placement="rightTop"
-                    trigger={compact ? ['hover'] : []}
-                    align={{offset: [20, -10]}}
+                <NavLink
+                    activeClassName="active"
+                    to={routes.settings()}
                 >
-                    <NavLink
-                        activeClassName="active"
-                        to={routes.settings()}
-                    >
-                        <span className={cx(css.icon, 'mdi mdi-settings')} />
+                    <span className={cx(css.icon, 'mdi mdi-settings')} />
+
+                    <span className={css.labelWrap}>
                         <span className={css.label}>{t('settings')}</span>
-                    </NavLink>
-                </Tooltip>
+                    </span>
+                </NavLink>
             </li>
 
             <li className={css.item}>
-                <Tooltip
-                    overlayContent={t('documentation')}
-                    placement="rightTop"
-                    trigger={compact ? ['hover'] : []}
-                    align={{offset: [20, -10]}}
+                <a
+                    href={config.DOCS_URL}
+                    target="_blank"
                 >
-                    <a
-                        href={config.DOCS_URL}
-                        target="_blank"
-                    >
-                        <span className={cx(css.icon, 'mdi mdi-file-document')} />
+                    <span className={cx(css.icon, 'mdi mdi-file-document')} />
+
+                    <span className={css.labelWrap}>
                         <span className={css.label}>{t('documentation')}</span>
-                    </a>
-                </Tooltip>
+                    </span>
+                </a>
             </li>
 
             <li className={css.item}>
-                <Tooltip
-                    overlayContent={t('discordChat')}
-                    placement="rightTop"
-                    trigger={compact ? ['hover'] : []}
-                    align={{offset: [20, -10]}}
+                <a
+                    href={config.DISCORD_URL}
+                    target="_blank"
                 >
-                    <a
-                        href={config.DISCORD_URL}
-                        target="_blank"
-                    >
-                        <span className={cx(css.icon, 'mdi mdi-discord')} />
+                    <span className={cx(css.icon, 'mdi mdi-discord')} />
+
+                    <span className={css.labelWrap}>
                         <span className={css.label}>{t('discordChat')}</span>
-                    </a>
-                </Tooltip>
+                    </span>
+                </a>
             </li>
         </ul>}
 
-        <button className={css.collapse} onClick={toggleCollapse}>
-            <span className={cx(css.icon, 'mdi mdi-chevron-double-left')} />
-            <span className={css.label}>{t('collapse')}</span>
-        </button>
+        <div className={css.bottomSection}>
+            {userData && (
+                <Dropdown
+                    className={css.userDropdown}
+                    items={[
+                        {
+                            title: t('signOut'),
+                            onClick: logOutHandle,
+                        },
+                    ]}
+                >
+                    <div className={css.user}>
+                        <Avatar className={css.avatar} name={userData.user} />
+                        <div className={css.userName}>{userData.user}</div>
+                    </div>
+                </Dropdown>
+            )}
+
+            <button className={css.collapse} onClick={toggleCollapse}>
+                <span className={cx(css.icon, 'mdi mdi-chevron-double-left')} />
+            </button>
+        </div>
     </div>;
 };
 
@@ -176,5 +188,5 @@ export default connect(
         userLoading: state.app.userLoading,
     }),
 
-    {fetchStacksList}
+    {fetchStacksList, logOut}
 )(Sidebar);

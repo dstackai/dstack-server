@@ -2,6 +2,8 @@
 @import "styles/media.css";
 
 .sidebar {
+    display: flex;
+    flex-direction: column;
     @media (--mobile) {
         z-index: var(--sidebar-z-index);
         position: fixed;
@@ -22,8 +24,8 @@
         }
     }
     @media (--desktop) {
-        display: flex;
-        flex-direction: column;
+        position: relative;
+        z-index: 1;
         background-color: var(--color-translated-white);
         &:global(.compact) {
             .logo {
@@ -43,23 +45,40 @@
                     }
                 }
             }
-            .links {
-                padding-left: 20px;
-                padding-right: 20px;
-            }
-            .item,
-            .collapse {
+            .item {
                 max-width: 20px;
                 transition-delay: .3s;
-                & .label,
-                & .count {
-                    opacity: 0;
+                .icon {
+                    &:before,
+                    & > svg {
+                        transform: scale(1);
+                    }
+                }
+                & .labelWrap {
+                    background: #FFFFFF;
+                    border: 1px solid #F8F9FA;
                     transition-delay: 0s;
                 }
+                &:not(:hover) {
+                    & .labelWrap {
+                        opacity: 0;
+                        pointer-events: none;
+                    }
+                }
+            }
+            .bottomSection {
+                min-height: 56px;
+                margin-left: 17px;
+            }
+            .userDropdown {
+                max-width: 28px;
+            }
+            .userName {
+                opacity: 0;
+                pointer-events: none;
+                transition-delay: 0s;
             }
             .collapse {
-                margin-left: 20px;
-                transition-delay: .3s, .0s, 0s;
                 & .icon {
                     transform: scale(-1);
                 }
@@ -81,8 +100,8 @@
     }
 }
 .logo {
-    margin-top: 30px;
-    margin-left: 30px;
+    margin-top: 20px;
+    margin-left: 20px;
     transition: opacity .3s ease, margin-left .6s ease-out;
     &:hover {
         opacity: .7;
@@ -116,11 +135,9 @@
         padding-right: 20px;
     }
     @media (--desktop) {
-        transition: padding .6s ease-out;
-        margin-top: 30px;
+        padding: 0;
         margin-bottom: 30px;
-        padding-left: 30px;
-        padding-right: 30px;
+        margin-top: 10px;
     }
 }
 .itemSeparator {
@@ -134,22 +151,21 @@
 }
 .item {
     list-style: none;
-    max-width: 170px;
-    overflow: hidden;
     transition: max-width .3s ease-out;
     &:nth-child(n+2) {
         @media (--mobile) {
             margin-top: 18px;
         }
-        @media (--desktop) {
-            margin-top: 22px;
-        }
     }
     a {
+        position: relative;
         display: flex;
         align-items: center;
         color: var(--color-dark-gray);
         @media (--desktop) {
+            padding-left: 20px;
+            padding-right: 20px;
+            height: 42px;
             &:not(:global(.active)) {
                 & .icon {
                     opacity: .3;
@@ -179,40 +195,95 @@
             }
         }
         & .icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
             flex-shrink: 0;
             font-size: 20px;
             height: 20px;
+            width: 20px;
             transition: opacity .3s ease-out;
+            & > svg {
+                width: 16px;
+                height: 16px;
+            }
+            @media (--desktop) {
+                &:before,
+                & > svg {
+                    transform: scale(.8);
+                    transition: transform .6s ease-out;
+                }
+            }
+        }
+        & .labelWrap {
+            display: flex;
+            align-items: center;
+            @media (--desktop) {
+                position: absolute;
+                top: 0;
+                left: 0;
+                height: inherit;
+                min-width: 100%;
+                padding-left: 40px;
+                padding-right: 40px;
+                box-sizing: border-box;
+                transition: opacity .3s .3s ease-out;
+            }
         }
         & .count {
             color: #B4B8C7;
             opacity: 0.8;
             margin-left: 4px;
             font-size: 12px;
-            transition: opacity .3s .3s ease-out;
-        }
-        & .sub {
-            font-size: 12px;
-            line-height: 12px;
-            padding-left: 4px;
         }
         & .label {
             margin-left: 6px;
             white-space: nowrap;
             font-size: 14px;
             line-height: 16px;
-            transition: opacity .3s .3s ease-out;
+        }
+        & .sub {
+            font-size: 12px;
+            line-height: 12px;
+            padding-left: 4px;
         }
     }
 }
-.collapse {
-    overflow: hidden;
+.userDropdown {
+
+}
+.user {
     display: flex;
     align-items: center;
-    max-width: 170px;
-    margin: auto 0 22px 30px;
+    cursor: pointer;
+}
+.avatar {
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.userName {
+    margin-left: 6px;
+    font-size: 14px;
+    line-height: 17px;
+    transition: opacity .3s .3s ease-out;
+}
+.bottomSection {
+    position: relative;
+    min-height: 28px;
+    margin: auto 0 22px 20px;
+    transition: min-height .6s ease-out, margin .6s ease-out;
+    @media (--mobile) {
+        margin-bottom: 0;
+    }
+}
+.collapse {
+    position: absolute;
+    bottom: 4px;
+    right: 20px;
     color: var(--color-light-gray);
-    transition: max-width .3s ease-out, margin-left .6s ease-out, color .3s ease-out;
+    transition: color .3s ease-out;
     cursor: pointer;
     border: none;
     padding: 0;
@@ -226,16 +297,13 @@
         color: var(--color-light-gray-hover);
     }
     & .icon {
+        display: flex;
+        justify-content: center;
+        align-items: center;
         flex-shrink: 0;
-        font-size: 20px;
+        font-size: 14px;
+        width: 20px;
         height: 20px;
         transition: transform .6s ease-out;
-    }
-    & .label {
-        margin-left: 6px;
-        white-space: nowrap;
-        font-size: 14px;
-        line-height: 16px;
-        transition: opacity .3s .3s ease-out;
     }
 }

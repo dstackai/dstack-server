@@ -1,6 +1,8 @@
 @import "styles/variables.css";
 @import "styles/media.css";
 .back {
+    display: flex;
+    align-items: center;
     font-size: 14px;
     line-height: 22px;
     color: var(--color-light-gray);
@@ -10,7 +12,7 @@
             opacity: .7;
         }
     }
-    & > span {
-        padding-right: 4px;
+    & .children {
+        margin-left: 4px;
     }
 }

@@ -6,7 +6,10 @@ const BackButton = ({Component = 'button', children, className, ...props}) => {
     return (
         <Component className={cx(css.back, className)} {...props}>
             <span className="mdi mdi-arrow-left" />
-            {children}
+
+            {children && (
+                <span className={css.children}>{children}</span>
+            )}
         </Component>
     );
 };

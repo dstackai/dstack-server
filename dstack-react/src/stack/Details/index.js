@@ -190,19 +190,13 @@ const Details = ({
 
     return (
         <div className={cx(css.details)}>
-            <Yield name="header-yield">
+            <div className={css.header}>
                 <BackButton
+                    className={css.backButton}
                     Component={Link}
                     to={backUrl}
-                >
-                    {(currentUser === user)
-                        ? t('backToMyStacks')
-                        : t('backToStacksOf', {name: user})
-                    }
-                </BackButton>
-            </Yield>
+                />
 
-            <div className={css.header}>
                 <div className={css.title}>
                     {data.name}
                     <span className={`mdi mdi-lock${data['access_level'] === 'private' ? '' : '-open'}`} />

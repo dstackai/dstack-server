@@ -400,7 +400,7 @@ var Avatar = React.forwardRef(function (_ref, ref) {
   }, name.slice(0, 2));
 });
 
-var css$2 = {"back":"_1MuhU"};
+var css$2 = {"back":"_1MuhU","children":"_3cJ8S"};
 
 var BackButton = function BackButton(_ref) {
   var _ref$Component = _ref.Component,
@@ -413,7 +413,9 @@ var BackButton = function BackButton(_ref) {
     className: cx(css$2.back, className)
   }, props), /*#__PURE__*/React__default.createElement("span", {
     className: "mdi mdi-arrow-left"
-  }), children);
+  }), children && /*#__PURE__*/React__default.createElement("span", {
+    className: css$2.children
+  }, children));
 };
 
 var css$3 = {"button":"_2lKoS","spinner":"_31PPt"};
@@ -3881,7 +3883,7 @@ var useForm = (function (initialFormState, fieldsValidators) {
   };
 });
 
-var css$B = {"details":"_3iAZb","header":"_2kekg","title":"_1zGvd","permissions":"_3ydGO","sideHeader":"_1FUDu","share":"_2kaMN","dropdown":"_3axDI","description":"_Y6gJz","label":"_2FemD","label-tooltip":"_2Oe5S","actions":"_sZkKa","size":"_Ja107","revisions":"_bLqAO","tabs":"_3mpfk","container":"_3_I7R","withFilters":"_3exQh","filters":"_1-hdZ","attachment":"_3IGZo","readme":"_mADeQ"};
+var css$B = {"details":"_3iAZb","header":"_2kekg","backButton":"_1cfLo","title":"_1zGvd","permissions":"_3ydGO","sideHeader":"_1FUDu","share":"_2kaMN","dropdown":"_3axDI","description":"_Y6gJz","label":"_2FemD","label-tooltip":"_2Oe5S","actions":"_sZkKa","size":"_Ja107","revisions":"_bLqAO","tabs":"_3mpfk","container":"_3_I7R","withFilters":"_3exQh","filters":"_1-hdZ","attachment":"_3IGZo","readme":"_mADeQ"};
 
 var Details = function Details(_ref) {
   var _data$head, _cx;
@@ -3899,8 +3901,7 @@ var Details = function Details(_ref) {
       changeAccessLevel = _ref.changeAccessLevel,
       updatePermissions = _ref.updatePermissions;
 
-  var _useTranslation = reactI18next.useTranslation(),
-      t = _useTranslation.t;
+  var _useTranslation = reactI18next.useTranslation();
 
   var didMountRef = React.useRef(false);
 
@@ -4031,16 +4032,13 @@ var Details = function Details(_ref) {
   if (loading) return /*#__PURE__*/React__default.createElement(Loader$1, null);
   return /*#__PURE__*/React__default.createElement("div", {
     className: cx(css$B.details)
-  }, /*#__PURE__*/React__default.createElement(Yield, {
-    name: "header-yield"
+  }, /*#__PURE__*/React__default.createElement("div", {
+    className: css$B.header
   }, /*#__PURE__*/React__default.createElement(BackButton, {
+    className: css$B.backButton,
     Component: reactRouterDom.Link,
     to: backUrl
-  }, currentUser === user ? t('backToMyStacks') : t('backToStacksOf', {
-    name: user
-  }))), /*#__PURE__*/React__default.createElement("div", {
-    className: css$B.header
-  }, /*#__PURE__*/React__default.createElement("div", {
+  }), /*#__PURE__*/React__default.createElement("div", {
     className: css$B.title
   }, data.name, /*#__PURE__*/React__default.createElement("span", {
     className: "mdi mdi-lock" + (data['access_level'] === 'private' ? '' : '-open')
@@ -4222,7 +4220,7 @@ var actions$1 = (function () {
   };
 });
 
-var css$E = {"details":"_ti47L","header":"_1-me2","title":"_1ZJdY","permissions":"_3X_XO","sideHeader":"_1w9C6","share":"_2sRwt","dropdown":"_1fs1J","description":"_3dUVb","label":"_1JQAe","label-tooltip":"_15gJa","actions":"_2mMuP","size":"_2GzG9","revisions":"_1t1sR","tabs":"_1iRHh","container":"_2Ro1o","withSidebar":"_3dv-r","filters":"_283Wj","filterLoader":"_7OdCa","attachment":"_1QLqg","progress":"_HhauM","emptyMessage":"_16j-R","error":"_2FCD_","message":"_nbe6T","logs":"_36zNW","logsButton":"_1K-0S","logsExpand":"_1YGSB","fromAgo":"_2urIx","log":"_3Aob9","readme":"_19inZ"};
+var css$E = {"details":"_ti47L","header":"_1-me2","backButton":"_1ERQl","title":"_1ZJdY","permissions":"_3X_XO","sideHeader":"_1w9C6","share":"_2sRwt","dropdown":"_1fs1J","description":"_3dUVb","label":"_1JQAe","label-tooltip":"_15gJa","actions":"_2mMuP","size":"_2GzG9","revisions":"_1t1sR","tabs":"_1iRHh","container":"_2Ro1o","withSidebar":"_3dv-r","filters":"_283Wj","filterLoader":"_7OdCa","attachment":"_1QLqg","progress":"_HhauM","emptyMessage":"_16j-R","error":"_2FCD_","message":"_nbe6T","logs":"_36zNW","logsButton":"_1K-0S","logsExpand":"_1YGSB","fromAgo":"_2urIx","log":"_3Aob9","readme":"_19inZ"};
 
 var REFRESH_INTERVAL = 1000;
 
@@ -4590,16 +4588,13 @@ var Details$1 = function Details(_ref) {
   });
   return /*#__PURE__*/React__default.createElement("div", {
     className: cx(css$E.details)
-  }, /*#__PURE__*/React__default.createElement(Yield, {
-    name: "header-yield"
+  }, /*#__PURE__*/React__default.createElement("div", {
+    className: css$E.header
   }, /*#__PURE__*/React__default.createElement(BackButton, {
+    className: css$E.backButton,
     Component: reactRouterDom.Link,
     to: backUrl
-  }, currentUser === user ? t('backToMyStacks') : t('backToStacksOf', {
-    name: user
-  }))), /*#__PURE__*/React__default.createElement("div", {
-    className: css$E.header
-  }, /*#__PURE__*/React__default.createElement("div", {
+  }), /*#__PURE__*/React__default.createElement("div", {
     className: css$E.title
   }, data.name, /*#__PURE__*/React__default.createElement("span", {
     className: "mdi mdi-lock" + (data['access_level'] === 'private' ? '' : '-open')
