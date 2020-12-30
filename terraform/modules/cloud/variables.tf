@@ -10,7 +10,6 @@ variable "image_name" {
 }
 
 variable "image_tag" {
-  default = "20201229232839"
 }
 
 variable "fargate_cpu" {

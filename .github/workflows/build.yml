@@ -87,6 +87,30 @@ jobs:
           TIMESTAMP: ${{needs.publish-server-snapshot.outputs.timestamp}}
           DOCKER_PASS: ${{ secrets.DOCKERHUB_PASSWORD }}
 
+  apply-cloud-snaphost:
+    needs: [publish-server-snapshot, publish-docker-snaphost]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Change directory
+        run: |
+          cd terraform/applications/cloud/stgn
+      - name: "Terraform Init"
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: 0.12.20
+          tf_actions_working_dir: 'terraform/applications/cloud/stgn'
+          tf_actions_subcommand: "init"
+      - name: "Terraform Apply"
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: 0.12.20
+          tf_actions_working_dir: 'terraform/applications/cloud/stgn'
+          tf_actions_subcommand: "apply"
+          args: '-var="image_tag=${{needs.publish-server-snapshot.outputs.timestamp}}"'
+
   publish-docker-release:
     needs: publish-release
     runs-on: ubuntu-latest
