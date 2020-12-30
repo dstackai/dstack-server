@@ -3361,19 +3361,19 @@ var useActions = (function () {
   };
 });
 
-var css$x = {"desktopButton":"_2X9G0","mobileButton":"_3s7Ow","modal":"_I7l_L","dialog":"_2ieJ1","description":"_2kfzG","content":"_3zGyt","switcher":"_RKqmw","text-input":"_2_DXM","copylink":"_2NvuS","copy":"_2rv__","checkUserName":"_2UalE","checkUserMessage":"_1jlEB","users":"_2gjKq","user":"_3VlxR","user-pic":"_2PGqr","user-name":"_-pvaS","userPic":"_IWEUU","userName":"_2xAc9","userDelete":"_3QkG0","userMessage":"_1Bvl_","userMessageSuccess":"_1PzgS"};
+var css$x = {"desktopButton":"_2X9G0","mobileButton":"_3s7Ow","modal":"_I7l_L","dialog":"_2ieJ1","description":"_2kfzG","copyAndDropdown":"_3e5Np","link":"_2420g","copy":"_2rv__","separator":"_3gVSm","dropdown":"_3Iy_D","dropdownButton":"_11Rdi","content":"_3zGyt","invite":"_2Zs79","checkUserName":"_2UalE","inviteField":"_2VZEa","inviteButton":"_2MARU","checkUserMessage":"_1jlEB","users":"_2gjKq","user":"_3VlxR","user-pic":"_2PGqr","user-name":"_-pvaS","userPic":"_IWEUU","userName":"_2xAc9","userDelete":"_3QkG0","userMessage":"_1Bvl_","userMessageSuccess":"_1PzgS"};
 
 var Share = function Share(_ref) {
   var className = _ref.className,
       instancePath = _ref.instancePath,
-      _ref$defaultIsPrivate = _ref.defaultIsPrivate,
-      defaultIsPrivate = _ref$defaultIsPrivate === void 0 ? false : _ref$defaultIsPrivate,
+      initialAccessLevel = _ref.accessLevel,
       _ref$defaultPermissio = _ref.defaultPermissions,
       defaultPermissions = _ref$defaultPermissio === void 0 ? [] : _ref$defaultPermissio,
-      onUpdatePrivate = _ref.onUpdatePrivate,
+      onChangeAccessLevel = _ref.onChangeAccessLevel,
       _ref$urlParams = _ref.urlParams,
       urlParams = _ref$urlParams === void 0 ? {} : _ref$urlParams,
-      onUpdatePermissions = _ref.onUpdatePermissions;
+      onUpdatePermissions = _ref.onUpdatePermissions,
+      stackName = _ref.stackName;
 
   var _useAppStore = useAppStore(),
       configInfo = _useAppStore[0].configInfo;
@@ -3386,9 +3386,9 @@ var Share = function Share(_ref) {
       isEmail = _useState2[0],
       setIsEmail = _useState2[1];
 
-  var _useState3 = useState(defaultIsPrivate),
-      isPrivate = _useState3[0],
-      setIsPrivate = _useState3[1];
+  var _useState3 = useState(initialAccessLevel),
+      accessLevel = _useState3[0],
+      setAccessLevel = _useState3[1];
 
   var _useState4 = useState(defaultPermissions),
       permissions = _useState4[0],
@@ -3418,13 +3418,15 @@ var Share = function Share(_ref) {
     return setIsShowModal(!isShowModal);
   };
 
+  var dropdownOptionsMap = {
+    "public": t('public'),
+    internal: t('forDstackaiUsersOnly'),
+    "private": t('forSelectedUsers')
+  };
   useEffect(function () {
     setPermissions(defaultPermissions);
-    setIsPrivate(defaultIsPrivate);
+    setAccessLevel(initialAccessLevel);
   }, [instancePath]);
-  var updatePrivate = useDebounce(function (isPrivate) {
-    if (onUpdatePrivate) onUpdatePrivate(isPrivate);
-  }, []);
   var checkUserName = useDebounce(function (userName) {
     setUserExists(null);
 
@@ -3437,9 +3439,9 @@ var Share = function Share(_ref) {
     }
   }, []);
 
-  var onChangeIsPrivate = function onChangeIsPrivate(event) {
-    setIsPrivate(event.target.checked);
-    updatePrivate(event.target.checked);
+  var onChangeDropdown = function onChangeDropdown(value) {
+    setAccessLevel(value);
+    onChangeAccessLevel(value);
   };
 
   var onChangeUserName = function onChangeUserName(event) {
@@ -3454,14 +3456,22 @@ var Share = function Share(_ref) {
     }
   };
 
+  var submitInvite = function submitInvite() {
+    if (userName.length) {
+      var userHasPermission = permissions.some(function (i) {
+        return i.user === userName;
+      });
+      if (!userHasPermission) addUser(userName);else {
+        setUserName('');
+        setUserExists(null);
+        setIsEmail(false);
+      }
+    }
+  };
+
   var onKeyPressUserName = function onKeyPressUserName(event) {
     if (event.which === 13 || event.keyCode === 13 || event.key === 'Enter') {
-      if (userName.length) {
-        var userHasPermission = permissions.some(function (i) {
-          return i.user === userName;
-        });
-        if (!userHasPermission) addUser(userName);else setUserName('');
-      }
+      submitInvite();
     }
   };
 
@@ -3551,33 +3561,51 @@ var Share = function Share(_ref) {
     withCloseButton: true
   }, /*#__PURE__*/React__default.createElement("div", {
     className: css$x.description
-  }, isPrivate ? t('theCurrentStackIsPrivateButYouCanMakeItPublic') : t('theCurrentStackIsPublicButYouCanMakeItPrivateAndShareWithSelectedUsersOnly')), /*#__PURE__*/React__default.createElement("div", {
-    className: css$x.copylink
-  }, /*#__PURE__*/React__default.createElement(TextField, {
-    className: css$x.textInput,
-    readOnly: true,
-    value: origin + "/" + instancePath + searchString
-  }), /*#__PURE__*/React__default.createElement(Copy, {
+  }, accessLevel === 'private' && t('theStackNameIsPrivateButYouCanMakeShareItWithSelectedUsers', {
+    name: stackName
+  }), accessLevel === 'public' && t('theStackNameIsPublic', {
+    name: stackName
+  }), accessLevel === 'internal' && t('theStackNameIsInternal', {
+    name: stackName
+  })), /*#__PURE__*/React__default.createElement("div", {
+    className: css$x.copyAndDropdown
+  }, /*#__PURE__*/React__default.createElement("div", {
+    className: css$x.link
+  }, origin + "/" + instancePath + searchString), /*#__PURE__*/React__default.createElement(Copy, {
     className: css$x.copy,
+    buttonTitle: null,
     copyText: origin + "/" + instancePath + searchString,
     successMessage: t('linkIsCopied')
-  })), /*#__PURE__*/React__default.createElement("div", {
+  }), /*#__PURE__*/React__default.createElement("div", {
+    className: css$x.separator
+  }), /*#__PURE__*/React__default.createElement(Dropdown, {
+    className: css$x.dropdown,
+    items: Object.keys(dropdownOptionsMap).map(function (key) {
+      return {
+        title: dropdownOptionsMap[key],
+        value: key,
+        onClick: function onClick() {
+          return onChangeDropdown(key);
+        }
+      };
+    })
+  }, /*#__PURE__*/React__default.createElement(Button, {
+    className: css$x.dropdownButton,
+    color: "primary",
+    size: "small"
+  }, dropdownOptionsMap[accessLevel], /*#__PURE__*/React__default.createElement("span", {
+    className: "mdi mdi-chevron-down"
+  })))), /*#__PURE__*/React__default.createElement("div", {
     className: css$x.content
-  }, /*#__PURE__*/React__default.createElement(CheckboxField, {
-    className: css$x.switcher,
-    id: "checkbox-is-private",
-    name: "private",
-    appearance: "switcher",
-    onChange: onChangeIsPrivate,
-    value: isPrivate,
-    offLabel: t('everyoneWithTheLink'),
-    onLabel: t('selectedUsersOnly')
-  }), isPrivate && /*#__PURE__*/React__default.createElement("div", {
+  }, accessLevel === 'private' && /*#__PURE__*/React__default.createElement("div", {
+    className: css$x.invite
+  }, /*#__PURE__*/React__default.createElement("div", {
     className: css$x.checkUserName
   }, /*#__PURE__*/React__default.createElement(TextField, {
+    size: "small",
     disabled: loading,
     placeholder: get(configInfo, 'data.email_enabled') ? t('enterUsernameEmailAndPressEnter') : t('enterUsernameAndPressEnter'),
-    className: css$x.textInput,
+    className: css$x.inviteField,
     value: userName,
     onChange: onChangeUserName,
     onKeyPress: onKeyPressUserName
@@ -3587,7 +3615,14 @@ var Share = function Share(_ref) {
       fail: userExists === false,
       secondary: isEmail
     })
-  }, userExists && !isEmail && t('userExists'), !userExists && !isEmail && t('userNotFound'), isEmail && t('enterToInvite'))), isPrivate && /*#__PURE__*/React__default.createElement("div", {
+  }, userExists && !isEmail && t('userExists'), !userExists && !isEmail && t('userNotFound'), isEmail && t('enterToInvite'))), /*#__PURE__*/React__default.createElement(Button, {
+    className: css$x.inviteButton,
+    size: "small",
+    color: "primary",
+    variant: "contained",
+    disabled: loading || !isEmail && !userExists,
+    onClick: submitInvite
+  }, t('sendInvite'))), accessLevel === 'private' && /*#__PURE__*/React__default.createElement("div", {
     className: css$x.users
   }, permissions.map(renderUser)))));
 };
@@ -3858,7 +3893,7 @@ var Details = function Details(_ref) {
       backUrl = _ref.backUrl,
       user = _ref.user,
       stack = _ref.stack,
-      setPrivate = _ref.setPrivate,
+      changeAccessLevel = _ref.changeAccessLevel,
       updatePermissions = _ref.updatePermissions;
 
   var _useTranslation = useTranslation(),
@@ -4005,17 +4040,18 @@ var Details = function Details(_ref) {
   }, /*#__PURE__*/React__default.createElement("div", {
     className: css$B.title
   }, data.name, /*#__PURE__*/React__default.createElement("span", {
-    className: "mdi mdi-lock" + (data["private"] ? '' : '-open')
-  })), data["private"] && /*#__PURE__*/React__default.createElement(PermissionUsers, {
+    className: "mdi mdi-lock" + (data['access_level'] === 'private' ? '' : '-open')
+  })), data['access_level'] === 'private' && /*#__PURE__*/React__default.createElement(PermissionUsers, {
     className: css$B.permissions,
     permissions: data.permissions
   }), /*#__PURE__*/React__default.createElement("div", {
     className: css$B.sideHeader
   }, data && data.user === currentUser && /*#__PURE__*/React__default.createElement(Share, {
+    stackName: stack,
     instancePath: user + "/" + stack,
-    onUpdatePrivate: setPrivate,
+    onChangeAccessLevel: changeAccessLevel,
     className: css$B.share,
-    defaultIsPrivate: data["private"],
+    accessLevel: data['access_level'],
     defaultPermissions: data.permissions,
     urlParams: {
       a: attachmentIndex ? attachmentIndex : null,
@@ -4202,7 +4238,7 @@ var Details$1 = function Details(_ref) {
       backUrl = _ref.backUrl,
       user = _ref.user,
       stack = _ref.stack,
-      setPrivate = _ref.setPrivate,
+      changeAccessLevel = _ref.changeAccessLevel,
       updatePermissions = _ref.updatePermissions;
 
   var _useTranslation = useTranslation(),
@@ -4563,17 +4599,18 @@ var Details$1 = function Details(_ref) {
   }, /*#__PURE__*/React__default.createElement("div", {
     className: css$E.title
   }, data.name, /*#__PURE__*/React__default.createElement("span", {
-    className: "mdi mdi-lock" + (data["private"] ? '' : '-open')
-  })), data["private"] && /*#__PURE__*/React__default.createElement(PermissionUsers, {
+    className: "mdi mdi-lock" + (data['access_level'] === 'private' ? '' : '-open')
+  })), data['access_level'] === 'private' && /*#__PURE__*/React__default.createElement(PermissionUsers, {
     className: css$E.permissions,
     permissions: data.permissions
   }), /*#__PURE__*/React__default.createElement("div", {
     className: css$E.sideHeader
   }, data && data.user === currentUser && /*#__PURE__*/React__default.createElement(Share, {
     instancePath: user + "/" + stack,
-    onUpdatePrivate: setPrivate,
+    stackName: stack,
+    onChangeAccessLevel: changeAccessLevel,
     className: css$E.share,
-    defaultIsPrivate: data["private"],
+    accessLevel: data['access_level'],
     defaultPermissions: data.permissions,
     urlParams: {
       a: attachmentIndex ? attachmentIndex : null,
@@ -7555,7 +7592,7 @@ var Details$3 = function Details() {
     className: "mdi mdi-plus"
   }), t('addStack')), isUserOwner && /*#__PURE__*/React__default.createElement(Share, {
     instancePath: user + "/d/" + data.id,
-    onUpdatePrivate: onChangePrivate,
+    onChangeAccessLevel: onChangePrivate,
     className: css$_.share,
     defaultIsPrivate: data["private"],
     defaultPermissions: data.permissions,

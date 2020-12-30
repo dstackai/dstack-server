@@ -416,7 +416,7 @@ const Details = () => {
                     {isUserOwner && (
                         <Share
                             instancePath={`${user}/d/${data.id}`}
-                            onUpdatePrivate={onChangePrivate}
+                            onChangeAccessLevel={onChangePrivate}
                             className={css.share}
                             defaultIsPrivate={data.private}
                             defaultPermissions={data.permissions}

@@ -7,7 +7,7 @@ import useDebounce from '../hooks/useDebounce';
 import Copy from '../Copy';
 import Modal from '../Modal';
 import Avatar from '../Avatar';
-import CheckboxField from '../CheckboxField';
+import Dropdown from '../Dropdown';
 import TextField from '../TextField';
 import Button from '../Button';
 import {isValidEmail} from '../validations';
@@ -19,28 +19,30 @@ type Props = {
     className?: string,
     urlParams?: {[key: string]: any},
     update: Function,
-    onUpdatePrivate: Function,
+    onChangeAccessLevel: Function,
     onUpdatePermissions: Function,
     permissions: Array<{}>,
     instancePath: string,
     loading: boolean,
-    defaultIsPrivate?: boolean,
+    accessLevel: 'private' | 'public' | 'internal',
     defaultPermissions?: Array<{}>,
+    stackName?: string,
 };
 
 const Share = ({
     className,
     instancePath,
-    defaultIsPrivate = false,
+    accessLevel: initialAccessLevel,
     defaultPermissions = [],
-    onUpdatePrivate,
+    onChangeAccessLevel,
     urlParams = {},
     onUpdatePermissions,
+    stackName,
 }: Props) => {
     const [{configInfo}] = useAppStore();
     const [userExists, setUserExists] = useState(null);
     const [isEmail, setIsEmail] = useState(false);
-    const [isPrivate, setIsPrivate] = useState(defaultIsPrivate);
+    const [accessLevel, setAccessLevel] = useState(initialAccessLevel);
     const [permissions, setPermissions] = useState(defaultPermissions);
     const [loading, setLoading] = useState(false);
     const [isShowModal, setIsShowModal] = useState(false);
@@ -49,15 +51,16 @@ const Share = ({
     const {t} = useTranslation();
     const toggleModal = () => setIsShowModal(!isShowModal);
 
+    const dropdownOptionsMap = {
+        public: t('public'),
+        internal: t('forDstackaiUsersOnly'),
+        private: t('forSelectedUsers'),
+    };
+
     useEffect(() => {
         setPermissions(defaultPermissions);
-        setIsPrivate(defaultIsPrivate);
+        setAccessLevel(initialAccessLevel);
     }, [instancePath]);
-
-    const updatePrivate = useDebounce(isPrivate => {
-        if (onUpdatePrivate)
-            onUpdatePrivate(isPrivate);
-    }, []);
 
     const checkUserName = useDebounce(userName => {
         setUserExists(null);
@@ -69,9 +72,9 @@ const Share = ({
         }
     }, []);
 
-    const onChangeIsPrivate = event => {
-        setIsPrivate(event.target.checked);
-        updatePrivate(event.target.checked);
+    const onChangeDropdown = value => {
+        setAccessLevel(value);
+        onChangeAccessLevel(value);
     };
 
     const onChangeUserName = event => {
@@ -88,16 +91,23 @@ const Share = ({
         }
     };
 
+    const submitInvite = () => {
+        if (userName.length) {
+            const userHasPermission = permissions.some(i => i.user === userName);
+
+            if (!userHasPermission)
+                addUser(userName);
+            else {
+                setUserName('');
+                setUserExists(null);
+                setIsEmail(false);
+            }
+        }
+    };
+
     const onKeyPressUserName = event => {
         if (event.which === 13 || event.keyCode === 13 || event.key === 'Enter') {
-            if (userName.length) {
-                const userHasPermission = permissions.some(i => i.user === userName);
-
-                if (!userHasPermission)
-                    addUser(userName);
-                else
-                    setUserName('');
-            }
+            submitInvite();
         }
     };
 
@@ -212,65 +222,92 @@ const Share = ({
                 withCloseButton
             >
                 <div className={css.description}>
-                    {isPrivate
-                        ? t('theCurrentStackIsPrivateButYouCanMakeItPublic')
-                        : t('theCurrentStackIsPublicButYouCanMakeItPrivateAndShareWithSelectedUsersOnly')
+                    {accessLevel === 'private'
+                        && t('theStackNameIsPrivateButYouCanMakeShareItWithSelectedUsers', {name: stackName})
                     }
+
+                    {accessLevel === 'public' && t('theStackNameIsPublic', {name: stackName})}
+                    {accessLevel === 'internal' && t('theStackNameIsInternal', {name: stackName})}
                 </div>
 
-                <div className={css.copylink}>
-                    <TextField
-                        className={css.textInput}
-                        readOnly
-                        value={`${origin}/${instancePath}${searchString}`}
-                    />
+                <div className={css.copyAndDropdown}>
+                    <div className={css.link}>{`${origin}/${instancePath}${searchString}`}</div>
 
                     <Copy
                         className={css.copy}
+                        buttonTitle={null}
                         copyText={`${origin}/${instancePath}${searchString}`}
                         successMessage={t('linkIsCopied')}
                     />
+
+                    <div className={css.separator} />
+
+                    <Dropdown
+                        className={css.dropdown}
+
+                        items={
+                            Object
+                                .keys(dropdownOptionsMap)
+                                .map(key => ({
+                                    title: dropdownOptionsMap[key],
+                                    value: key,
+                                    onClick: () => onChangeDropdown(key),
+                                }))
+                        }
+                    >
+                        <Button
+                            className={css.dropdownButton}
+                            color="primary"
+                            size="small"
+                        >
+                            {dropdownOptionsMap[accessLevel]}
+                            <span className="mdi mdi-chevron-down" />
+                        </Button>
+                    </Dropdown>
                 </div>
 
                 <div className={css.content}>
-                    <CheckboxField
-                        className={css.switcher}
-                        id="checkbox-is-private"
-                        name="private"
-                        appearance="switcher"
-                        onChange={onChangeIsPrivate}
-                        value={isPrivate}
-                        offLabel={t('everyoneWithTheLink')}
-                        onLabel={t('selectedUsersOnly')}
-                    />
+                    {accessLevel === 'private' && (
+                        <div className={css.invite}>
+                            <div className={css.checkUserName}>
+                                <TextField
+                                    size="small"
+                                    disabled={loading}
+                                    placeholder={get(configInfo, 'data.email_enabled')
+                                        ? t('enterUsernameEmailAndPressEnter')
+                                        : t('enterUsernameAndPressEnter')
+                                    }
+                                    className={css.inviteField}
+                                    value={userName}
+                                    onChange={onChangeUserName}
+                                    onKeyPress={onKeyPressUserName}
+                                />
 
-                    {isPrivate && <div className={css.checkUserName}>
-                        <TextField
-                            disabled={loading}
-                            placeholder={get(configInfo, 'data.email_enabled')
-                                ? t('enterUsernameEmailAndPressEnter')
-                                : t('enterUsernameAndPressEnter')
-                            }
-                            className={css.textInput}
-                            value={userName}
-                            onChange={onChangeUserName}
-                            onKeyPress={onKeyPressUserName}
-                        />
+                                {Boolean(userName.length) && !loading && <div
+                                    className={cx(css.checkUserMessage, {
+                                        success: userExists,
+                                        fail: userExists === false,
+                                        secondary: isEmail,
+                                    })}
+                                >
+                                    {userExists && !isEmail && t('userExists')}
+                                    {!userExists && !isEmail && t('userNotFound')}
+                                    {isEmail && t('enterToInvite')}
+                                </div>}
+                            </div>
 
-                        {Boolean(userName.length) && !loading && <div
-                            className={cx(css.checkUserMessage, {
-                                success: userExists,
-                                fail: userExists === false,
-                                secondary: isEmail,
-                            })}
-                        >
-                            {userExists && !isEmail && t('userExists')}
-                            {!userExists && !isEmail && t('userNotFound')}
-                            {isEmail && t('enterToInvite')}
-                        </div>}
-                    </div>}
+                            <Button
+                                className={css.inviteButton}
+                                size="small"
+                                color="primary"
+                                variant="contained"
+                                disabled={loading || (!isEmail && !userExists)}
+                                onClick={submitInvite}
+                            >{t('sendInvite')}</Button>
+                        </div>
+                    )}
 
-                    {isPrivate && <div className={css.users}>
+                    {accessLevel === 'private' && <div className={css.users}>
                         {permissions.map(renderUser)}
                     </div>}
                 </div>

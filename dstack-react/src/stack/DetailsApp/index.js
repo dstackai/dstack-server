@@ -45,7 +45,7 @@ type Props = {
     onChangeExecutionId: Function,
     onUpdateReadme: Function,
     onChangeFrame: Function,
-    setPrivate: Function,
+    changeAccessLevel: Function,
     updatePermissions: Function,
 }
 
@@ -66,7 +66,7 @@ const Details = ({
     backUrl,
     user,
     stack,
-    setPrivate,
+    changeAccessLevel,
     updatePermissions,
 }: Props) => {
     const {t} = useTranslation();
@@ -394,10 +394,10 @@ const Details = ({
             <div className={css.header}>
                 <div className={css.title}>
                     {data.name}
-                    <span className={`mdi mdi-lock${data.private ? '' : '-open'}`} />
+                    <span className={`mdi mdi-lock${data['access_level'] === 'private' ? '' : '-open'}`} />
                 </div>
 
-                {data.private && (
+                {data['access_level'] === 'private' && (
                     <PermissionUsers
                         className={css.permissions}
                         permissions={data.permissions}
@@ -408,10 +408,12 @@ const Details = ({
                     {data && data.user === currentUser && (
                         <Share
                             instancePath={`${user}/${stack}`}
-                            onUpdatePrivate={setPrivate}
+                            stackName={stack}
+                            onChangeAccessLevel={changeAccessLevel}
                             className={css.share}
-                            defaultIsPrivate={data.private}
+                            accessLevel={data['access_level']}
                             defaultPermissions={data.permissions}
+
                             urlParams={{
                                 a: attachmentIndex ? attachmentIndex : null,
                                 f: frame?.id !== data?.head?.id ? frame?.id : null,

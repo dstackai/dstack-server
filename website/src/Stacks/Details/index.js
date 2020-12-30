@@ -162,10 +162,10 @@ const Details = ({
 
     const toggleUploadModal = () => setIsShowUploadModal(!isShowUploadModal);
 
-    const setPrivate = isPrivate => {
+    const changeAccessLevel = accessLevel => {
         update({
             stack: `${data.user}/${data.name}`,
-            private: isPrivate,
+            'access_level': accessLevel,
         });
     };
 
@@ -227,7 +227,7 @@ const Details = ({
                 currentUserToken={currentUserToken}
                 toggleUpload={toggleUploadModal}
                 backUrl={routes.categoryStacks(categoryMap[category])}
-                setPrivate={setPrivate}
+                changeAccessLevel={changeAccessLevel}
                 updatePermissions={updatePermissions}
                 user={params.user}
                 stack={params.stack}
