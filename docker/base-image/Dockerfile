@@ -4,7 +4,7 @@ ADD requirements.txt /
 
 ENV PIP_URL_PRIMARY=https://test.pypi.org/simple/
 ENV PIP_URL_SECONDARY=https://pypi.org/simple/
-ENV DSTACK_PIP_VERSION=0.6dev22
+ENV DSTACK_PIP_VERSION=0.6dev24
 
 RUN uname -r \
   && cat /etc/os-release \
