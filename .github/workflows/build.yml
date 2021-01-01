@@ -102,9 +102,6 @@ jobs:
     needs: [ publish-server-snapshot, publish-docker-snaphost ]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
-    defaults:
-      run:
-        working-directory: terraform/applications/cloud/stgn
 
     steps:
       - uses: actions/checkout@v2
@@ -112,6 +109,7 @@ jobs:
         uses: hashicorp/terraform-github-actions@master
         with:
           tf_actions_version: 0.12.20
+          tf_actions_working_dir: 'terraform/applications/cloud/stgn'
           tf_actions_subcommand: "init"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -120,6 +118,7 @@ jobs:
         uses: hashicorp/terraform-github-actions@master
         with:
           tf_actions_version: 0.12.20
+          tf_actions_working_dir: 'terraform/applications/cloud/stgn'
           tf_actions_subcommand: "apply"
           args: '-var="image_tag=${{needs.publish-server-snapshot.outputs.timestamp}}"'
         env:
