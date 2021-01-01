@@ -31,6 +31,30 @@ jobs:
           name: website-dist
           path: website/build
 
+  test-py:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ macos-latest, windows-latest, ubuntu-latest ]
+        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+    defaults:
+      run:
+        working-directory: ./dstack-py
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Test with unittest
+        run: |
+          python -m unittest discover tests
+
   build-server:
     needs: build-website
     runs-on: ubuntu-latest
@@ -53,20 +77,7 @@ jobs:
         run: chmod +x gradlew
       - name: Build with Gradle
         run: ./gradlew build
-  
-  build-docker:
-    runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v2
-      - name: Grant execute permission to build scripts
-        run: |
-          chmod +x docker/base-image/variables.sh
-          chmod +x docker/base-image/build.sh 
-      - name: Build base image
-        run: docker/base-image/build.sh
-  
-  
   publish-docker-snaphost:
     needs: publish-server-snapshot
     runs-on: ubuntu-latest
@@ -88,20 +99,19 @@ jobs:
           DOCKER_PASS: ${{ secrets.DOCKERHUB_PASSWORD }}
 
   apply-cloud-snaphost:
-    needs: [publish-server-snapshot, publish-docker-snaphost]
+    needs: [ publish-server-snapshot, publish-docker-snaphost ]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
+    defaults:
+      run:
+        working-directory: terraform/applications/cloud/stgn
 
     steps:
       - uses: actions/checkout@v2
-      - name: Change directory
-        run: |
-          cd terraform/applications/cloud/stgn
       - name: "Terraform Init"
         uses: hashicorp/terraform-github-actions@master
         with:
           tf_actions_version: 0.12.20
-          tf_actions_working_dir: 'terraform/applications/cloud/stgn'
           tf_actions_subcommand: "init"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -110,7 +120,6 @@ jobs:
         uses: hashicorp/terraform-github-actions@master
         with:
           tf_actions_version: 0.12.20
-          tf_actions_working_dir: 'terraform/applications/cloud/stgn'
           tf_actions_subcommand: "apply"
           args: '-var="image_tag=${{needs.publish-server-snapshot.outputs.timestamp}}"'
         env:

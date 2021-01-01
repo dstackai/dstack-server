@@ -1,0 +1,13 @@
+wheel
+cloudpickle
+deprecation
+matplotlib
+packaging
+pandas
+PyYAML>=5.3.1
+requests
+scikit-learn
+tqdm
+twine
+torch
+numpy

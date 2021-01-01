@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/dstack-py/dstack-py.iml" filepath="$PROJECT_DIR$/dstack-py/dstack-py.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/dstack-server.iml" filepath="$PROJECT_DIR$/.idea/dstack-server.iml" />
     </modules>
   </component>
