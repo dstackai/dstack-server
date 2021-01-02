@@ -266,8 +266,9 @@ def _pull(context: Context,
     return decoder.decode(pull_data(context, params, **kwargs))
 
 
-def create_context(stack: str, profile: str = "default") -> Context:
-    profile = get_config().get_profile(profile)
+# TODO: Make it protected. Move config to pull
+def create_context(stack: str, profile: str = "default", config: ty.Optional[Config] = None) -> Context:
+    profile = (config or get_config()).get_profile(profile)
     protocol = create_protocol(profile)
     return Context(stack, profile, protocol)
 

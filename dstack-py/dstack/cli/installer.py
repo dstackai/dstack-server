@@ -8,10 +8,18 @@ from tempfile import gettempdir
 from typing import Optional, List, Callable
 from uuid import uuid4
 
-from dstack import pull_data, create_context
-from dstack.config import Profile, from_yaml_file, API_SERVER, Config, _get_config_path, configure
-from dstack.handler import FrameData
 from packaging.version import parse as parse_version
+
+from dstack import pull_data, create_context
+from dstack.config import Profile, from_yaml_file, API_SERVER, Config
+from dstack.handler import FrameData
+
+
+def _get_installer_path() -> Path:
+    deps_path = Path.home() / ".dstack-installer"
+    env = os.getenv("DSTACK_INSTALLER_PATH")
+    env = Path(env) if env else None
+    return env or deps_path
 
 
 class Java(object):
@@ -39,29 +47,27 @@ _JavaFactory = Callable[[Path], Java]
 class Installer(object):
     _STACK = "artifacts/server"
     _JDK_STACK_BASE = "artifacts/jdk"
+    _USER = "dstack"
     _PROFILE = "dstack"
 
-    def __init__(self, config: Config = None, base_path: Optional[Path] = None,
+    def __init__(self, config: Config = None, installer_path: Optional[Path] = None,
                  java_factory: Optional[_JavaFactory] = None, verify: bool = True):
 
         def my_java_factory(java_home: Path) -> Java:
             return Java(java_home)
 
-        config_path = _get_config_path()
-
-        self.base_path = base_path or config_path.parent
-        self._conf = config or from_yaml_file(path=config_path)
+        self.installer_path = installer_path or _get_installer_path()
+        config_path = self.installer_path / "config.yaml"
+        self.config = config or from_yaml_file(path=config_path)
         self._java_factory = java_factory if java_factory else my_java_factory
         self._verify = verify
 
-        if not self._conf.get_profile("dstack"):
-            profile = Profile(self._PROFILE, "dstack", None, API_SERVER, verify=verify)
-            self._conf.add_or_replace_profile(profile)
-
-        configure(self._conf)
+        if not self.config.get_profile(self._PROFILE):
+            profile = Profile(self._PROFILE, self._USER, None, API_SERVER, verify=verify)
+            self.config.add_or_replace_profile(profile)
 
     def _update(self, download: bool) -> bool:
-        context = create_context(self._STACK, self._PROFILE)
+        context = create_context(self._STACK, self._PROFILE, self.config)
         server_attachment = pull_data(context)
         server_version = server_attachment.params["version"]
         jdk_version = server_attachment.params["jdk_version"]
@@ -112,8 +118,8 @@ class Installer(object):
         return False
 
     def _save_server(self, data: FrameData):
-        old_filename = self._conf.get_property("server.jar")
-        lib_path = self.base_path / "lib"
+        old_filename = self.config.get_property("server.jar")
+        lib_path = self.installer_path / "lib"
 
         if old_filename:
             self._delete(lib_path / old_filename)
@@ -126,16 +132,16 @@ class Installer(object):
 
         self._download_data(data, path)
 
-        self._conf.set_property("server.jar", str(path.name))
-        self._conf.set_property("server.version", data.params["version"])
-        self._conf.save()
+        self.config.set_property("server.jar", str(path.name))
+        self.config.set_property("server.version", data.params["version"])
+        self.config.save()
 
     def jar_path(self, new_path: Optional[str] = None) -> Optional[Path]:
-        server_jar = new_path or self._conf.get_property("server.jar")
-        return self.base_path / "lib" / server_jar if server_jar else None
+        server_jar = new_path or self.config.get_property("server.jar")
+        return self.installer_path / "lib" / server_jar if server_jar else None
 
     def _download_jdk(self, version: str):
-        context = create_context(f"{self._JDK_STACK_BASE}/{version}", self._PROFILE)
+        context = create_context(f"{self._JDK_STACK_BASE}/{version}", self._PROFILE, self.config)
         jdk_attachment = pull_data(context, os=self.get_os())
 
         jdk_path = self._jdk_path(check_path_exist=False)
@@ -159,7 +165,7 @@ class Installer(object):
         self._delete(temp)
 
     def version(self) -> Optional[str]:
-        return self._conf.get_property("server.version")
+        return self.config.get_property("server.version")
 
     def find_jdk(self) -> Optional[Java]:
         java_home = self._jdk_path() or self._java_home()
@@ -178,7 +184,7 @@ class Installer(object):
         data.data.to_file(path, show_progress=True)
 
     def _jdk_path(self, check_path_exist: bool = True) -> Optional[Path]:
-        path = self.base_path / "jdk"
+        path = self.installer_path / "jdk"
         return path if not check_path_exist or path.exists() else None
 
     @staticmethod

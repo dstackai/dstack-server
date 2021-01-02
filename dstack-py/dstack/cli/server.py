@@ -20,11 +20,6 @@ def start(args: Namespace):
     java = srv.find_jdk()
     jar = srv.jar_path()
 
-    if not java or not jar:
-        srv.update()
-        java = srv.find_jdk()
-        jar = srv.jar_path()
-
     cmd = [java.path(), "-jar", jar]
 
     if args.port:
@@ -34,9 +29,6 @@ def start(args: Namespace):
         cmd += ["--home", args.home]
 
     cmd += ["--python", args.python or sys.executable]
-
-    if args.rscript:
-        cmd += ["--rscript", args.rscript]
 
     try:
         subprocess.run([str(x) for x in cmd])
@@ -65,7 +57,6 @@ def register_parsers(main_subparsers):
     start_parser.add_argument("--port", help="use specific port", type=int, nargs="?")
     start_parser.add_argument("--home", help="store server data in the specified directory", type=str, nargs="?")
     start_parser.add_argument("--python", help="path to Python interpreter", type=str, nargs="?")
-    start_parser.add_argument("--rscript", help="path to R interpreter", type=str, nargs="?")
     start_parser.add_argument("--skip", help="skip checking for updates", dest="skip_update_check", action="store_true")
 
     add_no_verify(start_parser)

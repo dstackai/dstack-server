@@ -6,8 +6,9 @@ from pathlib import Path
 from typing import Optional
 from uuid import uuid4
 
-from dstack import push_frame, get_config
+from dstack import push
 from dstack.cli.installer import Installer, Java
+from dstack.config import InPlaceConfig, Profile, configure, API_SERVER
 from tests import TestBase
 
 
@@ -18,8 +19,13 @@ class TestInstaller(TestBase):
             del os.environ["JAVA_HOME"]
         self.temp = Path(tempfile.gettempdir()) / f"dstack-f{uuid4()}"
         self.temp.mkdir()
-        self.base = self.temp / ".dstack"
-        self.server = Installer(get_config(), self.base, self._java_factory)
+        self.installer_path = self.temp / ".dstack-installer"
+        self.config = InPlaceConfig()
+        self.config.add_or_replace_profile(
+            Profile(Installer._PROFILE, Installer._USER, "fake_token", API_SERVER, verify=True))
+        configure(self.config)
+
+        self.installer = Installer(config=self.config, installer_path=self.installer_path, java_factory=self._java_factory)
         self.java_version = "1.8.0_221"
 
     def _java_factory(self, path: Path) -> Java:
@@ -44,67 +50,66 @@ class TestInstaller(TestBase):
         # setup fake jdk to skip download
         self.fake_java()
 
-        self.assertTrue(self.server.install())
+        self.assertTrue(self.installer.install())
 
-        file_to_check = self.base / "lib" / jar_name
+        file_to_check = self.installer_path / "lib" / jar_name
         self.assertTrue(file_to_check.exists())
 
     def fake_java(self, version: Optional[str] = None):
-        (self.base / "jdk").mkdir(parents=True)
+        (self.installer_path / "jdk").mkdir(parents=True)
         self.java_version = version or self.java_version
 
     def test_locate_java(self):
-        self.assertIsNone(self.server.find_jdk())
+        self.assertIsNone(self.installer.find_jdk())
 
-        java_home = self.base / "my_java"
+        java_home = self.installer_path / "my_java"
         java_home.mkdir(parents=True)
         os.environ["JAVA_HOME"] = str(java_home)
-        jdk = self.server.find_jdk()
+        jdk = self.installer.find_jdk()
         self.assertIsNotNone(jdk)
         self.assertEqual(java_home, jdk.java_home)
 
-        jdk_dir = self.base / "jdk"
+        jdk_dir = self.installer_path / "jdk"
         jdk_dir.mkdir(parents=True)
-        jdk = self.server.find_jdk()
+        jdk = self.installer.find_jdk()
         self.assertIsNotNone(jdk)
         self.assertEqual(jdk_dir, jdk.java_home)
 
     def test_update(self):
-        config = get_config()
-        config.set_property("server.version", "0.1.0")
+        self.config.set_property("server.version", "0.1.0")
         self.prepare_server_stack("0.1.0")
         self.fake_java()
 
         # server jar doesn't exist
-        self.assertTrue(self.server.check_for_updates())
+        self.assertTrue(self.installer.check_for_updates())
 
         # try to check again to sure we updated nothing
-        self.assertTrue(self.server.update())
+        self.assertTrue(self.installer.update())
 
         # all things are up to date
-        self.assertFalse(self.server.check_for_updates())
+        self.assertFalse(self.installer.check_for_updates())
 
         self.prepare_server_stack("0.1.2")
-        self.assertTrue(self.server.update())
-        self.assertEqual("0.1.2", config.get_property("server.version"))
+        self.assertTrue(self.installer.update())
+        self.assertEqual("0.1.2", self.config.get_property("server.version"))
 
     def test_download_jdk(self):
         fake_jdk = self.create_fake_archive("OpenJDK-1.8.0.121-x86_64-bin")
         self.assertTrue(fake_jdk.exists())
         self.assertFalse(fake_jdk.is_dir())
 
-        push_frame(f"{Installer._JDK_STACK_BASE}/8", fake_jdk, profile=Installer._PROFILE, os=self.server.get_os())
+        push(f"{Installer._JDK_STACK_BASE}/8", fake_jdk, profile=Installer._PROFILE, os=self.installer.get_os())
 
-        self.server._download_jdk("8")
-        self.assertTrue(self.server._jdk_path().exists())
-        self.assertTrue(self.server._jdk_path().is_dir())
-        file_list = [p.name for p in self.server._jdk_path().iterdir()]
+        self.installer._download_jdk("8")
+        self.assertTrue(self.installer._jdk_path().exists())
+        self.assertTrue(self.installer._jdk_path().is_dir())
+        file_list = [p.name for p in self.installer._jdk_path().iterdir()]
         self.assertIn("file1.txt", file_list)
 
     def prepare_server_stack(self, version: str) -> str:
         jar_path = self.create_fake_file("fake-server.jar")
-        push_frame(Installer._STACK, jar_path, profile=Installer._PROFILE,
-                   version=version, jdk_version="8", jdk_compatible_versions=self.java_version)
+        push(Installer._STACK, jar_path, profile=Installer._PROFILE,
+             version=version, jdk_version="8", jdk_compatible_versions=self.java_version)
         return jar_path.name
 
     def create_fake_file(self, filename: str) -> Path:
