@@ -9,5 +9,6 @@ data class FrameInfo(
     @JsonProperty("timestamp")
     val timestampMillis: Long,
     val attachments: List<AttachmentInfo>,
-    val params: Map<String, Any>
+    val params: Map<String, Any>,
+    val settings: Map<String, Any>
 )

@@ -17,7 +17,8 @@ data class PushPayload(
         val index: Int?,
         val attachments: List<PushPayloadAttachment>?,
         val size: Int?,
-        val params: Map<String, Any>?
+        val params: Map<String, Any>?,
+        val settings: Map<String, Any>?
 )
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

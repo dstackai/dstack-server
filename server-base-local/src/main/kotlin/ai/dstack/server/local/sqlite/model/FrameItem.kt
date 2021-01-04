@@ -47,5 +47,8 @@ data class FrameItem(
     var size: Int?,
 
     @Column(name = "params")
-    var paramsJson: String?
+    var paramsJson: String?,
+
+    @Column(name = "settings")
+    var settingsJson: String?
 )

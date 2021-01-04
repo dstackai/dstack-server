@@ -39,8 +39,8 @@ class FrameResources {
     @Path("/{user}/{stack: .+}/{frame}")
     @Produces(JSON_UTF8)
     fun frame(
-        @PathParam("user") u: String?, @PathParam("stack") s: String?,
-        @PathParam("frame") f: String?
+            @PathParam("user") u: String?, @PathParam("stack") s: String?,
+            @PathParam("frame") f: String?
     ): Response {
         // TODO: Check permissions
         // TODO: Renew session if any
@@ -54,20 +54,20 @@ class FrameResources {
                 if (frame != null) {
                     val attachments = attachmentService.findByFrame(frame.path)
                     ok(
-                        GetFrameStatus(
-                            FrameInfo(
-                                frame.id, frame.timestampMillis,
-                                attachments.map { a ->
-                                    AttachmentInfo(
-                                        a.application,
-                                        a.contentType,
-                                        a.params,
-                                        a.settings,
-                                        a.length
+                            GetFrameStatus(
+                                    FrameInfo(
+                                            frame.id, frame.timestampMillis,
+                                            attachments.map { a ->
+                                                AttachmentInfo(
+                                                        a.application,
+                                                        a.contentType,
+                                                        a.params,
+                                                        a.settings,
+                                                        a.length
+                                                )
+                                            }, frame.params, frame.settings
                                     )
-                                }, frame.params
                             )
-                        )
                     )
                 } else {
                     frameNotFound()

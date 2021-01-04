@@ -20,7 +20,8 @@ class PushPayloadTest {
                         index = 0,
                         attachments = null,
                         size = null,
-                        params = null
+                        params = null,
+                        settings = null
                 ).isMalformed
         ).isTrue()
 
@@ -38,7 +39,8 @@ class PushPayloadTest {
                                 PushPayloadAttachment(null, null, "hoho", null, emptyMap(), emptyMap())
                         ),
                         size = null,
-                        params = null
+                        params = null,
+                        settings = null
                 ).isMalformed
         ).isTrue()
 
@@ -56,7 +58,8 @@ class PushPayloadTest {
                                 PushPayloadAttachment(null, null, "hoho", null, emptyMap(), emptyMap())
                         ),
                         size = null,
-                        params = null
+                        params = null,
+                        settings = null
                 ).isMalformed
         ).isTrue()
 
@@ -74,7 +77,8 @@ class PushPayloadTest {
                                 PushPayloadAttachment(null, null, "hoho", null, emptyMap(), emptyMap())
                         ),
                         size = null,
-                        params = null
+                        params = null,
+                        settings = null
                 ).isMalformed
         ).isTrue()
 
@@ -91,7 +95,8 @@ class PushPayloadTest {
                         PushPayloadAttachment(null, "image/png", "hoho", null, emptyMap(), emptyMap())
                 ),
                 size = null,
-                params = null
+                params = null,
+                settings = null
         ).isMalformed).isFalse()
 
         // no timestamp
@@ -108,7 +113,8 @@ class PushPayloadTest {
                                 PushPayloadAttachment(null, null, "hoho", null, emptyMap(), emptyMap())
                         ),
                         size = null,
-                        params = null
+                        params = null,
+                        settings = null
                 ).isMalformed
         ).isTrue()
 
@@ -126,7 +132,8 @@ class PushPayloadTest {
                                 PushPayloadAttachment(null, null, "hoho", null, emptyMap(), emptyMap())
                         ),
                         size = null,
-                        params = null
+                        params = null,
+                        settings = null
                 ).isMalformed
         ).isTrue()
 
@@ -144,7 +151,8 @@ class PushPayloadTest {
                                 PushPayloadAttachment(null, null, "hoho", null, emptyMap(), emptyMap())
                         ),
                         size = null,
-                        params = null
+                        params = null,
+                        settings = null
                 ).isMalformed
         ).isTrue()
 
@@ -161,7 +169,8 @@ class PushPayloadTest {
                                 PushPayloadAttachment(null, null, "haha", null, emptyMap(), emptyMap())
                         ),
                         size = null,
-                        params = null
+                        params = null,
+                        settings = null
                 ).isMalformed
         ).isFalse()
 
@@ -179,7 +188,8 @@ class PushPayloadTest {
                                 PushPayloadAttachment(null, null, "hoho", null, emptyMap(), emptyMap())
                         ),
                         size = null,
-                        params = null
+                        params = null,
+                        settings = null
                 ).isMalformed
         ).isFalse()
 
@@ -194,7 +204,8 @@ class PushPayloadTest {
                         index = null,
                         attachments = null,
                         size = 1,
-                        params = null
+                        params = null,
+                        settings = null
                 ).isMalformed
         ).isFalse()
 
@@ -211,7 +222,8 @@ class PushPayloadTest {
                                 PushPayloadAttachment(null, null, "haha", null, emptyMap(), emptyMap())
                         ),
                         size = null,
-                        params = null
+                        params = null,
+                        settings = null
                 ).isMalformed
         ).isFalse()
 
@@ -228,7 +240,8 @@ class PushPayloadTest {
                                 PushPayloadAttachment(null, null, null, 10000L, emptyMap(), emptyMap())
                         ),
                         size = null,
-                        params = null
+                        params = null,
+                        settings = null
                 ).isMalformed
         ).isFalse()
 
@@ -245,7 +258,8 @@ class PushPayloadTest {
                                 PushPayloadAttachment(null, null, "haha", null, emptyMap(), emptyMap())
                         ),
                         size = null,
-                        params = null
+                        params = null,
+                        settings = null
                 ).isMalformed
         ).isTrue()
 
@@ -262,7 +276,8 @@ class PushPayloadTest {
                                 PushPayloadAttachment(null, null, "haha", null, emptyMap(), emptyMap())
                         ),
                         size = null,
-                        params = null
+                        params = null,
+                        settings = null
                 ).isMalformed
         ).isTrue()
 
@@ -279,7 +294,8 @@ class PushPayloadTest {
                                 PushPayloadAttachment(null, null, "haha", null, emptyMap(), emptyMap())
                         ),
                         size = null,
-                        params = null
+                        params = null,
+                        settings = null
                 ).isMalformed
         ).isTrue()
 
@@ -296,7 +312,8 @@ class PushPayloadTest {
                                 PushPayloadAttachment(null, null, null, null, emptyMap(), emptyMap())
                         ),
                         size = null,
-                        params = null
+                        params = null,
+                        settings = null
                 ).isMalformed
         ).isTrue()
     }

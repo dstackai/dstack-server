@@ -44,6 +44,10 @@ class SQLiteFrameService(private val repository: FrameRepository) : FrameService
                     f.paramsJson?.let {
                         sqliteMapper.readValue(f.paramsJson,
                                 object : TypeReference<Map<String, Any>>() {})
+                    } ?: emptyMap(),
+                    f.settingsJson?.let {
+                        sqliteMapper.readValue(f.settingsJson,
+                                object : TypeReference<Map<String, Any>>() {})
                     } ?: emptyMap())
         }
     }
@@ -57,6 +61,9 @@ class SQLiteFrameService(private val repository: FrameRepository) : FrameService
                     f.size,
                     sqliteMapper.writeValueAsString(
                             f.params
+                    ),
+                    sqliteMapper.writeValueAsString(
+                            f.settings
                     )
             )
         }

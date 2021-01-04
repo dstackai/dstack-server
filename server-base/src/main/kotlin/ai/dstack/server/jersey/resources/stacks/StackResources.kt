@@ -1,6 +1,5 @@
 package ai.dstack.server.jersey.resources.stacks
 
-import ai.dstack.server.chainIf
 import ai.dstack.server.chainIfNotNull
 import ai.dstack.server.model.*
 import ai.dstack.server.model.Stack
@@ -130,7 +129,8 @@ class StackResources {
                                                                 a.settings,
                                                                 a.length
                                                         )
-                                                    }, it.params
+                                                    }, it.params,
+                                                    it.settings
                                             )
                                         },
                                         stack.readme,
@@ -268,7 +268,8 @@ class StackResources {
                                 payload.attachments.size
                             else
                                 payload.size,
-                            payload.params.orEmpty().let { it.mapValues { it.value }.toMap() }
+                            payload.params.orEmpty().let { it.mapValues { it.value }.toMap() },
+                            payload.settings.orEmpty().let { it.mapValues { it.value }.toMap() }
                     )
                     frameService.create(frame)
                 } else if (payload.size != null) {

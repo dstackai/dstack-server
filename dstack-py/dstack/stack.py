@@ -2,6 +2,7 @@ import time
 from abc import ABC, abstractmethod
 from platform import uname
 from sys import version as python_version
+from sys import version_info as python_version_info
 from typing import Dict, List, Optional, Any
 from uuid import uuid4
 
@@ -183,13 +184,21 @@ class StackFrame(object):
     @staticmethod
     def settings():
         info = uname()
-        return {"python": python_version,
-                "os": {
-                    "sysname": info[0],
-                    "release": info[2],
-                    "version": info[3],
-                    "machine": info[4]
-                }}
+        return {
+            "python": {
+                "major": python_version_info.major,
+                "minor": python_version_info.minor,
+                "micro": python_version_info.micro,
+                "releaselevel": python_version_info.releaselevel,
+                "serial": python_version_info.serial,
+                "version": python_version
+            },
+            "os": {
+                "system": info[0],
+                "release": info[2],
+                "version": info[3],
+                "machine": info[4]
+            }}
 
 
 def filter_none(d):

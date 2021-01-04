@@ -378,7 +378,10 @@ class JerseyApplicationTests : JerseyTest() {
                         "test_param" to "test_param_value"
                 ),
                 index = null,
-                size = null
+                size = null,
+                settings = mapOf(
+                        "python" to "3.8"
+                )
         )
         val pushResponse: Response = target("/stacks/push").request()
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + testUser.token)
@@ -404,7 +407,8 @@ class JerseyApplicationTests : JerseyTest() {
                                 pushPayloadAttach.length!!,
                                 data = null, downloadUrl = null, preview = null,
                                 index = null)),
-                        pushPayload.params!!))
+                        pushPayload.params!!,
+                        pushPayload.settings!!))
                 )
 
         val updateStackPayload = UpdateStackPayload("test_user/test_stack",
