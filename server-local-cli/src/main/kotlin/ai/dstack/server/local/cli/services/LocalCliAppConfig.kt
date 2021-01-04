@@ -128,5 +128,6 @@ class LocalCliAppConfig : AppConfig {
         var defaultInternalPort: String = "8080"
         var defaultHomeDirectory: String? = System.getProperty("user.home")
         var defaultPythonExecutable: String? = null
+        var overrideConfig: Boolean = false
     }
 }

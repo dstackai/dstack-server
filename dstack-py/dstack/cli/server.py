@@ -6,19 +6,22 @@ from dstack.cli.installer import Installer
 
 
 def update(args: Namespace):
-    srv = Installer(verify=not args.no_verify)
-    if srv.update():
+    installer = Installer(verify=not args.no_verify)
+    if installer.update():
         print("Server is successfully updated")
     else:
         print("Server is up to date")
 
 
 def start(args: Namespace):
-    srv = Installer(verify=not args.no_verify)
+    installer = Installer(verify=not args.no_verify)
     if not args.skip_update_check:
-        srv.update()
-    java = srv.find_jdk()
-    jar = srv.jar_path()
+        installer.update()
+    else:
+        if installer.check_for_updates():
+            print("Newer server version is available, type the following command to update: \n\tdstack server update\n")
+    java = installer.find_jdk()
+    jar = installer.jar_path()
 
     cmd = [java.path(), "-jar", jar]
 
@@ -30,6 +33,9 @@ def start(args: Namespace):
 
     cmd += ["--python", args.python or sys.executable]
 
+    if args.override:
+        cmd += ["--override"]
+
     try:
         subprocess.run([str(x) for x in cmd])
     except KeyboardInterrupt:
@@ -37,8 +43,8 @@ def start(args: Namespace):
 
 
 def version(args: Namespace):
-    srv = Installer()
-    print(srv.version() or "Server is not installed")
+    installer = Installer()
+    print(installer.version() or "Server is not installed")
 
 
 def register_parsers(main_subparsers):
@@ -58,6 +64,7 @@ def register_parsers(main_subparsers):
     start_parser.add_argument("--home", help="store server data in the specified directory", type=str, nargs="?")
     start_parser.add_argument("--python", help="path to Python interpreter", type=str, nargs="?")
     start_parser.add_argument("--skip", help="skip checking for updates", dest="skip_update_check", action="store_true")
+    start_parser.add_argument("--override", help="override the default config profile", action="store_true")
 
     add_no_verify(start_parser)
     start_parser.set_defaults(func=start)

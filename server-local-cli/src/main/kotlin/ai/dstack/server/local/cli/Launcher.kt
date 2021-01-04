@@ -2,7 +2,6 @@ package ai.dstack.server.local.cli
 
 import ai.dstack.server.local.Application
 import ai.dstack.server.local.cli.services.LocalCliAppConfig
-import ai.dstack.server.local.sqlite.SQLiteConfig
 import org.apache.commons.cli.*
 import org.springframework.boot.Banner
 import org.springframework.boot.SpringApplication
@@ -25,6 +24,9 @@ fun main(args: Array<String>) {
 
     val password = Option("s", "password", true, "the admin password")
     options.addOption(password)
+
+    val overrideConfig = Option("o", "override", false, "override the default config profile if any")
+    options.addOption(overrideConfig)
 
     val parser: CommandLineParser = DefaultParser()
     val formatter = HelpFormatter()
@@ -54,6 +56,10 @@ fun main(args: Array<String>) {
 
     if (cmd.hasOption("password")) {
         LocalCliAppConfig.defaultPassword = cmd.getOptionValue("password")
+    }
+
+    if (cmd.hasOption("override")) {
+        LocalCliAppConfig.overrideConfig = true
     }
 
     val application = SpringApplication(Application::class.java)

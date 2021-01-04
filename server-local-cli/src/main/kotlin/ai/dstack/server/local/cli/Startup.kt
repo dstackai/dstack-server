@@ -2,6 +2,7 @@ package ai.dstack.server.local.cli
 
 import ai.dstack.server.local.cli.config.Config
 import ai.dstack.server.local.cli.config.Profile
+import ai.dstack.server.local.cli.services.LocalCliAppConfig
 import ai.dstack.server.model.*
 import ai.dstack.server.services.AppConfig
 import ai.dstack.server.services.UserService
@@ -48,15 +49,15 @@ open class Startup {
                 userService.update(user)
             }
         }
-        var autoConfigure = false
         val defaultConfigFile = File(appConfig.homeDirectory + "/config.yaml")
         val defaultConfig = if (defaultConfigFile.exists()) Config.read(defaultConfigFile) else Config()
-        val server = "http://localhost:${appConfig.internalPort}/api"
+        val server = "${appConfig.address}/api"
         val profile = defaultConfig["default"]
-        autoConfigure = profile == null ||
-            (profile.user == "dstack"
-                    && profile.token == user.token
-                    && profile.server.orEmpty().startsWith("http://localhost:"))
+        val autoConfigure = profile == null ||
+                LocalCliAppConfig.overrideConfig ||
+                (profile.user == user.name
+                        && profile.token == user.token
+                        && profile.server.orEmpty().startsWith(appConfig.address.substringBefore(":")))
         if (autoConfigure) {
             defaultConfig["default"] = Profile(user.name, user.token, server)
             Config.write(defaultConfigFile, defaultConfig)
@@ -68,14 +69,14 @@ open class Startup {
         val ANSI_BLUE = "\u001B[34m"
         val ANSI_BRIGHT_WHITE = "\u001B[33m"
         val ANSI_YELLOW = "\u001B[37m"
-        println("To access the application, open this URL in the browser: ${ANSI_BLUE}${ANSI_UNDERLINE}http://localhost:${appConfig.internalPort}/auth/verify?user=${user.name}&code=${user.verificationCode}&next=/${ANSI_RESET}")
+        println("To access the application, open this URL in the browser: ${ANSI_BLUE}${ANSI_UNDERLINE}${appConfig.address}/auth/verify?user=${user.name}&code=${user.verificationCode}&next=/${ANSI_RESET}")
         if (autoConfigure) {
             println()
             println("The ${ANSI_BOLD}default${ANSI_RESET} profile in \"$defaultConfigFile\" is already configured. You are welcome to push your applications using Python package.")
         } else {
             println()
             println("The ${ANSI_BOLD}default${ANSI_RESET} profile in \"$defaultConfigFile\" is not configured. To configure it, use this command:")
-            println("\t${ANSI_BRIGHT_WHITE}dstack config add --token ${user.token} --user ${user.name} --server http://localhost:${appConfig.internalPort}/api${ANSI_RESET}")
+            println("\t${ANSI_BRIGHT_WHITE}dstack config add --token ${user.token} --user ${user.name} --server ${appConfig.address}/api${ANSI_RESET}")
         }
         println()
         println("${ANSI_YELLOW}What's next?${ANSI_RESET}")
