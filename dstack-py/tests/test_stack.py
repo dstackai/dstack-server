@@ -1,5 +1,5 @@
 import unittest
-from sys import version as python_version
+from sys import version as python_version, version_info as python_version_info
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -121,7 +121,12 @@ class StackFrameTest(TestBase):
 
     def test_per_frame_settings(self):
         ds.push("test/my_plot", self.get_figure())
-        self.assertEqual(python_version, self.get_data("test/my_plot")["settings"]["python"])
+        self.assertEqual(python_version, self.get_data("test/my_plot")["settings"]["python"]["version"])
+        self.assertEqual(python_version_info.major, self.get_data("test/my_plot")["settings"]["python"]["major"])
+        self.assertEqual(python_version_info.minor, self.get_data("test/my_plot")["settings"]["python"]["minor"])
+        self.assertEqual(python_version_info.micro, self.get_data("test/my_plot")["settings"]["python"]["micro"])
+        self.assertEqual(python_version_info.releaselevel, self.get_data("test/my_plot")["settings"]["python"]["releaselevel"])
+        self.assertEqual(python_version_info.serial, self.get_data("test/my_plot")["settings"]["python"]["serial"])
         self.assertIn("os", self.get_data("test/my_plot")["settings"])
 
     def test_tab(self):
