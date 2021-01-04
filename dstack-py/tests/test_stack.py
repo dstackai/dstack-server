@@ -125,7 +125,8 @@ class StackFrameTest(TestBase):
         self.assertEqual(python_version_info.major, self.get_data("test/my_plot")["settings"]["python"]["major"])
         self.assertEqual(python_version_info.minor, self.get_data("test/my_plot")["settings"]["python"]["minor"])
         self.assertEqual(python_version_info.micro, self.get_data("test/my_plot")["settings"]["python"]["micro"])
-        self.assertEqual(python_version_info.releaselevel, self.get_data("test/my_plot")["settings"]["python"]["releaselevel"])
+        self.assertEqual(python_version_info.releaselevel,
+                         self.get_data("test/my_plot")["settings"]["python"]["releaselevel"])
         self.assertEqual(python_version_info.serial, self.get_data("test/my_plot")["settings"]["python"]["serial"])
         self.assertIn("os", self.get_data("test/my_plot")["settings"])
 
