@@ -33,8 +33,8 @@ class LocalExecutionService @Autowired constructor(
     override fun execute(stackPath: String, frame: Frame, attachment: Attachment, views: List<Map<String, Any?>>?, apply: Boolean): Pair<Execution?, File?> {
         val id = UUID.randomUUID().toString()
         val minorPythonVersion = frame.minorPythonVersion
-        val pythonExecutable = minorPythonVersion?.let { getPythonExecutable(it) } ?:
-            config.pythonExecutables.values.firstOrNull()
+        val pythonExecutable = minorPythonVersion?.let { getPythonExecutable(it) }
+                ?: config.pythonExecutables.values.firstOrNull()
         return if (pythonExecutable != null) {
             extractApplicationIfMissing(attachment)
 
@@ -63,7 +63,7 @@ class LocalExecutionService @Autowired constructor(
             }
         } else {
             Pair(Execution(id, emptyList(), ExecutionStatus.Failed,
-                    logs = "The required Python version is not supported: " + minorPythonVersion), null)
+                    logs = "The required Python version is not supported: $minorPythonVersion"), null)
         }
     }
 
