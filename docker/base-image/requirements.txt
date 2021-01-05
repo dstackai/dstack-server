@@ -3,8 +3,4 @@ scipy
 pandas
 matplotlib
 plotly
-psycopg2-binary
-mysql-connector-python
-google-api-python-client
-oauth2client
 pandas_datareader

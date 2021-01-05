@@ -47,7 +47,7 @@ fun main(args: Array<String>) {
     }
 
     if (cmd.hasOption("python")) {
-        LocalCliAppConfig.defaultPythonExecutable = cmd.getOptionValue("python")
+        LocalCliAppConfig.defaultPythonExecutables = cmd.getOptionValue("python")
     }
 
     if (cmd.hasOption("user")) {

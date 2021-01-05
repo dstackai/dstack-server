@@ -13,7 +13,7 @@ class NoSuchModuleError(ValueError):
         self.module = module
 
     def __str__(self):
-        return f"Module f{self.module} not found"
+        return f"Module {self.module} not found"
 
 
 def _find_project_root(wd: Path) -> Path:

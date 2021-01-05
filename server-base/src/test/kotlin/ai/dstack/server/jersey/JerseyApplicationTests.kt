@@ -29,7 +29,6 @@ class JerseyApplicationTests : JerseyTest() {
     private lateinit var appConfig: AppConfig
     private lateinit var emailService: EmailService
     private lateinit var permissionService: PermissionService
-    private lateinit var schedulerService: SchedulerService
     private lateinit var analyticsService: AnalyticsService
     private lateinit var newsletterService: NewsletterService
 
@@ -37,7 +36,6 @@ class JerseyApplicationTests : JerseyTest() {
     private lateinit var frameService: InMemoryFrameService
     private lateinit var attachmentService: InMemoryAttachmentService
     private lateinit var fileService: InMemoryFileService
-    private lateinit var jobService: InMemoryJobService
     private lateinit var userService: InMemoryUserService
     private lateinit var sessionService: InMemorySessionService
 
@@ -45,7 +43,6 @@ class JerseyApplicationTests : JerseyTest() {
         appConfig = Mockito.mock(AppConfig::class.java)
         emailService = Mockito.mock(EmailService::class.java)
         permissionService = Mockito.mock(PermissionService::class.java)
-        schedulerService = Mockito.mock(SchedulerService::class.java)
         analyticsService = Mockito.mock(AnalyticsService::class.java)
         newsletterService = Mockito.mock(NewsletterService::class.java)
 
@@ -54,7 +51,6 @@ class JerseyApplicationTests : JerseyTest() {
         attachmentService = InMemoryAttachmentService()
         fileService = InMemoryFileService()
         userService = InMemoryUserService()
-        jobService = InMemoryJobService()
         sessionService = InMemorySessionService()
 
         return JerseyApplication.resourceConfig
@@ -68,11 +64,9 @@ class JerseyApplicationTests : JerseyTest() {
                         bind(emailService).to(EmailService::class.java)
                         bind(fileService).to(FileService::class.java)
                         bind(permissionService).to(PermissionService::class.java)
-                        bind(schedulerService).to(SchedulerService::class.java)
                         bind(analyticsService).to(AnalyticsService::class.java)
                         bind(newsletterService).to(NewsletterService::class.java)
 
-                        bind(jobService).to(JobService::class.java)
                         bind(userService).to(UserService::class.java)
                         bind(sessionService).to(SessionService::class.java)
                     }
@@ -94,7 +88,6 @@ class JerseyApplicationTests : JerseyTest() {
         attachmentService.reset()
         fileService.reset()
         userService.reset()
-        jobService.reset()
         sessionService.reset()
     }
 
@@ -192,142 +185,6 @@ class JerseyApplicationTests : JerseyTest() {
         Truth.assertThat(logoutResponse.status).isEqualTo(Response.Status.OK.statusCode)
         Truth.assertThat(logoutResponse.json).isEqualTo(API_MAPPER.createEmptyJsonObject())
         Truth.assertThat(sessionService.get(loggedInVerifiedAuthStatus.session)?.valid).isFalse()
-    }
-
-    @Test
-    fun testJobs() {
-        val testUser = User(
-                "test_user", "test@gmail.com", "test",
-                "test_token", "test_code", true, UserRole.Admin,
-                LocalDate.now(), Settings(General(AccessLevel.Public)), "test_user"
-        )
-        userService.create(testUser)
-
-        val noAuthorizationResponse = target("/jobs/test_user").request()
-                .get()
-        Truth.assertThat(noAuthorizationResponse.status).isEqualTo(Response.Status.FORBIDDEN.statusCode)
-        Truth.assertThat(noAuthorizationResponse.json)
-                .isEqualTo(message("bad credentials"))
-
-        val invalidAuthorizationResponse = target("/jobs/test_user").request()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + "some invalid token")
-                .get()
-        Truth.assertThat(invalidAuthorizationResponse.status).isEqualTo(Response.Status.FORBIDDEN.statusCode)
-        Truth.assertThat(invalidAuthorizationResponse.json)
-                .isEqualTo(message("bad credentials"))
-
-        val emptyResponse = target("/jobs/test_user").request()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + testUser.token)
-                .get()
-        Truth.assertThat(emptyResponse.status).isEqualTo(Response.Status.OK.statusCode)
-        Truth.assertThat(emptyResponse.entity<GetJobsStatus>())
-                .isEqualTo(GetJobsStatus(emptyList()))
-
-        val createJobPayload = CreateJobPayload(
-                "test_user",
-                "Test Job", "python", "print(\"Hello, world!\")", "unscheduled"
-        )
-        val createJobResponse: Response = target("/jobs/create").request()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + testUser.token)
-                .post(
-                        Entity.json(
-                                createJobPayload
-                        )
-                )
-        Truth.assertThat(createJobResponse.status).isEqualTo(Response.Status.OK.statusCode)
-        val createJobStatus = createJobResponse.entity<GetJobStatus>()
-        Truth.assertThat(createJobStatus.job.id).isNotNull()
-        Truth.assertThat(createJobStatus.job.title).isEqualTo(createJobPayload.title)
-        Truth.assertThat(createJobStatus.job.code).isEqualTo(createJobPayload.code)
-        Truth.assertThat(createJobStatus.job.runtime).isEqualTo(createJobPayload.runtime)
-        Truth.assertThat(createJobStatus.job.schedule).isEqualTo(createJobPayload.schedule)
-
-        val nonEmptyResponse = target("/jobs/test_user").request()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + testUser.token)
-                .get()
-        Truth.assertThat(nonEmptyResponse.status).isEqualTo(Response.Status.OK.statusCode)
-        Truth.assertThat(nonEmptyResponse.entity<GetJobsStatus>())
-                .isEqualTo(
-                        GetJobsStatus(
-                                listOf(
-                                        BasicJobInfo(
-                                                createJobStatus.job.id, "Test Job", "python", "unscheduled", "CREATED",
-                                                null, null, null
-                                        )
-                                )
-                        )
-                )
-
-        val createdJobResponse = target("/jobs/test_user/${createJobStatus.job.id}").request()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + testUser.token)
-                .get()
-        Truth.assertThat(createdJobResponse.status).isEqualTo(Response.Status.OK.statusCode)
-        Truth.assertThat(createdJobResponse.entity<GetJobStatus>())
-                .isEqualTo(
-                        GetJobStatus(
-                                JobInfo(
-                                        createJobStatus.job.id,
-                                        "Test Job",
-                                        "python",
-                                        "unscheduled",
-                                        "print(\"Hello, world!\")",
-                                        "CREATED",
-                                        null,
-                                        null,
-                                        null,
-                                        null
-                                )
-                        )
-                )
-
-        val updateJobResponse: Response = target("/jobs/update").request()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + testUser.token)
-                .post(
-                        Entity.json(
-                                UpdateJobPayload(
-                                        "test_user",
-                                        createJobStatus.job.id, "Test Job", null, "print(\"Hello!\")", null, null, null, null, null
-                                )
-                        )
-                )
-        Truth.assertThat(updateJobResponse.status).isEqualTo(Response.Status.OK.statusCode)
-        Truth.assertThat(updateJobResponse.entity<OpStatus>())
-                .isEqualTo(OpStatus())
-
-        val updatedJobResponse = target("/jobs/test_user/${createJobStatus.job.id}").request()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + testUser.token)
-                .get()
-        Truth.assertThat(updatedJobResponse.status).isEqualTo(Response.Status.OK.statusCode)
-        Truth.assertThat(updatedJobResponse.entity<GetJobStatus>())
-                .isEqualTo(
-                        GetJobStatus(
-                                JobInfo(
-                                        createJobStatus.job.id, "Test Job", "python", "unscheduled", "print(\"Hello!\")", "CREATED", null,
-                                        null, null, null
-                                )
-                        )
-                )
-
-        val deleteJobResponse: Response = target("/jobs/delete").request()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + testUser.token)
-                .post(
-                        Entity.json(
-                                DeleteJobPayload(
-                                        "test_user",
-                                        createJobStatus.job.id
-                                )
-                        )
-                )
-        Truth.assertThat(deleteJobResponse.status).isEqualTo(Response.Status.OK.statusCode)
-        Truth.assertThat(deleteJobResponse.entity<OpStatus>())
-                .isEqualTo(OpStatus())
-
-        val emptyResponse2 = target("/jobs/test_user").request()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + testUser.token)
-                .get()
-        Truth.assertThat(emptyResponse2.status).isEqualTo(Response.Status.OK.statusCode)
-        Truth.assertThat(emptyResponse2.entity<GetJobsStatus>())
-                .isEqualTo(GetJobsStatus(emptyList()))
     }
 
     @Test
@@ -464,8 +321,6 @@ class JerseyApplicationTests : JerseyTest() {
         get() {
             return Entity.entity(API_MAPPER.writeValueAsBytes(this), MediaType.APPLICATION_JSON_TYPE)
         }
-
-    private fun message(value: String) = API_MAPPER.readValue("{ \"message\": \"$value\" }", JsonNode::class.java)
 
     private val Response.json: JsonNode
         get() = readEntity(JsonNode::class.java)

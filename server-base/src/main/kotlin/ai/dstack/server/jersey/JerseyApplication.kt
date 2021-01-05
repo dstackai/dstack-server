@@ -6,7 +6,6 @@ import ai.dstack.server.jersey.jackson.ObjectMapperContextResolver
 import ai.dstack.server.jersey.resources.SupportResources
 import ai.dstack.server.jersey.resources.apps.AppResources
 import ai.dstack.server.jersey.resources.config.ConfigResources
-import ai.dstack.server.jersey.resources.jobs.JobResources
 import ai.dstack.server.jersey.resources.stacks.*
 import ai.dstack.server.jersey.resources.users.UserResources
 import org.glassfish.jersey.CommonProperties
@@ -27,7 +26,6 @@ class JerseyApplication {
                     CorsAllowAllRestResponseFilter::class.java,
                     UriInfoFilter::class.java,
                     StackResources::class.java,
-                    JobResources::class.java,
                     PermissionResources::class.java,
                     FrameResources::class.java,
                     AttachResources::class.java,

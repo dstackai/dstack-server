@@ -107,9 +107,13 @@ class LocalCliAppConfig : AppConfig {
             return getEnvIfNotEmpty("DSTACK_PASSWORD") ?: defaultPassword
         }
 
-    override val pythonExecutable: String?
+    override val pythonExecutables: Map<String, String>
         get() {
-            return getEnvIfNotEmpty("DSTACK_PYTHON_EXECUTABLE") ?: defaultPythonExecutable
+            val value: String = getEnvIfNotEmpty("DSTACK_PYTHON_EXECUTABLES") ?: defaultPythonExecutables
+            return value.split(";").map {
+                val p = it.split("=")
+                p[0] to p[1]
+            }.toMap()
         }
 
     override val emailEnabled: Boolean
@@ -127,7 +131,7 @@ class LocalCliAppConfig : AppConfig {
         var defaultPassword: String? = null
         var defaultInternalPort: String = "8080"
         var defaultHomeDirectory: String? = System.getProperty("user.home")
-        var defaultPythonExecutable: String? = null
+        var defaultPythonExecutables: String = ""
         var overrideConfig: Boolean = false
     }
 }

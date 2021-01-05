@@ -24,7 +24,7 @@ class ConfigResources {
 
     val runtimes: List<String> by lazy {
         val runtimes = mutableListOf<String>()
-        if (config.pythonExecutable != null) {
+        if (config.pythonExecutables.isNotEmpty()) {
             runtimes.add("python")
         }
         runtimes

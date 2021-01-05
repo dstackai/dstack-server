@@ -22,7 +22,7 @@ class StackNotFoundError(ValueError):
         self.stack = stack
 
     def __str__(self):
-        return f"Stack f{self.stack} not found"
+        return f"Stack {self.stack} not found"
 
 
 class Protocol(ABC):

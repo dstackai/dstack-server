@@ -50,11 +50,6 @@ open class SQLiteConfig {
     }
 
     @Bean
-    open fun jobService(@Autowired repository: JobRepository): JobService {
-        return SQLiteJobService(repository)
-    }
-
-    @Bean
     open fun permissionService(@Autowired repository: PermissionRepository): PermissionService {
         return SQLitePermissionService(repository)
     }

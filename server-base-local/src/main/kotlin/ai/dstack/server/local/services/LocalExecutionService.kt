@@ -30,9 +30,12 @@ class LocalExecutionService @Autowired constructor(
     private val executionHome = File(config.executionDirectory).absolutePath
 
     // TODO: Split into update (returning UpdateStatus) and apply (returning ExecutionStatus (stack, InputStream, and length))
-    override fun execute(stackPath: String, attachment: Attachment, views: List<Map<String, Any?>>?, apply: Boolean): Pair<Execution?, File?> {
+    override fun execute(stackPath: String, frame: Frame, attachment: Attachment, views: List<Map<String, Any?>>?, apply: Boolean): Pair<Execution?, File?> {
         val id = UUID.randomUUID().toString()
-        return if (config.pythonExecutable != null) {
+        val minorPythonVersion = frame.minorPythonVersion
+        val pythonExecutable = minorPythonVersion?.let { getPythonExecutable(it) } ?:
+            config.pythonExecutables.values.firstOrNull()
+        return if (pythonExecutable != null) {
             extractApplicationIfMissing(attachment)
 
             val executionFile = executionFile(id, EXECUTION_STAGE_ORIGINAL)
@@ -42,7 +45,7 @@ class LocalExecutionService @Autowired constructor(
             }
 
             // TODO: Move to to ExecutionProcess and ExecutionProcessFactory
-            val p = getProcess(attachment, stackPath)
+            val p = getProcess(attachment, pythonExecutable, stackPath)
             val command = mutableMapOf<String, Any?>()
             command["views"] = views
             return if (apply) {
@@ -55,10 +58,12 @@ class LocalExecutionService @Autowired constructor(
                     sendCommand(p, command)
                     receiveResponse(p)
                 }.toUpdatedViews()
-                Pair(Execution(id, updatedViews.views, ExecutionStatus.fromCode(updatedViews.status), updatedViews.logs), null)
+                Pair(Execution(id, updatedViews.views, ExecutionStatus.fromCode(updatedViews.status),
+                        updatedViews.logs), null)
             }
         } else {
-            Pair(Execution(id, emptyList(), ExecutionStatus.Failed, logs = "The Python executable is not configured."), null)
+            Pair(Execution(id, emptyList(), ExecutionStatus.Failed,
+                    logs = "The required Python version is not supported: " + minorPythonVersion), null)
         }
     }
 
@@ -69,10 +74,10 @@ class LocalExecutionService @Autowired constructor(
         p.outputStream.flush()
     }
 
-    data class UpdatedViews (
-        val views: List<Map<String, Any?>>,
-        val logs: String,
-        val status: String
+    data class UpdatedViews(
+            val views: List<Map<String, Any?>>,
+            val logs: String,
+            val status: String
     )
 
     private fun String?.toUpdatedViews() =
@@ -80,25 +85,54 @@ class LocalExecutionService @Autowired constructor(
 
     private val processes = mutableMapOf<String, Process>()
 
-    private fun getProcess(attachment: Attachment, stackPath: String): Process {
+    private fun getProcess(attachment: Attachment, pythonExecutable: String, stackPath: String): Process {
         val p = processes.getOrPut(attachment.filePath) {
             val executorFile = executorFile(attachment)
             val attachmentSettings = attachment.settings["function"] as Map<*, *>
             val functionType = attachmentSettings["type"] as String
             val functionData = attachmentSettings["data"] as String
-            val commands = mutableListOf(config.pythonExecutable, executorFile.name,
+            val commands = mutableListOf(pythonExecutable, executorFile.name,
                     executionHome, functionType, functionData)
             ProcessBuilder(commands).directory(destDir(attachment)).start().also {
-                LocalSchedulerService.ErrorLogger(it.errorStream).start()
+                ErrorLogger(it.errorStream).start()
             }
         }
         return if (p.isAlive) {
             p
         } else {
             processes.remove(attachment.filePath, p)
-            getProcess(attachment, stackPath)
+            getProcess(attachment, pythonExecutable, stackPath)
         }
     }
+
+    private class ErrorLogger(var inputStream: InputStream) : Thread() {
+        override fun run() {
+            try {
+                val isr = InputStreamReader(inputStream)
+                val br = BufferedReader(isr)
+                var line: String?
+                while (br.readLine().also { line = it } != null) logger.error { line }
+            } catch (ex: IOException) {
+                logger.error { ex }
+            }
+        }
+    }
+
+    private fun getPythonExecutable(version: String): String? {
+        return config.pythonExecutables[version]
+    }
+
+    private val Frame.minorPythonVersion: String?
+        get() {
+            val python = pythonSettings
+            return python?.let { "${it["major"]}.${it["minor"]}" }
+        }
+
+    private val Frame.pythonSettings: Map<*, *>?
+        get() {
+            val python = settings["python"]?.let { if (it is Map<*, *>) it else null }
+            return python
+        }
 
     // TODO: Introduce ExecutionStatus (stack, InputStream, and length)
     override fun poll(id: String): Pair<String?, File?> {
