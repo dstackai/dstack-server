@@ -2,7 +2,7 @@ FROM debian:stable-slim
 
 ENV PIP_URL_PRIMARY=https://test.pypi.org/simple/
 ENV PIP_URL_SECONDARY=https://pypi.org/simple/
-ENV DSTACK_PIP_VERSION=0.6.dev27
+ENV DSTACK_PIP_VERSION=0.6.dev28
 
 ENV PYTHON_3_6_VERSION=3.6.12
 ENV PYTHON_3_7_VERSION=3.7.9
@@ -38,11 +38,11 @@ RUN curl -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/p
   && echo /root/.dstack-installer/config.yaml \
   && cat /root/.dstack-installer/config.yaml
 
-RUN rm -rf root/.cache \
-    && rm -rf root/.dstack/cache \
+RUN rm -rf /root/.cache \
+    && rm -rf /root/.dstack/cache \
     && find /root/ -type d -name __pycache__ -exec rm -r {} \+
 
-ENTRYPOINT /root/.pyenv/versions/${PYTHON_3_9_VERSION}/bin/dstack server start --skip --override \
+ENTRYPOINT /root/.pyenv/versions/${PYTHON_3_9_VERSION}/bin/dstack server start --skip \
     --python "/root/.pyenv/versions/${PYTHON_3_9_VERSION}/bin/python" \
     --python "/root/.pyenv/versions/${PYTHON_3_8_VERSION}/bin/python" \
     --python "/root/.pyenv/versions/${PYTHON_3_7_VERSION}/bin/python" \

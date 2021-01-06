@@ -4,3 +4,4 @@ pandas
 matplotlib
 plotly
 pandas_datareader
+scikit-learn

@@ -31,7 +31,8 @@ setup(
         "deprecation",
         "packaging",
         "tqdm",
-        "cloudpickle"
+        "cloudpickle",
+        "joblib"
     ],
     classifiers=[
         "Development Status :: 4 - Beta",

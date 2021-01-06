@@ -91,7 +91,7 @@ class LocalExecutionService @Autowired constructor(
             val attachmentSettings = attachment.settings["function"] as Map<*, *>
             val functionType = attachmentSettings["type"] as String
             val functionData = attachmentSettings["data"] as String
-            val server = "${config.address}/api"
+            val server = "http://localhost${if (config.internalPort != 80) ":${config.internalPort}" else ""}/api"
             val commands = mutableListOf(pythonExecutable, executorFile.name,
                     executionHome, functionType, functionData, user.name, user.token, server)
             ProcessBuilder(commands).directory(destDir(attachment)).start().also {
