@@ -42,7 +42,7 @@ RUN rm -rf root/.cache \
     && rm -rf root/.dstack/cache \
     && find /root/ -type d -name __pycache__ -exec rm -r {} \+
 
-ENTRYPOINT /root/.pyenv/versions/${PYTHON_3_9_VERSION}/bin/dstack server start --skip \
+ENTRYPOINT /root/.pyenv/versions/${PYTHON_3_9_VERSION}/bin/dstack server start --skip --override \
     --python "/root/.pyenv/versions/${PYTHON_3_9_VERSION}/bin/python" \
     --python "/root/.pyenv/versions/${PYTHON_3_8_VERSION}/bin/python" \
     --python "/root/.pyenv/versions/${PYTHON_3_7_VERSION}/bin/python" \

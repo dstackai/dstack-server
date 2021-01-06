@@ -30,7 +30,7 @@ class LocalExecutionService @Autowired constructor(
     private val executionHome = File(config.executionDirectory).absolutePath
 
     // TODO: Split into update (returning UpdateStatus) and apply (returning ExecutionStatus (stack, InputStream, and length))
-    override fun execute(stackPath: String, frame: Frame, attachment: Attachment, views: List<Map<String, Any?>>?, apply: Boolean): Pair<Execution?, File?> {
+    override fun execute(stackPath: String, user: User, frame: Frame, attachment: Attachment, views: List<Map<String, Any?>>?, apply: Boolean): Pair<Execution?, File?> {
         val id = UUID.randomUUID().toString()
         val minorPythonVersion = frame.minorPythonVersion
         val pythonExecutable = minorPythonVersion?.let { getPythonExecutable(it) }
@@ -45,7 +45,7 @@ class LocalExecutionService @Autowired constructor(
             }
 
             // TODO: Move to to ExecutionProcess and ExecutionProcessFactory
-            val p = getProcess(attachment, pythonExecutable, stackPath)
+            val p = getProcess(user, attachment, pythonExecutable, stackPath)
             val command = mutableMapOf<String, Any?>()
             command["views"] = views
             return if (apply) {
@@ -85,14 +85,15 @@ class LocalExecutionService @Autowired constructor(
 
     private val processes = mutableMapOf<String, Process>()
 
-    private fun getProcess(attachment: Attachment, pythonExecutable: String, stackPath: String): Process {
+    private fun getProcess(user: User, attachment: Attachment, pythonExecutable: String, stackPath: String): Process {
         val p = processes.getOrPut(attachment.filePath) {
             val executorFile = executorFile(attachment)
             val attachmentSettings = attachment.settings["function"] as Map<*, *>
             val functionType = attachmentSettings["type"] as String
             val functionData = attachmentSettings["data"] as String
+            val server = "${config.address}/api"
             val commands = mutableListOf(pythonExecutable, executorFile.name,
-                    executionHome, functionType, functionData)
+                    executionHome, functionType, functionData, user.name, user.token, server)
             ProcessBuilder(commands).directory(destDir(attachment)).start().also {
                 ErrorLogger(it.errorStream).start()
             }
@@ -101,7 +102,7 @@ class LocalExecutionService @Autowired constructor(
             p
         } else {
             processes.remove(attachment.filePath, p)
-            getProcess(attachment, pythonExecutable, stackPath)
+            getProcess(user, attachment, pythonExecutable, stackPath)
         }
     }
 
@@ -206,7 +207,7 @@ class LocalExecutionService @Autowired constructor(
     private fun destDir(attachment: Attachment) =
             File(config.appDirectory + "/" + attachment.filePath)
 
-    private val executorVersion = 12
+    private val executorVersion = 13
 
     private fun executorFile(attachment: Attachment) = File(destDir(attachment), "execute_v${executorVersion}.py")
 

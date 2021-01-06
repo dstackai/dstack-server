@@ -73,8 +73,9 @@ class AppResources {
                             val attachment = attachmentService.get(frame.path, payload.attachment!!)
                             if (attachment != null) {
                                 if (attachment.application == "application/python") {
-                                    // TODO: Cache session, userByToken, stack, frame, attachment
-                                    val pair = executionService.execute(stack.path, frame, attachment,
+                                    // TODO: Cache session, stackUser, stack, frame, attachment
+                                    val stackUser = userService.get(stack.userName)!!
+                                    val pair = executionService.execute(stack.path, stackUser, frame, attachment,
                                             payload.views, payload.apply == true)
                                     if (pair.first != null)
                                         ok(pair.first!!.toStatus())

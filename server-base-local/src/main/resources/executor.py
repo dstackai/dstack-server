@@ -11,10 +11,19 @@ from contextlib import redirect_stdout
 from dstack.controls import unpack_view
 from dstack import AutoHandler
 from dstack.controls import Apply
+from dstack import config as dstack_config
+from dstack.config import InPlaceConfig, Profile
 
 executions_home = sys.argv[1]
 function_type = sys.argv[2]
 function_data = sys.argv[3]
+user = sys.argv[4]
+token = sys.argv[5]
+server = sys.argv[6]
+
+in_place_config = InPlaceConfig()
+in_place_config.add_or_replace_profile(Profile("default", user, token, server, verify=True))
+dstack_config.configure(in_place_config)
 
 with open("controller.pickle", "rb") as f:
     controller = cloudpickle.load(f)
