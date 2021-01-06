@@ -2,8 +2,8 @@
   {
     "name": "${prefix}-cloud",
     "environment": [
-        {"name": "DSTACK_USER", "value": "foo"},
-        {"name": "DSTACK_PASSWORD", "value": "bar"},
+        {"name": "DSTACK_USER", "value": "${user}"},
+        {"name": "DSTACK_PASSWORD", "value": "${password}"},
         {"name": "DSTACK_PORT", "value": "${port}"},
         {"name": "DSTACK_INTERNAL_PORT", "value": "${container_port}"},
         {"name": "DSTACK_SSL", "value": "${ssl}"},

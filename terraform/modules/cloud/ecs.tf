@@ -8,6 +8,8 @@ data "template_file" "main" {
   vars = {
     prefix = var.prefix
     image = "${var.image_name}:${var.image_tag}"
+    user = var.user
+    password = var.password
     port = "443"
     container_port = "80"
     ssl = "true"

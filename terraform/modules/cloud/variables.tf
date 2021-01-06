@@ -12,6 +12,14 @@ variable "image_name" {
 variable "image_tag" {
 }
 
+variable "user" {
+  default = "foo"
+}
+
+variable "password" {
+  default = "bar"
+}
+
 variable "fargate_cpu" {
   default = "1024"
 }
