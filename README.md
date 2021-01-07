@@ -7,7 +7,7 @@
 Installing and running `dstack` is very easy:
 
 ```bash
-pip install --index-url https://test.pypi.org/simple/ --upgrade --no-cache-dir --extra-index-url=https://pypi.org/simple/ dstack==0.6.dev24
+pip install --index-url https://test.pypi.org/simple/ --upgrade --no-cache-dir --extra-index-url=https://pypi.org/simple/ dstack==0.6.dev28
 dstack server start
 ```
 
@@ -81,4 +81,4 @@ The instructions on how to build dstack from sources can be found [here](CONTRIB
 
 ## License
 
-dstack is an open-source library licensed under the Apache 2.0 license
+`dstack` is an open-source library licensed under the Apache 2.0 license
