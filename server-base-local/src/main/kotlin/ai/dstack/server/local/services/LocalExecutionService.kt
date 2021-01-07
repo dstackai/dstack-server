@@ -13,6 +13,7 @@ import java.util.zip.ZipInputStream
 import java.io.IOException
 import java.util.zip.ZipEntry
 import java.io.FileOutputStream
+import java.lang.IllegalStateException
 import java.util.*
 
 
@@ -39,12 +40,15 @@ class LocalExecutionService @Autowired constructor(
             extractApplicationIfMissing(attachment)
 
             val executionFile = executionFile(id, EXECUTION_STAGE_ORIGINAL)
+            // TODO: Write execution file regardless of `apply`
+            //  Initiate the `process` asynchronously
+            //  Refactor the front-end so it supports nullable views and SCHEDULED status
+            //  This is important because the starting the process may take long time
             if (apply) {
                 writeStackPathFile(stackPath, id)
                 writeExecutionFile(executionFile, id, views)
             }
 
-            // TODO: Move to to ExecutionProcess and ExecutionProcessFactory
             val p = getProcess(user, attachment, pythonExecutable, stackPath)
             val command = mutableMapOf<String, Any?>()
             command["views"] = views
@@ -85,6 +89,42 @@ class LocalExecutionService @Autowired constructor(
 
     private val processes = mutableMapOf<String, Process>()
 
+    private fun getVirtualPythonExecutable(attachment: Attachment, pythonExecutable: String): File {
+        val destDir = destDir(attachment)
+        val venvFile = File(destDir, "venv")
+        val flagFile = File(venvFile, "flag")
+        if (!flagFile.exists()) {
+            venvFile.deleteRecursively()
+            val venvCommands = mutableListOf(pythonExecutable, "-m", "venv", "venv", "--system-site-packages")
+            ProcessBuilder(venvCommands).directory(destDir).start().also {
+                ErrorLogger(it.errorStream).start()
+            }.waitFor()
+            val requirementsFile = File(destDir, "requirements.txt")
+            if (requirementsFile.exists()) {
+                val pipMacLinuxExecutableFile = File(File(venvFile, "bin"), "pip")
+                val pipWinExecutableFile = File(File(venvFile, "Scripts"), "pip.exe")
+                val pipExecutableFile = when {
+                    pipMacLinuxExecutableFile.exists() -> pipMacLinuxExecutableFile
+                    pipWinExecutableFile.exists() -> pipWinExecutableFile
+                    else -> throw IllegalStateException("Can't find pip in " + venvFile.absolutePath)
+                }
+                val pipCommands = mutableListOf(pipExecutableFile.absolutePath, "install", "-r", requirementsFile.absolutePath)
+                ProcessBuilder(pipCommands).directory(destDir).start().also {
+                    ErrorLogger(it.errorStream).start()
+                }.waitFor()
+            }
+            flagFile.createNewFile()
+        }
+        val pythonMacLinuxExecutableFile = File(File(venvFile, "bin"), "python")
+        val pythonWinExecutableFile = File(File(venvFile, "Scripts"), "python.exe")
+        return when {
+            pythonMacLinuxExecutableFile.exists() -> pythonMacLinuxExecutableFile
+            pythonWinExecutableFile.exists() -> pythonWinExecutableFile
+            else -> throw IllegalStateException("Can't find a Python executable in " + venvFile.absolutePath)
+        }
+    }
+
+    // TODO: Move to to ExecutionProcess and ExecutionProcessFactory
     private fun getProcess(user: User, attachment: Attachment, pythonExecutable: String, stackPath: String): Process {
         val p = processes.getOrPut(attachment.filePath) {
             val executorFile = executorFile(attachment)
@@ -92,7 +132,10 @@ class LocalExecutionService @Autowired constructor(
             val functionType = attachmentSettings["type"] as String
             val functionData = attachmentSettings["data"] as String
             val server = "http://localhost${if (config.internalPort != 80) ":${config.internalPort}" else ""}/api"
-            val commands = mutableListOf(pythonExecutable, executorFile.name,
+            // TODO: Use the map processes to store both the venv initialization and the application processes
+            //  This is important not to restart the in-progress processes
+            val virtualPythonExecutable = getVirtualPythonExecutable(attachment, pythonExecutable)
+            val commands = mutableListOf(virtualPythonExecutable.absolutePath, executorFile.name,
                     executionHome, functionType, functionData, user.name, user.token, server)
             ProcessBuilder(commands).directory(destDir(attachment)).start().also {
                 ErrorLogger(it.errorStream).start()
