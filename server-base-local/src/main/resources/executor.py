@@ -43,7 +43,8 @@ else:
         func = cloudpickle.load(f)
 
 
-def apply(views, execution_id, logs_handler):
+def execute(id, views, apply):
+    logs_handler = StringIO()
     with redirect_stdout(logs_handler):
         executions = Path(executions_home)
         executions.mkdir(exist_ok=True)
@@ -53,81 +54,51 @@ def apply(views, execution_id, logs_handler):
         finished_executions.mkdir(exist_ok=True)
 
         execution = {
-            'id': execution_id,
+            'id': id,
             'status': 'RUNNING' if apply else 'READY'
         }
 
         try:
-            has_dependant = False
-            has_apply = False
-            for c in controller.controls_by_id.values():
-                if isinstance(c, Apply):
-                    has_apply = True
-                if c.is_dependent():
-                    has_dependant = True
-            if has_dependant and not has_apply:
-                views = controller.list(views)
-                execution['views'] = [v.pack() for v in views]
-                running_execution_file = running_executions / (execution_id + '.json')
-                running_execution_file.write_text(json.dumps(execution))
+            views = controller.list(views)
+            execution['views'] = [v.pack() for v in views]
+            executions = running_executions if apply else finished_executions
+            execution['logs'] = logs_handler.getvalue()
+            execution_file = executions / (id + '.json')
+            execution_file.write_text(json.dumps(execution))
 
-            result = controller.apply(func, views)
-            execution['status'] = 'FINISHED'
-            output = {}
-            encoder = AutoHandler()
-            frame_data = encoder.encode(result, None, None)
-            output['application'] = frame_data.application
-            output['content_type'] = frame_data.content_type
-            output['data'] = frame_data.data.base64value()
-            execution['output'] = output
+            if apply:
+                result = controller.apply(func, views)
+                execution['status'] = 'FINISHED'
+                output = {}
+                encoder = AutoHandler()
+                frame_data = encoder.encode(result, None, None)
+                output['application'] = frame_data.application
+                output['content_type'] = frame_data.content_type
+                output['data'] = frame_data.data.base64value()
+                execution['output'] = output
         except Exception:
             execution['status'] = 'FAILED'
             print(str(traceback.format_exc()))
 
-    if 'views' not in execution:
-        execution['views'] = [v.pack() for v in views]
-    execution['logs'] = logs_handler.getvalue()
-    finished_execution_file = finished_executions / (execution_id + '.json')
-    finished_execution_file.write_text(json.dumps(execution))
-
-
-def update(views, logs_handler):
-    with redirect_stdout(logs_handler):
-        try:
-            updated_views = controller.list(views)
-            status = 'READY'
-        except Exception:
-            updated_views = views
-            status = 'FAILED'
-            print(str(traceback.format_exc()))
-    print_views_stdout(updated_views, logs_handler, status)
+    if apply:
+        if 'views' not in execution:
+            execution['views'] = [v.pack() for v in views]
+        execution['logs'] = logs_handler.getvalue()
+        finished_execution_file = finished_executions / (id + '.json')
+        finished_execution_file.write_text(json.dumps(execution))
 
 
 def parse_command(command):
     command_json = json.loads(command)
+    id = command_json.get("id")
     _views = command_json.get("views")
-    execution_id = command_json.get("id")
     views = [unpack_view(v) for v in _views] if _views is not None else None
-    return views, execution_id
-
-
-def print_views_stdout(views, logs_handler, status):
-    execution = {
-        'status': status,
-        'views': [v.pack() for v in (views or [])],
-        'logs': logs_handler.getvalue()
-    }
-    sys.stdout.write(json.dumps(execution, indent=None, separators=(",", ":")) + "\n")
-    sys.stdout.flush()
+    apply = command_json.get("apply")
+    return id, views, apply
 
 
 while True:
-    # TODO: Support timeout in future
     command = sys.stdin.readline().strip()
-    views, execution_id = parse_command(command)
-    logs_handler = StringIO()
-    if execution_id:
-        apply(views, execution_id, logs_handler)
-    else:
-        # TODO: Make it possible to transport the views state without transporting the entire data
-        update(views, logs_handler)
+    id, views, apply = parse_command(command)
+    # TODO: Support timeout in future
+    execute(id, views, apply)
