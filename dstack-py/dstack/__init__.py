@@ -11,6 +11,7 @@ from dstack.config import Config, ConfigFactory, YamlConfigFactory, \
 from dstack.content import StreamContent, BytesContent, MediaType, FileContent
 from dstack.context import Context
 from dstack.handler import Encoder, Decoder, T, DecoratedValue
+from dstack.markdown import Markdown
 from dstack.protocol import Protocol, JsonProtocol, MatchError, create_protocol
 from dstack.stack import EncryptionMethod, NoEncryption, StackFrame, merge_or_none, FrameData, PushResult, FrameMeta
 from dstack.application import Application
@@ -292,6 +293,10 @@ def tab(title: ty.Optional[str] = None) -> DecoratedValue:
 def app(handler: ty.Callable, depends: ty.Optional[ty.Union[str, ty.List[str]]] = None,
         requirements: ty.Optional[str] = None, project: bool = False, **kwargs):
     return Application(handler, depends, requirements, project, **kwargs)
+
+
+def md(text: str):
+    return Markdown(text)
 
 
 def default_hash_func(*args, **kwargs):
