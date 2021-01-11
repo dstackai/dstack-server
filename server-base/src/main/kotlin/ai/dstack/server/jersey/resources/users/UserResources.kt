@@ -115,7 +115,7 @@ class UserResources {
                     userEmailAlreadyRegistered()
                 } else {
                     try {
-                        val verified = payload.code != null || !config.emailEnabled
+                        val verified = payload.code != null
                         if (verified && payload.code != payload.email.emailToVerificationCode) {
                             badCredentials()
                         } else {
