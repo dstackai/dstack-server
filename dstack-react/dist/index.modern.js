@@ -4220,6 +4220,13 @@ var actions$1 = (function () {
 var css$E = {"details":"_ti47L","header":"_1-me2","backButton":"_1ERQl","title":"_1ZJdY","permissions":"_3X_XO","sideHeader":"_1w9C6","share":"_2sRwt","dropdown":"_1fs1J","description":"_3dUVb","label":"_1JQAe","label-tooltip":"_15gJa","actions":"_2mMuP","size":"_2GzG9","revisions":"_1t1sR","tabs":"_1iRHh","container":"_2Ro1o","withSidebar":"_3dv-r","filters":"_283Wj","filterLoader":"_7OdCa","attachment":"_1QLqg","progress":"_HhauM","initMessage":"_3mGpo","emptyMessage":"_16j-R","error":"_2FCD_","message":"_nbe6T","logs":"_36zNW","logsButton":"_1K-0S","logsExpand":"_1YGSB","fromAgo":"_2urIx","log":"_3Aob9","readme":"_19inZ"};
 
 var REFRESH_INTERVAL = 1000;
+var STATUSES = Object.freeze({
+  READY: 'READY',
+  SCHEDULED: 'SCHEDULED',
+  RUNNING: 'RUNNING',
+  FINISHED: 'FINISHED',
+  FAILED: 'FAILED'
+});
 
 var Details$1 = function Details(_ref) {
   var _data$head, _cx;
@@ -4338,10 +4345,15 @@ var Details$1 = function Details(_ref) {
   };
 
   var updateExecuteData = function updateExecuteData(data) {
-    var fields = parseStackViews(data.views);
-    var form = getFormFromViews(data.views);
-    setFields(fields);
-    setForm(form);
+    if (data.views) {
+      var _fields = parseStackViews(data.views);
+
+      var _form = getFormFromViews(data.views);
+
+      setFields(_fields);
+      setForm(_form);
+    }
+
     setExecuteData(_extends({
       lastUpdate: Date.now()
     }, data));
@@ -4370,7 +4382,7 @@ var Details$1 = function Details(_ref) {
       frame: frame === null || frame === void 0 ? void 0 : frame.id,
       attachment: attachmentIndex || 0,
       apply: apply,
-      views: executeData.views.map(function (view, index) {
+      views: executeData.views && executeData.views.map(function (view, index) {
         switch (view.type) {
           case 'ApplyView':
             return view;
@@ -4427,7 +4439,7 @@ var Details$1 = function Details(_ref) {
   };
 
   useEffect(function () {
-    if (executeData && executeData.status === 'READY' && !appAttachment && !executing) {
+    if (executeData && executeData.status === STATUSES.READY && !appAttachment && !executing) {
       if (!hasApplyButton()) submit(form, true);
     }
   }, [executeData]);
@@ -4446,6 +4458,14 @@ var Details$1 = function Details(_ref) {
           setExecuting(false);
           setError(null);
           updateExecuteData(data);
+
+          if (data.status === STATUSES.SCHEDULED) {
+            setIsScheduled(true);
+            checkFinished({
+              id: data.id,
+              isUpdateData: true
+            });
+          }
         })["catch"](function () {
           setExecuting(false);
           setError({
@@ -4539,18 +4559,18 @@ var Details$1 = function Details(_ref) {
     pollStack({
       id: id
     }).then(function (data) {
-      setIsScheduled(data.status === 'SCHEDULED');
-      if (['SCHEDULED', 'RUNNING'].indexOf(data.status) >= 0) setTimeout(function () {
+      setIsScheduled(data.status === STATUSES.SCHEDULED);
+      if ([STATUSES.SCHEDULED, STATUSES.RUNNING].indexOf(data.status) >= 0) setTimeout(function () {
         checkFinished({
           id: data.id
         });
       }, REFRESH_INTERVAL);
 
-      if (['FINISHED', 'FAILED', 'READY'].indexOf(data.status) >= 0) {
+      if ([STATUSES.FINISHED, STATUSES.FAILED, STATUSES.READY].indexOf(data.status) >= 0) {
         setCalculating(false);
       }
 
-      if (data.status === 'FINISHED') {
+      if ([STATUSES.FINISHED, STATUSES.READY].indexOf(data.status) >= 0) {
         setAppAttachment(data.output);
 
         if (isUpdateData) {
@@ -4564,7 +4584,7 @@ var Details$1 = function Details(_ref) {
         }
       }
 
-      if (data.status === 'FAILED') {
+      if (data.status === STATUSES.FAILED) {
         if (isUpdateData) {
           setExecuting(false);
           updateExecuteData(data);
@@ -4646,9 +4666,9 @@ var Details$1 = function Details(_ref) {
     customData: appAttachment
   }), calculating && !isScheduled && /*#__PURE__*/React__default.createElement(Progress, {
     className: css$E.progress
-  }), calculating && isScheduled && /*#__PURE__*/React__default.createElement("div", {
+  }), !appAttachment && !error && isScheduled && /*#__PURE__*/React__default.createElement("div", {
     className: css$E.initMessage
-  }, t('initializingTheApplication')), !calculating && !executing && !appAttachment && !error && /*#__PURE__*/React__default.createElement("div", {
+  }, t('initializingTheApplication')), !calculating && !executing && !appAttachment && !error && !isScheduled && /*#__PURE__*/React__default.createElement("div", {
     className: css$E.emptyMessage
   }, t('clickApplyToSeeTheResult')), !calculating && !executing && error && /*#__PURE__*/React__default.createElement("div", {
     className: css$E.error

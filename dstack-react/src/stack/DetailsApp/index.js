@@ -28,6 +28,14 @@ import css from './styles.module.css';
 
 const REFRESH_INTERVAL = 1000;
 
+const STATUSES = Object.freeze({
+    READY: 'READY',
+    SCHEDULED: 'SCHEDULED',
+    RUNNING: 'RUNNING',
+    FINISHED: 'FINISHED',
+    FAILED: 'FAILED',
+});
+
 type Props = {
     loading: boolean,
     currentFrameId: number,
@@ -125,11 +133,14 @@ const Details = ({
     };
 
     const updateExecuteData = data => {
-        const fields = parseStackViews(data.views);
-        const form = getFormFromViews(data.views);
 
-        setFields(fields);
-        setForm(form);
+        if (data.views) {
+            const fields = parseStackViews(data.views);
+            const form = getFormFromViews(data.views);
+
+            setFields(fields);
+            setForm(form);
+        }
         setExecuteData({
             lastUpdate: Date.now(),
             ...data,
@@ -159,7 +170,7 @@ const Details = ({
             frame: frame?.id,
             attachment: attachmentIndex || 0,
             apply,
-            views: executeData.views.map((view, index) => {
+            views: executeData.views && executeData.views.map((view, index) => {
                 switch (view.type) {
                     case 'ApplyView':
                         return view;
@@ -205,7 +216,7 @@ const Details = ({
     const onApply = () => submit(form);
 
     useEffect(() => {
-        if (executeData && executeData.status === 'READY' && !appAttachment && !executing) {
+        if (executeData && executeData.status === STATUSES.READY && !appAttachment && !executing) {
             if (!hasApplyButton())
                 submit(form, true);
         }
@@ -228,6 +239,10 @@ const Details = ({
                         setExecuting(false);
                         setError(null);
                         updateExecuteData(data);
+                        if (data.status === STATUSES.SCHEDULED) {
+                            setIsScheduled(true);
+                            checkFinished({id: data.id, isUpdateData: true});
+                        }
                     })
                     .catch(() => {
                         setExecuting(false);
@@ -326,18 +341,24 @@ const Details = ({
     const checkFinished = ({id, isUpdateData}) => {
         pollStack({id: id})
             .then(data => {
-                setIsScheduled(data.status === 'SCHEDULED');
+                setIsScheduled(data.status === STATUSES.SCHEDULED);
 
-                if (['SCHEDULED', 'RUNNING'].indexOf(data.status) >= 0)
+                if ([STATUSES.SCHEDULED, STATUSES.RUNNING].indexOf(data.status) >= 0)
                     setTimeout(() => {
                         checkFinished({id: data.id});
                     }, REFRESH_INTERVAL);
 
-                if (['FINISHED', 'FAILED', 'READY'].indexOf(data.status) >= 0) {
+                if (
+                    [
+                        STATUSES.FINISHED,
+                        STATUSES.FAILED,
+                        STATUSES.READY,
+                    ].indexOf(data.status) >= 0
+                ) {
                     setCalculating(false);
                 }
 
-                if (data.status === 'FINISHED') {
+                if ([STATUSES.FINISHED, STATUSES.READY].indexOf(data.status) >= 0) {
                     setAppAttachment(data.output);
 
                     if (isUpdateData) {
@@ -352,7 +373,7 @@ const Details = ({
                     }
                 }
 
-                if (data.status === 'FAILED') {
+                if (data.status === STATUSES.FAILED) {
                     if (isUpdateData) {
                         setExecuting(false);
                         updateExecuteData(data);
@@ -468,13 +489,13 @@ const Details = ({
 
                     {calculating && !isScheduled && <Progress className={css.progress} />}
 
-                    {calculating && isScheduled && (
+                    {!appAttachment && !error && isScheduled && (
                         <div className={css.initMessage}>
                             {t('initializingTheApplication')}
                         </div>
                     )}
 
-                    {!calculating && !executing && !appAttachment && !error && (
+                    {!calculating && !executing && !appAttachment && !error && !isScheduled && (
                         <div className={css.emptyMessage}>
                             {t('clickApplyToSeeTheResult')}
                         </div>

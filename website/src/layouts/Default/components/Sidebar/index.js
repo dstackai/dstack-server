@@ -40,8 +40,6 @@ const Sidebar = ({
         logOut(() => push('/'));
     };
 
-    console.log(params);
-
     useOnClickOutside(sidebarRef, () => isShow && toggleMenu());
 
     const getMenuItemClick = item => () => {
