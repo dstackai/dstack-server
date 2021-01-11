@@ -4220,7 +4220,7 @@ var actions$1 = (function () {
   };
 });
 
-var css$E = {"details":"_ti47L","header":"_1-me2","backButton":"_1ERQl","title":"_1ZJdY","permissions":"_3X_XO","sideHeader":"_1w9C6","share":"_2sRwt","dropdown":"_1fs1J","description":"_3dUVb","label":"_1JQAe","label-tooltip":"_15gJa","actions":"_2mMuP","size":"_2GzG9","revisions":"_1t1sR","tabs":"_1iRHh","container":"_2Ro1o","withSidebar":"_3dv-r","filters":"_283Wj","filterLoader":"_7OdCa","attachment":"_1QLqg","progress":"_HhauM","emptyMessage":"_16j-R","error":"_2FCD_","message":"_nbe6T","logs":"_36zNW","logsButton":"_1K-0S","logsExpand":"_1YGSB","fromAgo":"_2urIx","log":"_3Aob9","readme":"_19inZ"};
+var css$E = {"details":"_ti47L","header":"_1-me2","backButton":"_1ERQl","title":"_1ZJdY","permissions":"_3X_XO","sideHeader":"_1w9C6","share":"_2sRwt","dropdown":"_1fs1J","description":"_3dUVb","label":"_1JQAe","label-tooltip":"_15gJa","actions":"_2mMuP","size":"_2GzG9","revisions":"_1t1sR","tabs":"_1iRHh","container":"_2Ro1o","withSidebar":"_3dv-r","filters":"_283Wj","filterLoader":"_7OdCa","attachment":"_1QLqg","progress":"_HhauM","initMessage":"_3mGpo","emptyMessage":"_16j-R","error":"_2FCD_","message":"_nbe6T","logs":"_36zNW","logsButton":"_1K-0S","logsExpand":"_1YGSB","fromAgo":"_2urIx","log":"_3Aob9","readme":"_19inZ"};
 
 var REFRESH_INTERVAL = 1000;
 
@@ -4280,13 +4280,17 @@ var Details$1 = function Details(_ref) {
       appAttachment = _useState7[0],
       setAppAttachment = _useState7[1];
 
-  var _useState8 = React.useState(),
-      activeTab = _useState8[0],
-      setActiveTab = _useState8[1];
+  var _useState8 = React.useState(false),
+      isScheduled = _useState8[0],
+      setIsScheduled = _useState8[1];
 
-  var _useState9 = React.useState([]),
-      tabs = _useState9[0],
-      setTabs = _useState9[1];
+  var _useState9 = React.useState(),
+      activeTab = _useState9[0],
+      setActiveTab = _useState9[1];
+
+  var _useState10 = React.useState([]),
+      tabs = _useState10[0],
+      setTabs = _useState10[1];
 
   var prevFrame = usePrevious(frame);
 
@@ -4538,6 +4542,7 @@ var Details$1 = function Details(_ref) {
     pollStack({
       id: id
     }).then(function (data) {
+      setIsScheduled(data.status === 'SCHEDULED');
       if (['SCHEDULED', 'RUNNING'].indexOf(data.status) >= 0) setTimeout(function () {
         checkFinished({
           id: data.id
@@ -4642,9 +4647,11 @@ var Details$1 = function Details(_ref) {
     className: css$E.attachment,
     stack: user + "/" + stack,
     customData: appAttachment
-  }), calculating && /*#__PURE__*/React__default.createElement(Progress, {
+  }), calculating && !isScheduled && /*#__PURE__*/React__default.createElement(Progress, {
     className: css$E.progress
-  }), !calculating && !executing && !appAttachment && !error && /*#__PURE__*/React__default.createElement("div", {
+  }), calculating && isScheduled && /*#__PURE__*/React__default.createElement("div", {
+    className: css$E.initMessage
+  }, t('initializingTheApplication')), !calculating && !executing && !appAttachment && !error && /*#__PURE__*/React__default.createElement("div", {
     className: css$E.emptyMessage
   }, t('clickApplyToSeeTheResult')), !calculating && !executing && error && /*#__PURE__*/React__default.createElement("div", {
     className: css$E.error

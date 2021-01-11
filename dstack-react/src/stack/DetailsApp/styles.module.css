@@ -206,6 +206,18 @@
     grid-area: content;
     min-width: 0;
 }
+.initMessage {
+    grid-area: content;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 250px;
+    font-size: 12px;
+    line-height: 14px;
+    color: rgba(48, 52, 64, 0.6);
+}
 .emptyMessage {
     min-width: 0;
     grid-area: content;

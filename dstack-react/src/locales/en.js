@@ -116,6 +116,7 @@ export default {
     'installRPackage': 'Install the dstack R package:',
     'imprint': 'Imprint',
     'installPipPackage_2': 'Install dstack via pip (not needed if you run via dstack.ai jobs):',
+    'initializingTheApplication': 'Initializing the application',
     'invalidEmailAddress': 'Invalid email address',
     'itsNotAProblem': 'It’s not a problem',
     'job': 'Job',

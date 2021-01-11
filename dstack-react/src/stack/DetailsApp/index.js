@@ -79,6 +79,7 @@ const Details = ({
     const [calculating, setCalculating] = useState(false);
     const [error, setError] = useState(null);
     const [appAttachment, setAppAttachment] = useState(null);
+    const [isScheduled, setIsScheduled] = useState(false);
     const [activeTab, setActiveTab] = useState();
     const [tabs, setTabs] = useState([]);
     const prevFrame = usePrevious(frame);
@@ -325,6 +326,8 @@ const Details = ({
     const checkFinished = ({id, isUpdateData}) => {
         pollStack({id: id})
             .then(data => {
+                setIsScheduled(data.status === 'SCHEDULED');
+
                 if (['SCHEDULED', 'RUNNING'].indexOf(data.status) >= 0)
                     setTimeout(() => {
                         checkFinished({id: data.id});
@@ -463,7 +466,13 @@ const Details = ({
                         />
                     )}
 
-                    {calculating && <Progress className={css.progress} />}
+                    {calculating && !isScheduled && <Progress className={css.progress} />}
+
+                    {calculating && isScheduled && (
+                        <div className={css.initMessage}>
+                            {t('initializingTheApplication')}
+                        </div>
+                    )}
 
                     {!calculating && !executing && !appAttachment && !error && (
                         <div className={css.emptyMessage}>
