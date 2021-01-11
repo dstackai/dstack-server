@@ -9,8 +9,8 @@ export default {
     confirmEmailMessage: () => '/auth/confirm-message',
 
     // stacks
-    stacks: (user = ':user') => `/${user}`,
-    userStacks: () => '/',
+    stacks: () => '/',
+    userStacks: (user = ':user') => `/${user}`,
     categoryStacks: (category = ':category(applications|models)') => `/${category}`,
     categoryUserStacks: (user = ':user', category = ':category(applications|models)') => `/${user}/${category}`,
     stackDetails: (user = ':user', id = ':stack') => `/${user}/${id}` + (id === ':stack' ? '+' : ''),

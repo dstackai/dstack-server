@@ -40,6 +40,8 @@ const Sidebar = ({
         logOut(() => push('/'));
     };
 
+    console.log(params);
+
     useOnClickOutside(sidebarRef, () => isShow && toggleMenu());
 
     const getMenuItemClick = item => () => {
@@ -53,6 +55,7 @@ const Sidebar = ({
     const getRefreshStacks = (category: 'applications' | 'category') => () => {
         if (pathname === routes.categoryStacks(category)) {
             dispatch({type: appStoreActionTypes.START_PROGRESS});
+
             fetchStacksList(params.user, () => {
                 dispatch({type: appStoreActionTypes.COMPLETE_PROGRESS});
             });

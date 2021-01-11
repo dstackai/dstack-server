@@ -2782,15 +2782,15 @@ var routes = {
   confirmEmailMessage: function confirmEmailMessage() {
     return '/auth/confirm-message';
   },
-  stacks: function stacks(user) {
+  stacks: function stacks() {
+    return '/';
+  },
+  userStacks: function userStacks(user) {
     if (user === void 0) {
       user = ':user';
     }
 
     return "/" + user;
-  },
-  userStacks: function userStacks() {
-    return '/';
   },
   categoryStacks: function categoryStacks(category) {
     if (category === void 0) {

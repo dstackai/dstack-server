@@ -39,7 +39,6 @@ const List = ({
     const {user, category} = useParams();
     const [, dispatch] = useAppStore();
 
-
     const fetchData = () => {
         dispatch({type: appStoreActionTypes.START_PROGRESS});
 
