@@ -1,17 +1,17 @@
 variable "image_tag" {
 }
 
-variable "smpt_host" {
+variable "smtp_host" {
 }
 
-variable "smpt_port" {
+variable "smtp_port" {
 }
 
-variable "smpt_user" {
+variable "smtp_user" {
 }
 
-variable "smpt_password" {
+variable "smtp_password" {
 }
 
-variable "smpt_from" {
+variable "smtp_from" {
 }

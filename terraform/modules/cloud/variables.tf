@@ -20,23 +20,23 @@ variable "password" {
   default = "bar"
 }
 
-variable "smpt_host" {
+variable "smtp_host" {
   default = ""
 }
 
-variable "smpt_port" {
+variable "smtp_port" {
   default = ""
 }
 
-variable "smpt_user" {
+variable "smtp_user" {
   default = ""
 }
 
-variable "smpt_password" {
+variable "smtp_password" {
   default = ""
 }
 
-variable "smpt_from" {
+variable "smtp_from" {
   default = ""
 }
 

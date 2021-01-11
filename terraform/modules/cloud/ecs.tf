@@ -17,11 +17,11 @@ data "template_file" "main" {
     fargate_cpu = var.fargate_cpu
     fargate_memory = var.fargate_memory
     aws_region = data.aws_region.current.name
-    smtp_host = var.smpt_host
-    smtp_port = var.smpt_port
-    smpt_user = var.smpt_user
-    smpt_password = var.smpt_password
-    smpt_from = var.smpt_from
+    smtp_host = var.smtp_host
+    smtp_port = var.smtp_port
+    smtp_user = var.smtp_user
+    smtp_password = var.smtp_password
+    smtp_from = var.smtp_from
   }
 }
 
