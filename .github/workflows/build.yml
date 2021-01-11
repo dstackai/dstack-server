@@ -120,7 +120,7 @@ jobs:
           tf_actions_version: 0.12.20
           tf_actions_working_dir: 'terraform/applications/cloud/stgn'
           tf_actions_subcommand: "apply"
-          args: '-var="image_tag=${{needs.publish-server-snapshot.outputs.timestamp}}"'
+          args: '-var="image_tag=${{needs.publish-server-snapshot.outputs.timestamp}}" -var="smtp_host=${{ secrets.DSTACK_SMTP_HOST }}" -var="smtp_port=${{ secrets.DSTACK_SMTP_PORT }}" -var="smtp_user=${{ secrets.DSTACK_SMTP_USER }}"  -var="smtp_password=${{ secrets.DSTACK_SMTP_PASSWORD }}"  -var="smtp_from=${{ secrets.DSTACK_SMTP_FROM }}" '
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

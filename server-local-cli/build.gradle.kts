@@ -1,6 +1,7 @@
 dependencies {
     compile(Deps.spring_boot_starter_jersey)
     compile(Deps.spring_boot_starter_web)
+    compile(Deps.spring_boot_starter_mail)
     compile(Deps.slf4j_log4j12)
     compile(Deps.commons_io)
     compile(Deps.commons_cli)

@@ -20,6 +20,26 @@ variable "password" {
   default = "bar"
 }
 
+variable "smpt_host" {
+  default = ""
+}
+
+variable "smpt_port" {
+  default = ""
+}
+
+variable "smpt_user" {
+  default = ""
+}
+
+variable "smpt_password" {
+  default = ""
+}
+
+variable "smpt_from" {
+  default = ""
+}
+
 variable "fargate_cpu" {
   default = "1024"
 }

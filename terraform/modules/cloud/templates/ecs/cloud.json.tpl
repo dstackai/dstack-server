@@ -7,7 +7,12 @@
         {"name": "DSTACK_PORT", "value": "${port}"},
         {"name": "DSTACK_INTERNAL_PORT", "value": "${container_port}"},
         {"name": "DSTACK_SSL", "value": "${ssl}"},
-        {"name": "DSTACK_HOST_NAME", "value": "${host_name}"}
+        {"name": "DSTACK_HOST_NAME", "value": "${host_name}"},
+        {"name": "DSTACK_SMTP_HOST", "value": "${smpt_host}"},
+        {"name": "DSTACK_SMTP_PORT", "value": "${smpt_port}"},
+        {"name": "DSTACK_SMTP_USER", "value": "${smpt_user}"},
+        {"name": "DSTACK_SMTP_PASSWORD", "value": "${smpt_password}"},
+        {"name": "DSTACK_SMTP_FROM", "value": "${smpt_from}"}
     ],
     "image": "${image}",
     "cpu": ${fargate_cpu},

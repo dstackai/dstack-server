@@ -45,6 +45,7 @@ object Deps {
     val spring_bridge = "org.glassfish.hk2:spring-bridge:2.6.1"
     val spring_boot_starter_jersey = "org.springframework.boot:spring-boot-starter-jersey:2.2.6.RELEASE"
     val spring_boot_starter_web = "org.springframework.boot:spring-boot-starter-web:2.2.6.RELEASE"
+    val spring_boot_starter_mail = "org.springframework.boot:spring-boot-starter-mail:2.2.6.RELEASE"
 
     // SQLite
     var sqlite_jdbc = "org.xerial:sqlite-jdbc:3.31.1"
