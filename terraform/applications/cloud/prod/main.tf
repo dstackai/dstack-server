@@ -10,4 +10,9 @@ module "cloud" {
   image_tag = var.image_tag
   user = var.user
   password = var.password
+  smtp_host = var.smtp_host
+  smtp_port = var.smtp_port
+  smtp_user = var.smtp_user
+  smtp_password = var.smtp_password
+  smtp_from = var.smtp_from
 }

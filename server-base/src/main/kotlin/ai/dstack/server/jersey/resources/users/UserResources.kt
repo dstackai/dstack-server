@@ -296,7 +296,7 @@ class UserResources {
             } else if (!user.verified) {
                 userNotVerified()
             } else {
-                if (emailService !is NonAvailable) {
+                if (config.emailEnabled) {
                     emailService.sendResetEmail(user)
                 }
                 ok(OpStatus())

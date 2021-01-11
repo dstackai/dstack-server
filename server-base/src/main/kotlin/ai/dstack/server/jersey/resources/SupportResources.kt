@@ -1,9 +1,9 @@
 package ai.dstack.server.jersey.resources
 
 import ai.dstack.server.services.EmailService
-import ai.dstack.server.services.NonAvailable
 import ai.dstack.server.jersey.resources.payload.SupportSubmitPayload
 import ai.dstack.server.jersey.resources.users.isMalformedEmail
+import ai.dstack.server.services.AppConfig
 import mu.KLogging
 import javax.inject.Inject
 import javax.ws.rs.Consumes
@@ -17,6 +17,9 @@ import javax.ws.rs.core.Response
 
 @Path("/support")
 class SupportResources {
+    @Context
+    private lateinit var config: AppConfig
+
     @Context
     private lateinit var resourceContext: ResourceContext
 
@@ -34,7 +37,7 @@ class SupportResources {
         return if (payload.isMalformed) {
             malformedRequest()
         } else {
-            if (emailService !is NonAvailable) {
+            if (config.emailEnabled) {
                 emailService.sendSupportRequestEmail(
                     payload!!.name,
                     payload.email!!,

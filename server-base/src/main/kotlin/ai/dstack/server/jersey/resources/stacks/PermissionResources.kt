@@ -36,6 +36,9 @@ class PermissionResources {
     @Inject
     private lateinit var emailService: EmailService
 
+    @Inject
+    private lateinit var config: AppConfig
+
     companion object : KLogging()
 
     @POST
@@ -74,7 +77,7 @@ class PermissionResources {
                         if (p == null && user.name != payload.user) {
                             val permission = Permission(payload.path, userNameOrEmail)
                             permissionService.add(permission)
-                            if (emailService !is NonAvailable) {
+                            if (config.emailEnabled) {
                                 // TODO: Send invite emails with a 1 minute delay (via SQS)
                                 if (invitedUser != null) {
                                     emailService.sendInviteEmail(user, payload.path, invitedUser)

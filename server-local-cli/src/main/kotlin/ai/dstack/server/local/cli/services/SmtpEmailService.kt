@@ -1,18 +1,14 @@
-package ai.dstack.server.local.cli
+package ai.dstack.server.local.cli.services
 
 import ai.dstack.server.model.User
 import ai.dstack.server.services.AppConfig
 import ai.dstack.server.services.EmailService
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.JavaMailSenderImpl
 import org.springframework.mail.javamail.MimeMessageHelper
-import org.springframework.stereotype.Component
 import java.util.*
 
-@Component
-class SmtpEmailService(@Autowired val config: AppConfig) : EmailService {
-
+class SmtpEmailService(val config: AppConfig) : EmailService {
     var sender: JavaMailSender = getJavaMailSender()
 
     private fun getJavaMailSender(): JavaMailSender {
@@ -34,50 +30,50 @@ class SmtpEmailService(@Autowired val config: AppConfig) : EmailService {
 
     override fun sendVerificationEmail(user: User) {
         sendMessage(user.email!!,
-            EmailService.verificationEmailSubject,
-            EmailService.verificationEmailPlainText(user, config),
-            EmailService.verificationEmailHtml(user, config)
+                EmailService.verificationEmailSubject,
+                EmailService.verificationEmailPlainText(user, config),
+                EmailService.verificationEmailHtml(user, config)
         )
     }
 
     override fun sendResetEmail(user: User) {
         sendMessage(user.email!!,
-            EmailService.resetEmailSubject,
-            EmailService.resetEmailPlainText(user, config),
-            EmailService.resetEmailHtml(user, config)
+                EmailService.resetEmailSubject,
+                EmailService.resetEmailPlainText(user, config),
+                EmailService.resetEmailHtml(user, config)
         )
     }
 
     override fun sendTriggerEmail(user: User) {
         sendMessage(user.email!!,
-            EmailService.triggerEmailSubject,
-            EmailService.triggerEmailPlainText(user, config),
-            EmailService.triggerEmailHtml(user, config)
+                EmailService.triggerEmailSubject,
+                EmailService.triggerEmailPlainText(user, config),
+                EmailService.triggerEmailHtml(user, config)
         )
     }
 
     override fun sendInviteEmail(fromUser: User, path: String, toEmail: String, verificationCode: String) {
         sendMessage(toEmail,
-            EmailService.stackInviteEmailSubject(path),
-            EmailService.stackInviteEmailPlainText(fromUser, toEmail, path, verificationCode, config),
-            EmailService.stackInviteEmailHtml(fromUser, toEmail, path, verificationCode, config)
+                EmailService.stackInviteEmailSubject(path),
+                EmailService.stackInviteEmailPlainText(fromUser, toEmail, path, verificationCode, config),
+                EmailService.stackInviteEmailHtml(fromUser, toEmail, path, verificationCode, config)
         )
     }
 
     override fun sendInviteEmail(fromUser: User, path: String, toUser: User) {
         sendMessage(toUser.email!!,
-            EmailService.stackInviteEmailSubject(path),
-            EmailService.stackInviteEmailPlainText(fromUser, toUser, path, config),
-            EmailService.stackInviteEmailHtml(fromUser, toUser, path, config)
+                EmailService.stackInviteEmailSubject(path),
+                EmailService.stackInviteEmailPlainText(fromUser, toUser, path, config),
+                EmailService.stackInviteEmailHtml(fromUser, toUser, path, config)
         )
     }
 
     override fun sendSupportRequestEmail(name: String?, email: String, company: String?, message: String) {
         sendMessage(config.adminEmail!!,
-            EmailService.supportRequestEmailSubject(),
-            EmailService.supportRequestEmailPlainText(name, email, company, message),
-            EmailService.supportRequestEmailHtml(name, email, company, message),
-            cc = email
+                EmailService.supportRequestEmailSubject(),
+                EmailService.supportRequestEmailPlainText(name, email, company, message),
+                EmailService.supportRequestEmailHtml(name, email, company, message),
+                cc = email
         )
     }
 
