@@ -25,6 +25,7 @@ in_place_config = InPlaceConfig()
 in_place_config.add_or_replace_profile(Profile("default", user, token, server, verify=True))
 dstack_config.configure(in_place_config)
 
+# TODO: Handle errors and communicate it via a special app initialization log file
 with open("controller.pickle", "rb") as f:
     controller = cloudpickle.load(f)
 

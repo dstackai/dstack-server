@@ -18,7 +18,7 @@ import java.lang.IllegalStateException
 import java.util.*
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
-
+import java.io.BufferedOutputStream
 
 @Component
 class LocalExecutionService @Autowired constructor(
@@ -221,28 +221,38 @@ class LocalExecutionService @Autowired constructor(
 
     private fun extractApplicationIfMissing(attachment: Attachment) {
         val destDir = destDir(attachment)
-        val buffer = ByteArray(1024)
         if (!destDir.exists()) {
             destDir.mkdirs()
-            val zis = ZipInputStream(ByteArrayInputStream(fileService.get(attachment.filePath)))
-            var zipEntry = zis.nextEntry
-            while (zipEntry != null) {
-                val newFile = newFile(destDir, zipEntry)
-                val fos = FileOutputStream(newFile)
-                var len: Int
-                while (zis.read(buffer).also { len = it } > 0) {
-                    fos.write(buffer, 0, len)
+            val zipIn = ZipInputStream(ByteArrayInputStream(fileService.get(attachment.filePath)))
+            var entry = zipIn.nextEntry
+            while (entry != null) {
+                val destFile = File(destDir, entry.name)
+                if (!entry.isDirectory) {
+                    extractFile(zipIn, destFile)
+                } else {
+                    destFile.mkdirs()
                 }
-                fos.close()
-                zipEntry = zis.nextEntry
+                zipIn.closeEntry()
+                entry = zipIn.nextEntry
             }
-            zis.closeEntry()
-            zis.close()
+            zipIn.close()
         }
         val executorFile = executorFile(attachment)
         if (!executorFile.exists()) {
             writeExecutorFile(executorFile)
         }
+    }
+
+    private val BUFFER_SIZE = 4096
+
+    private fun extractFile(zipIn: ZipInputStream, destFile: File) {
+        val bos = BufferedOutputStream(FileOutputStream(destFile))
+        val bytesIn = ByteArray(BUFFER_SIZE)
+        var read = 0
+        while (zipIn.read(bytesIn).also { read = it } != -1) {
+            bos.write(bytesIn, 0, read)
+        }
+        bos.close()
     }
 
     private fun destDir(attachment: Attachment) =
