@@ -4101,10 +4101,10 @@ var css$D = {"progress":"_1PIt0","percent":"_m5cJQ","bar":"_1v1JQ","label":"_1xB
 var Progress = function Progress(_ref) {
   var _ref$isActive = _ref.isActive,
       isActive = _ref$isActive === void 0 ? true : _ref$isActive,
-      className = _ref.className;
+      className = _ref.className,
+      message = _ref.message;
 
-  var _useTranslation = useTranslation(),
-      t = _useTranslation.t;
+  var _useTranslation = useTranslation();
 
   var _useState = useState(0),
       progress = _useState[0],
@@ -4166,7 +4166,7 @@ var Progress = function Progress(_ref) {
     }
   })), /*#__PURE__*/React__default.createElement("div", {
     className: css$D.label
-  }, t('calculatingTheData')));
+  }, message));
 };
 
 var api$1 = apiFabric();
@@ -4217,7 +4217,7 @@ var actions$1 = (function () {
   };
 });
 
-var css$E = {"details":"_ti47L","header":"_1-me2","backButton":"_1ERQl","title":"_1ZJdY","permissions":"_3X_XO","sideHeader":"_1w9C6","share":"_2sRwt","dropdown":"_1fs1J","description":"_3dUVb","label":"_1JQAe","label-tooltip":"_15gJa","actions":"_2mMuP","size":"_2GzG9","revisions":"_1t1sR","tabs":"_1iRHh","container":"_2Ro1o","withSidebar":"_3dv-r","filters":"_283Wj","filterLoader":"_7OdCa","attachment":"_1QLqg","progress":"_HhauM","initMessage":"_3mGpo","emptyMessage":"_16j-R","error":"_2FCD_","message":"_nbe6T","logs":"_36zNW","logsButton":"_1K-0S","logsExpand":"_1YGSB","fromAgo":"_2urIx","log":"_3Aob9","readme":"_19inZ"};
+var css$E = {"details":"_ti47L","header":"_1-me2","backButton":"_1ERQl","title":"_1ZJdY","permissions":"_3X_XO","sideHeader":"_1w9C6","share":"_2sRwt","dropdown":"_1fs1J","description":"_3dUVb","label":"_1JQAe","label-tooltip":"_15gJa","actions":"_2mMuP","size":"_2GzG9","revisions":"_1t1sR","tabs":"_1iRHh","container":"_2Ro1o","withSidebar":"_3dv-r","filters":"_283Wj","filterLoader":"_7OdCa","attachment":"_1QLqg","progress":"_HhauM","emptyMessage":"_16j-R","error":"_2FCD_","message":"_nbe6T","logs":"_36zNW","logsButton":"_1K-0S","logsExpand":"_1YGSB","fromAgo":"_2urIx","log":"_3Aob9","readme":"_19inZ"};
 
 var REFRESH_INTERVAL = 1000;
 var STATUSES = Object.freeze({
@@ -4488,6 +4488,9 @@ var Details$1 = function Details(_ref) {
   }, [frame]);
   useEffect(function () {
     if (!didMountRef.current) didMountRef.current = true;
+    return function () {
+      didMountRef.current = false;
+    };
   }, []);
 
   var getCurrentAttachment = function getCurrentAttachment(selectedTab) {
@@ -4560,9 +4563,10 @@ var Details$1 = function Details(_ref) {
       id: id
     }).then(function (data) {
       setIsScheduled(data.status === STATUSES.SCHEDULED);
-      if ([STATUSES.SCHEDULED, STATUSES.RUNNING].indexOf(data.status) >= 0) setTimeout(function () {
+      if ([STATUSES.SCHEDULED, STATUSES.RUNNING].indexOf(data.status) >= 0) if (didMountRef.current) setTimeout(function () {
         checkFinished({
-          id: data.id
+          id: data.id,
+          isUpdateData: isUpdateData
         });
       }, REFRESH_INTERVAL);
 
@@ -4571,7 +4575,7 @@ var Details$1 = function Details(_ref) {
       }
 
       if ([STATUSES.FINISHED, STATUSES.READY].indexOf(data.status) >= 0) {
-        setAppAttachment(data.output);
+        if (data.output) setAppAttachment(data.output);
 
         if (isUpdateData) {
           setExecuting(false);
@@ -4665,10 +4669,12 @@ var Details$1 = function Details(_ref) {
     stack: user + "/" + stack,
     customData: appAttachment
   }), calculating && !isScheduled && /*#__PURE__*/React__default.createElement(Progress, {
-    className: css$E.progress
-  }), !appAttachment && !error && isScheduled && /*#__PURE__*/React__default.createElement("div", {
-    className: css$E.initMessage
-  }, t('initializingTheApplication')), !calculating && !executing && !appAttachment && !error && !isScheduled && /*#__PURE__*/React__default.createElement("div", {
+    className: css$E.progress,
+    message: t('calculatingTheData')
+  }), !appAttachment && !error && isScheduled && /*#__PURE__*/React__default.createElement(Progress, {
+    className: css$E.progress,
+    message: t('initializingTheApplication')
+  }), !calculating && !executing && !appAttachment && !error && !isScheduled && /*#__PURE__*/React__default.createElement("div", {
     className: css$E.emptyMessage
   }, t('clickApplyToSeeTheResult')), !calculating && !executing && error && /*#__PURE__*/React__default.createElement("div", {
     className: css$E.error

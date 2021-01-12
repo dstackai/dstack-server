@@ -266,6 +266,10 @@ const Details = ({
     useEffect(() => {
         if (!didMountRef.current)
             didMountRef.current = true;
+
+        return () => {
+            didMountRef.current = false;
+        };
     }, []);
 
     const getCurrentAttachment = selectedTab => {
@@ -344,9 +348,10 @@ const Details = ({
                 setIsScheduled(data.status === STATUSES.SCHEDULED);
 
                 if ([STATUSES.SCHEDULED, STATUSES.RUNNING].indexOf(data.status) >= 0)
-                    setTimeout(() => {
-                        checkFinished({id: data.id});
-                    }, REFRESH_INTERVAL);
+                    if (didMountRef.current)
+                        setTimeout(() => {
+                            checkFinished({id: data.id, isUpdateData});
+                        }, REFRESH_INTERVAL);
 
                 if (
                     [
@@ -359,7 +364,8 @@ const Details = ({
                 }
 
                 if ([STATUSES.FINISHED, STATUSES.READY].indexOf(data.status) >= 0) {
-                    setAppAttachment(data.output);
+                    if (data.output)
+                        setAppAttachment(data.output);
 
                     if (isUpdateData) {
                         setExecuting(false);
@@ -487,12 +493,18 @@ const Details = ({
                         />
                     )}
 
-                    {calculating && !isScheduled && <Progress className={css.progress} />}
+                    {calculating && !isScheduled && (
+                        <Progress
+                            className={css.progress}
+                            message={t('calculatingTheData')}
+                        />
+                    )}
 
                     {!appAttachment && !error && isScheduled && (
-                        <div className={css.initMessage}>
-                            {t('initializingTheApplication')}
-                        </div>
+                        <Progress
+                            className={css.progress}
+                            message={t('initializingTheApplication')}
+                        />
                     )}
 
                     {!calculating && !executing && !appAttachment && !error && !isScheduled && (

@@ -4,7 +4,7 @@ import {useTranslation} from 'react-i18next';
 import usePrevious from '../../../../hooks/usePrevious';
 import css from './styles.module.css';
 
-const Progress = ({isActive = true, className}) => {
+const Progress = ({isActive = true, className, message}) => {
     const {t} = useTranslation();
     const [progress, setProgress] = useState(0);
     const step = useRef(0.01);
@@ -67,7 +67,7 @@ const Progress = ({isActive = true, className}) => {
                 <div style={{width: `${progress}%`}} />
             </div>
 
-            <div className={css.label}>{t('calculatingTheData')}</div>
+            <div className={css.label}>{message}</div>
         </div>
     );
 };
