@@ -127,7 +127,8 @@ class StackResources {
                                                                 a.contentType,
                                                                 a.params,
                                                                 a.settings,
-                                                                a.length
+                                                                a.length,
+                                                                a.description
                                                         )
                                                     }, it.params,
                                                     it.settings
@@ -307,6 +308,7 @@ class StackResources {
                                             application = application,
                                             contentType = contentType!!,
                                             length = length,
+                                            description = a.description,
                                             index = index,
                                             params = a.params.orEmpty().mapValues { it.value }.toMap(),
                                             settings = a.settings.orEmpty().mapValues { it.value }.toMap(),

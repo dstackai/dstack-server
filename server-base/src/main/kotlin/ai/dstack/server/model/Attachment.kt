@@ -8,6 +8,7 @@ data class Attachment(
     val application: String?,
     val contentType: String,
     val length: Long,
+    val description: String?,
     val index: Int,
     val params: Map<String, Any>,
     val settings: Map<String, Any>,

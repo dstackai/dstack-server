@@ -36,13 +36,14 @@ class SQLiteAttachmentService(private val repository: AttachmentRepository) :
             AttachId(framePath, attachIndex)
 
     private fun AttachmentItem.toAttachment(): Attachment {
-        return Attachment(frame, file, application, contentType, length, index, sqliteMapper.readValue(paramsJson,
-                object : TypeReference<Map<String, Any>>() {}),
+        return Attachment(frame, file, application, contentType, length, description, index,
+                sqliteMapper.readValue(paramsJson, object : TypeReference<Map<String, Any>>() {}),
                 sqliteMapper.readValue(settingsJson, object : TypeReference<Map<String, Any>>() {}), createdDate)
     }
 
     private fun Attachment.toAttachmentItem(): AttachmentItem {
         return AttachmentItem(framePath, index, filePath, application, contentType, length,
-                sqliteMapper.writeValueAsString(params), sqliteMapper.writeValueAsString(settings), createdDate)
+                description, sqliteMapper.writeValueAsString(params), sqliteMapper.writeValueAsString(settings),
+                createdDate)
     }
 }

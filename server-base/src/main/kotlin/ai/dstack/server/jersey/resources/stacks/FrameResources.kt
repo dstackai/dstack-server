@@ -63,7 +63,8 @@ class FrameResources {
                                                         a.contentType,
                                                         a.params,
                                                         a.settings,
-                                                        a.length
+                                                        a.length,
+                                                        a.description
                                                 )
                                             }, frame.params, frame.settings
                                     )

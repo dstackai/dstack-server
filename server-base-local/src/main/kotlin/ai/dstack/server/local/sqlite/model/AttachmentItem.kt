@@ -54,6 +54,8 @@ class AttachmentItem(
     @Column
     var length: Long,
 
+    var description: String?,
+
     @Column(name = "params")
     var paramsJson: String,
 

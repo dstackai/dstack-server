@@ -10,8 +10,10 @@ data class PushPayload(
         val stack: String?,
         val id: String?,
         val timestamp: Long?,
+        @Deprecated("Use attachments")
         @JsonProperty("application")
         val application: String?,
+        @Deprecated("Use attachments")
         @JsonProperty("content_type")
         val contentType: String?,
         val index: Int?,
@@ -30,6 +32,7 @@ data class PushPayloadAttachment(
         val contentType: String?,
         val data: String?,
         val length: Long?,
+        val description: String?,
         val params: Map<String, Any>?,
         val settings: Map<String, Any>?
 )

@@ -89,6 +89,7 @@ class AttachResources {
                                         attachment.params,
                                         attachment.settings,
                                         attachment.length,
+                                        attachment.description,
                                         data,
                                         downloadUrl?.toString(),
                                         preview,

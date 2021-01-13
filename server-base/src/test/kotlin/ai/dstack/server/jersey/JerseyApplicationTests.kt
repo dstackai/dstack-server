@@ -219,6 +219,7 @@ class JerseyApplicationTests : JerseyTest() {
                 application = null,
                 data = Base64.getEncoder().encodeToString(testData).toString(),
                 length = testData.count().toLong(),
+                description = "Test description",
                 params = mapOf(
                         "test_attach_param" to "test_attach_param_value"
                 ),
@@ -262,6 +263,7 @@ class JerseyApplicationTests : JerseyTest() {
                                 pushPayloadAttach.params!!,
                                 pushPayloadAttach.settings!!,
                                 pushPayloadAttach.length!!,
+                                pushPayloadAttach.description!!,
                                 data = null, downloadUrl = null, preview = null,
                                 index = null)),
                         pushPayload.params!!,
