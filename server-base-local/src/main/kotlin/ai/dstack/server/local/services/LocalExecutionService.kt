@@ -135,6 +135,7 @@ class LocalExecutionService @Autowired constructor(
     }
 
     private fun startVenvPythonProcess(user: User, attachment: Attachment, venvPythonExecutable: String): Process {
+        // TODO: Capture logs from installation and save them per application
         val executorFile = executorFile(attachment)
         val attachmentSettings = attachment.settings["function"] as Map<*, *>
         val functionType = attachmentSettings["type"] as String
