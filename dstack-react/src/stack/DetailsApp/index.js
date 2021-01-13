@@ -242,7 +242,7 @@ const Details = ({
                             checkFinished({id: data.id, isUpdateData: true});
                         }
                     })
-                    .catch(error => {
+                    .catch(() => {
                         setExecuting(false);
                         setError({status: null});
                     });
