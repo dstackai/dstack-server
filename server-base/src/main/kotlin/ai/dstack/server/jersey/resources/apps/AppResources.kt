@@ -4,11 +4,9 @@ import ai.dstack.server.jersey.resources.*
 import ai.dstack.server.jersey.resources.attachmentNotFound
 import ai.dstack.server.jersey.resources.frameNotFound
 import ai.dstack.server.jersey.resources.malformedRequest
-import ai.dstack.server.jersey.resources.ok
 import ai.dstack.server.jersey.resources.payload.ExecutePayload
 import ai.dstack.server.jersey.resources.stackNotFound
 import ai.dstack.server.jersey.resources.stacks.parseStackPath
-import ai.dstack.server.jersey.resources.status.toStatus
 import ai.dstack.server.model.AccessLevel
 import ai.dstack.server.services.*
 import mu.KLogging
@@ -21,9 +19,6 @@ import javax.ws.rs.core.StreamingOutput
 
 @Path("/apps")
 class AppResources {
-    @Inject
-    private lateinit var config: AppConfig
-
     @Inject
     private lateinit var userService: UserService
 
@@ -73,24 +68,19 @@ class AppResources {
                             val attachment = attachmentService.get(frame.path, payload.attachment!!)
                             if (attachment != null) {
                                 if (attachment.application == "application/python") {
-                                    // TODO: Cache session, stackUser, stack, frame, attachment
                                     val stackUser = userService.get(stack.userName)!!
-                                    val pair = executionService.execute(stack.path, stackUser, frame, attachment,
+                                    val status = executionService.execute(stack, stackUser, frame, attachment,
                                             payload.views, payload.apply == true)
-                                    if (pair.first != null)
-                                        ok(pair.first!!.toStatus())
-                                    else {
-                                        val streamingOutput = StreamingOutput { output ->
-                                            try {
-                                                pair.second!!.inputStream().copyTo(output)
-                                            } catch (e: Exception) {
-                                                throw WebApplicationException(e)
-                                            }
+                                    val streamingOutput = StreamingOutput { output ->
+                                        try {
+                                            status.inputStream.copyTo(output)
+                                        } catch (e: Exception) {
+                                            throw WebApplicationException(e)
                                         }
-                                        Response.ok(streamingOutput)
-                                                .header("content-type", "application/json;charset=UTF-8")
-                                                .header("content-length", pair.second!!.length()).build()
                                     }
+                                    Response.ok(streamingOutput)
+                                            .header("content-type", "application/json;charset=UTF-8")
+                                            .header("content-length", status.length).build()
                                 } else {
                                     unsupportedApplication(attachment.application)
                                 }
@@ -130,9 +120,9 @@ class AppResources {
         return if (id.isNullOrBlank()) {
             malformedRequest()
         } else {
-            val (stackPath, executionFile) = executionService.poll(id)
-            if (stackPath != null && executionFile != null) {
-                val (u, s) = stackPath.parseStackPath()
+            val status = executionService.poll(id)
+            if (status != null) {
+                val (u, s) = status.stackPath.parseStackPath()
                 val stack = stackService.get(u, s)
                 if (stack != null) {
                     val currentUser = headers.getCurrentUser()
@@ -147,14 +137,14 @@ class AppResources {
                         if (permitted) {
                             val streamingOutput = StreamingOutput { output ->
                                 try {
-                                    executionFile.inputStream().copyTo(output)
+                                    status.inputStream.copyTo(output)
                                 } catch (e: Exception) {
                                     throw WebApplicationException(e)
                                 }
                             }
                             Response.ok(streamingOutput)
                                     .header("content-type", "application/json;charset=UTF-8")
-                                    .header("content-length", executionFile.length()).build()
+                                    .header("content-length", status.length).build()
                         } else {
                             badCredentials()
                         }
@@ -171,6 +161,5 @@ class AppResources {
 
 private val ExecutePayload.isMalformed: Boolean
     get() {
-        return this.user == null || this.stack == null || this.frame == null
-                || this.attachment == null
+        return this.user == null || this.stack == null || this.frame == null || this.attachment == null
     }
