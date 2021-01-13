@@ -1964,7 +1964,7 @@ var base64ToJSON = function base64ToJSON(base64) {
   return parsedJSON;
 };
 
-var css$q = {"view":"_1T-AH","text":"_6S5f-","message":"_1p-0w","description":"_VNtCL","code":"_26Ytj","footer":"_O3Gct"};
+var css$q = {"view":"_1T-AH","text":"_6S5f-","message":"_1p-0w","description":"_VNtCL","code":"_26Ytj","markdown":"_2S2_H","footer":"_O3Gct"};
 
 var base64ImagePrefixes = {
   'image/svg+xml': 'data:image/svg+xml;charset=utf-8;',
@@ -2097,6 +2097,14 @@ var View = function View(_ref) {
     }));
   };
 
+  var renderMarkdown = function renderMarkdown() {
+    var text = unicodeBase64Decode(attachment.data);
+    if (!text) return null;
+    return /*#__PURE__*/React__default.createElement("div", {
+      className: css$q.markdown
+    }, /*#__PURE__*/React__default.createElement(ReactMarkdown, null, text));
+  };
+
   var renderMl = function renderMl() {
     var pullPythonCode = function pullPythonCode(data) {
       var a = ["'/" + stack + "'"];
@@ -2157,6 +2165,9 @@ var View = function View(_ref) {
 
       case attachment['application'] === 'plotly':
         return renderPlotly();
+
+      case attachment['application'] === 'markdown':
+        return renderMarkdown();
 
       case attachment['application'] === 'bokeh':
         return renderBokeh();

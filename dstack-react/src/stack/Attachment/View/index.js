@@ -2,6 +2,7 @@ import React, {memo, useEffect, useState, useRef} from 'react';
 import cx from 'classnames';
 import {useTranslation} from 'react-i18next';
 import Plot from 'react-plotly.js';
+import ReactMarkdown from 'react-markdown';
 import {isEqual, get, isString} from 'lodash-es';
 import {unicodeBase64Decode} from '../../../utils';
 import Table from './Table';
@@ -151,6 +152,22 @@ const View = ({frameId, attachment, fullAttachment, isList, className, requestSt
         );
     };
 
+    const renderMarkdown = () => {
+        const text = unicodeBase64Decode(attachment.data);
+
+
+        if (!text)
+            return null;
+
+        return (
+            <div className={css.markdown}>
+                <ReactMarkdown>
+                    {text}
+                </ReactMarkdown>
+            </div>
+        );
+    };
+
     const renderMl = () => {
         const pullPythonCode = data => {
             let a = [`\'/${stack}\'`];
@@ -217,6 +234,9 @@ model = ds.pull(${a.join(', ')})`;
 
             case (attachment['application'] === 'plotly'):
                 return renderPlotly();
+
+            case (attachment['application'] === 'markdown'):
+                return renderMarkdown();
 
             case (attachment['application'] === 'bokeh'):
                 return renderBokeh();

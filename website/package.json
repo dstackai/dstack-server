@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@babel/core": "7.7.4",
-    "@dstackai/dstack-react": "1.2.63",
+    "@dstackai/dstack-react": "1.2.64",
     "@mdi/font": "^4.8.95",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
