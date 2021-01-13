@@ -363,6 +363,7 @@ var typeMap = {
   'ApplyView': 'apply'
 };
 var parseStackViews = (function (views) {
+  if (!views || !Array.isArray(views)) return {};
   var fields = {};
   views.forEach(function (view, index) {
     fields[index] = {

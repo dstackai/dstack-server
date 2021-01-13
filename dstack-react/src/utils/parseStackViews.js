@@ -8,6 +8,9 @@ const typeMap = {
 };
 
 export default views => {
+    if (!views || !Array.isArray(views))
+        return {};
+
     const fields = {};
 
     views.forEach((view, index) => {

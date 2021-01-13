@@ -133,14 +133,12 @@ const Details = ({
     };
 
     const updateExecuteData = data => {
+        const fields = parseStackViews(data?.views);
+        const form = getFormFromViews(data?.views);
 
-        if (data.views) {
-            const fields = parseStackViews(data.views);
-            const form = getFormFromViews(data.views);
+        setFields(fields);
+        setForm(form);
 
-            setFields(fields);
-            setForm(form);
-        }
         setExecuteData({
             lastUpdate: Date.now(),
             ...data,
@@ -244,7 +242,7 @@ const Details = ({
                             checkFinished({id: data.id, isUpdateData: true});
                         }
                     })
-                    .catch(() => {
+                    .catch(error => {
                         setExecuting(false);
                         setError({status: null});
                     });
