@@ -3704,6 +3704,9 @@ button._2lKoS {
     flex-grow: 1;
     min-width: 0;
     flex-basis: 0;
+    max-width: -webkit-fit-content;
+    max-width: -moz-fit-content;
+    max-width: fit-content;
     font-size: 14px;
     line-height: 20px;
     color: rgb(48, 52, 64);
@@ -3711,6 +3714,9 @@ button._2lKoS {
     white-space: nowrap;
     text-overflow: ellipsis;
     transition: color .2s;
+}
+._-VmHI {
+    margin-left: 6px;
 }
 ._2SUP0 {
     margin-left: 6px;
@@ -4472,6 +4478,9 @@ button._2lKoS {
 ._3ydGO {
     margin-left: 10px;
 }
+._2dIaj {
+    margin-left: 10px;
+}
 ._1FUDu {
     display: flex;
     align-items: center;
@@ -4778,6 +4787,9 @@ button._2lKoS {
         opacity: .3;
     }
 ._3X_XO {
+    margin-left: 10px;
+}
+._3VFHc {
     margin-left: 10px;
 }
 ._1w9C6 {

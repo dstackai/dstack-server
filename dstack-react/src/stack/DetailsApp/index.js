@@ -25,6 +25,8 @@ import useForm from '../../hooks/useForm';
 import {parseStackTabs, parseStackViews} from '../../utils';
 import actions from '../actions';
 import css from './styles.module.css';
+import {useAppStore} from "../../AppStore";
+import Avatar from "../../Avatar";
 
 const REFRESH_INTERVAL = 1000;
 
@@ -42,7 +44,6 @@ type Props = {
     attachmentIndex: number,
     frame: ?{},
     data: {},
-    currentUser?: string,
     backUrl: string,
     user: string,
     stack: string,
@@ -70,7 +71,6 @@ const Details = ({
     data,
     frame,
     loading,
-    currentUser,
     backUrl,
     user,
     stack,
@@ -92,6 +92,9 @@ const Details = ({
     const [tabs, setTabs] = useState([]);
     const prevFrame = usePrevious(frame);
     const {executeStack, pollStack} = actions();
+
+    const [{currentUser}] = useAppStore();
+    const currentUserName = currentUser.data?.user;
 
     const getFormFromViews = views => {
         if (!views || !Array.isArray(views))
@@ -426,8 +429,24 @@ const Details = ({
                     />
                 )}
 
+                {data['access_level'] === 'private' && (
+                    <PermissionUsers
+                        className={css.permissions}
+                        permissions={data.permissions}
+                    />
+                )}
+
+                {data.user !== currentUserName && (
+                    <Avatar
+                        withBorder
+                        size="small"
+                        className={css.owner}
+                        name={data.user}
+                    />
+                )}
+
                 <div className={css.sideHeader}>
-                    {data && data.user === currentUser && (
+                    {data && data.user === currentUserName && (
                         <Share
                             instancePath={`${user}/${stack}`}
                             stackName={stack}

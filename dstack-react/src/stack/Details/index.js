@@ -20,6 +20,8 @@ import Readme from './components/Readme';
 import useForm from '../../hooks/useForm';
 import {parseStackParams, parseStackTabs} from '../../utils';
 import css from './styles.module.css';
+import {useAppStore} from "../../AppStore";
+import Avatar from "../../Avatar";
 
 type Props = {
     loading: boolean,
@@ -27,7 +29,6 @@ type Props = {
     attachmentIndex: number,
     frame: ?{},
     data: {},
-    currentUser?: string,
     downloadAttachment: Function,
     backUrl: string,
     user: string,
@@ -53,7 +54,6 @@ const Details = ({
     data,
     frame,
     loading,
-    currentUser,
     backUrl,
     user,
     stack,
@@ -67,6 +67,9 @@ const Details = ({
     const [fields, setFields] = useState({});
     const [tabs, setTabs] = useState([]);
     const prevFrame = usePrevious(frame);
+
+    const [{currentUser}] = useAppStore();
+    const currentUserName = currentUser.data?.user;
 
     useEffect(() => {
         if ((!isEqual(prevFrame, frame) || !didMountRef.current) && frame)
@@ -209,8 +212,17 @@ const Details = ({
                     />
                 )}
 
+                {data.user !== currentUserName && (
+                    <Avatar
+                        withBorder
+                        size="small"
+                        className={css.owner}
+                        name={data.user}
+                    />
+                )}
+
                 <div className={css.sideHeader}>
-                    {data && data.user === currentUser && (
+                    {data && data.user === currentUserName && (
                         <Share
                             stackName={stack}
                             instancePath={`${user}/${stack}`}

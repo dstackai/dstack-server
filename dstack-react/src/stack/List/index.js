@@ -9,6 +9,7 @@ import Modal from '../../Modal';
 import SearchField from '../../SearchField';
 import StackListItem from '../ListItem';
 import getStackCategory from '../../utils/getStackCategory';
+import {useAppStore} from '../../AppStore';
 import routes from '../../routes';
 import css from './styles.module.css';
 
@@ -20,7 +21,6 @@ type Props = {
     deleteStack: Function,
     data: Array<Stack>,
     loading: boolean,
-    currentUser?: string,
     category: string,
 };
 
@@ -28,7 +28,6 @@ const List = ({
     data = [],
     loading,
     deleteStack,
-    currentUser,
     user,
     category,
 }: Props) => {
@@ -38,6 +37,9 @@ const List = ({
         applications: 'app',
         models: 'mlModel',
     };
+
+    const [{currentUser}] = useAppStore();
+    const currentUserName = currentUser.data?.user;
 
     const [deletingStack, setDeletingStack] = useState(null);
     const [isShowWelcomeModal, setIsShowWelcomeModal] = useState(false);
@@ -132,7 +134,7 @@ const List = ({
 
             {!loading && !data.length && (
                 <div className={css.message}>
-                    {user === currentUser
+                    {user === currentUserName
                         ? t('youHaveNoStacksYet')
                         : t('theUserHasNoStacksYetByName', {name: user})
                     }
@@ -147,7 +149,7 @@ const List = ({
                         key={index}
                         data={item}
                         to={routes.stackDetails(item.user, item.name)}
-                        deleteAction={currentUser === item.user && showDeleteConfirmation}
+                        deleteAction={currentUserName === item.user && showDeleteConfirmation}
                     />)}
                 </div>
             )}
@@ -187,7 +189,7 @@ const List = ({
                 </div>
             </Modal>
 
-            {currentUser === user && (
+            {currentUserName === user && (
                 <Modal
                     isShow={isShowWelcomeModal}
                     onClose={hideWelcomeModal}

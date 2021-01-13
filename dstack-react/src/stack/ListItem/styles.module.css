@@ -58,6 +58,7 @@
     flex-grow: 1;
     min-width: 0;
     flex-basis: 0;
+    max-width: fit-content;
     font-size: 14px;
     line-height: var(--top-line-height);
     color: var(--color-dark-gray);
@@ -65,6 +66,9 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     transition: color .2s;
+}
+.owner {
+    margin-left: 6px;
 }
 .permissions {
     margin-left: 6px;

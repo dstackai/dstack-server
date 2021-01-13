@@ -2695,9 +2695,11 @@ function SvgApp(props) {
   }, props), _ref$5, _ref2$2);
 }
 
-var css$t = {"item":"_fLtf5","name":"_147V3","delete":"_2PoaL","icon":"_3yxhI","top":"_3aJqR","permissions":"_2SUP0","date":"_2c9og"};
+var css$t = {"item":"_fLtf5","name":"_147V3","delete":"_2PoaL","icon":"_3yxhI","top":"_3aJqR","owner":"_-VmHI","permissions":"_2SUP0","date":"_2c9og"};
 
 var Item = function Item(_ref) {
+  var _currentUser$data;
+
   var className = _ref.className,
       _ref$Component = _ref.Component,
       Component = _ref$Component === void 0 ? 'div' : _ref$Component,
@@ -2709,6 +2711,11 @@ var Item = function Item(_ref) {
       t = _useTranslation.t;
 
   var ref = React.useRef(null);
+
+  var _useAppStore = useAppStore(),
+      currentUser = _useAppStore[0].currentUser;
+
+  var currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
 
   var onClickDelete = function onClickDelete(event) {
     event.stopPropagation();
@@ -2755,13 +2762,18 @@ var Item = function Item(_ref) {
     className: css$t.name,
     title: data.name
   }, data.name), /*#__PURE__*/React__default.createElement("span", {
-    className: "mdi mdi-lock" + (data["private"] ? '' : '-open')
-  }), data["private"] && /*#__PURE__*/React__default.createElement(PermissionUsers, {
+    className: "mdi mdi-lock" + (data['access_level'] === 'private' ? '' : '-open')
+  }), data['access_level'] === 'private' && /*#__PURE__*/React__default.createElement(PermissionUsers, {
     variant: "list",
     owner: data.user,
     className: css$t.permissions,
     permissions: data.permissions,
     maxLength: 3
+  }), data.user !== currentUserName && /*#__PURE__*/React__default.createElement(Avatar, {
+    withBorder: true,
+    size: "list",
+    className: css$t.owner,
+    name: data.user
   })), data.head && /*#__PURE__*/React__default.createElement("div", {
     className: css$t.date
   }, t('updated'), " ", moment(data.head.timestamp).format('L')), deleteAction && /*#__PURE__*/React__default.createElement("span", {
@@ -2886,11 +2898,12 @@ var routes = {
 var css$u = {"list":"_3CcWo","header":"_3MHvB","title":"_2HbVV","headerSide":"_TN8Ts","search":"_3VlZv","uploadButton":"_35PkI","controls":"_ee5au","viewSwitcher":"_1boU7","sorting":"_1S_L9","sortingButton":"_1c0ym","message":"_3XJKG","text":"_1_wO5","tabs":"_DBGuk","itemList":"_1fksy","item":"_1RHsG","loadingItem":"_1uHPv","stacks-pulse":"_1qO_N","modal":"_1BJIQ","description":"_1U-iN","buttons":"_19NkE","button":"_3jLaw"};
 
 var List = function List(_ref) {
+  var _currentUser$data;
+
   var _ref$data = _ref.data,
       data = _ref$data === void 0 ? [] : _ref$data,
       loading = _ref.loading,
       deleteStack = _ref.deleteStack,
-      currentUser = _ref.currentUser,
       user = _ref.user,
       category = _ref.category;
 
@@ -2901,6 +2914,11 @@ var List = function List(_ref) {
     applications: 'app',
     models: 'mlModel'
   };
+
+  var _useAppStore = useAppStore(),
+      currentUser = _useAppStore[0].currentUser;
+
+  var currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
 
   var _useState = React.useState(null),
       deletingStack = _useState[0],
@@ -3000,7 +3018,7 @@ var List = function List(_ref) {
     });
   })), !loading && !data.length && /*#__PURE__*/React__default.createElement("div", {
     className: css$u.message
-  }, user === currentUser ? t('youHaveNoStacksYet') : t('theUserHasNoStacksYetByName', {
+  }, user === currentUserName ? t('youHaveNoStacksYet') : t('theUserHasNoStacksYetByName', {
     name: user
   })), Boolean(data.length && items.length) && /*#__PURE__*/React__default.createElement("div", {
     className: css$u.itemList
@@ -3011,7 +3029,7 @@ var List = function List(_ref) {
       key: index,
       data: item,
       to: routes.stackDetails(item.user, item.name),
-      deleteAction: currentUser === item.user && showDeleteConfirmation
+      deleteAction: currentUserName === item.user && showDeleteConfirmation
     });
   })), Boolean(data.length && !items.length) && /*#__PURE__*/React__default.createElement("div", {
     className: css$u.text
@@ -3040,7 +3058,7 @@ var List = function List(_ref) {
     variant: "contained",
     onClick: deleteItem,
     className: css$u.button
-  }, t('deleteStack')))), currentUser === user && /*#__PURE__*/React__default.createElement(Modal, {
+  }, t('deleteStack')))), currentUserName === user && /*#__PURE__*/React__default.createElement(Modal, {
     isShow: isShowWelcomeModal,
     onClose: hideWelcomeModal,
     size: "small",
@@ -3895,10 +3913,10 @@ var useForm = (function (initialFormState, fieldsValidators) {
   };
 });
 
-var css$B = {"details":"_3iAZb","header":"_2kekg","backButton":"_1cfLo","title":"_1zGvd","permissions":"_3ydGO","sideHeader":"_1FUDu","share":"_2kaMN","dropdown":"_3axDI","description":"_Y6gJz","label":"_2FemD","label-tooltip":"_2Oe5S","actions":"_sZkKa","size":"_Ja107","revisions":"_bLqAO","tabs":"_3mpfk","container":"_3_I7R","withFilters":"_3exQh","filters":"_1-hdZ","attachment":"_3IGZo","readme":"_mADeQ"};
+var css$B = {"details":"_3iAZb","header":"_2kekg","backButton":"_1cfLo","title":"_1zGvd","permissions":"_3ydGO","owner":"_2dIaj","sideHeader":"_1FUDu","share":"_2kaMN","dropdown":"_3axDI","description":"_Y6gJz","label":"_2FemD","label-tooltip":"_2Oe5S","actions":"_sZkKa","size":"_Ja107","revisions":"_bLqAO","tabs":"_3mpfk","container":"_3_I7R","withFilters":"_3exQh","filters":"_1-hdZ","attachment":"_3IGZo","readme":"_mADeQ"};
 
 var Details = function Details(_ref) {
-  var _data$head, _cx;
+  var _currentUser$data, _data$head, _cx;
 
   var attachmentIndex = _ref.attachmentIndex,
       onChangeAttachmentIndex = _ref.onChangeAttachmentIndex,
@@ -3906,7 +3924,6 @@ var Details = function Details(_ref) {
       data = _ref.data,
       frame = _ref.frame,
       loading = _ref.loading,
-      currentUser = _ref.currentUser,
       backUrl = _ref.backUrl,
       user = _ref.user,
       stack = _ref.stack,
@@ -3935,6 +3952,11 @@ var Details = function Details(_ref) {
       setTabs = _useState3[1];
 
   var prevFrame = usePrevious(frame);
+
+  var _useAppStore = useAppStore(),
+      currentUser = _useAppStore[0].currentUser;
+
+  var currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
   React.useEffect(function () {
     if ((!lodashEs.isEqual(prevFrame, frame) || !didMountRef.current) && frame) parseTabs();
   }, [frame]);
@@ -4057,9 +4079,14 @@ var Details = function Details(_ref) {
   })), data['access_level'] === 'private' && /*#__PURE__*/React__default.createElement(PermissionUsers, {
     className: css$B.permissions,
     permissions: data.permissions
+  }), data.user !== currentUserName && /*#__PURE__*/React__default.createElement(Avatar, {
+    withBorder: true,
+    size: "small",
+    className: css$B.owner,
+    name: data.user
   }), /*#__PURE__*/React__default.createElement("div", {
     className: css$B.sideHeader
-  }, data && data.user === currentUser && /*#__PURE__*/React__default.createElement(Share, {
+  }, data && data.user === currentUserName && /*#__PURE__*/React__default.createElement(Share, {
     stackName: stack,
     instancePath: user + "/" + stack,
     onChangeAccessLevel: changeAccessLevel,
@@ -4232,7 +4259,7 @@ var actions$1 = (function () {
   };
 });
 
-var css$E = {"details":"_ti47L","header":"_1-me2","backButton":"_1ERQl","title":"_1ZJdY","permissions":"_3X_XO","sideHeader":"_1w9C6","share":"_2sRwt","dropdown":"_1fs1J","description":"_3dUVb","label":"_1JQAe","label-tooltip":"_15gJa","actions":"_2mMuP","size":"_2GzG9","revisions":"_1t1sR","tabs":"_1iRHh","container":"_2Ro1o","withSidebar":"_3dv-r","filters":"_283Wj","filterLoader":"_7OdCa","attachment":"_1QLqg","progress":"_HhauM","emptyMessage":"_16j-R","error":"_2FCD_","message":"_nbe6T","logs":"_36zNW","logsButton":"_1K-0S","logsExpand":"_1YGSB","fromAgo":"_2urIx","log":"_3Aob9","readme":"_19inZ"};
+var css$E = {"details":"_ti47L","header":"_1-me2","backButton":"_1ERQl","title":"_1ZJdY","permissions":"_3X_XO","owner":"_3VFHc","sideHeader":"_1w9C6","share":"_2sRwt","dropdown":"_1fs1J","description":"_3dUVb","label":"_1JQAe","label-tooltip":"_15gJa","actions":"_2mMuP","size":"_2GzG9","revisions":"_1t1sR","tabs":"_1iRHh","container":"_2Ro1o","withSidebar":"_3dv-r","filters":"_283Wj","filterLoader":"_7OdCa","attachment":"_1QLqg","progress":"_HhauM","emptyMessage":"_16j-R","error":"_2FCD_","message":"_nbe6T","logs":"_36zNW","logsButton":"_1K-0S","logsExpand":"_1YGSB","fromAgo":"_2urIx","log":"_3Aob9","readme":"_19inZ"};
 
 var REFRESH_INTERVAL = 1000;
 var STATUSES = Object.freeze({
@@ -4244,7 +4271,7 @@ var STATUSES = Object.freeze({
 });
 
 var Details$1 = function Details(_ref) {
-  var _data$head, _cx;
+  var _currentUser$data, _data$head, _cx;
 
   var executionId = _ref.executionId,
       onChangeExecutionId = _ref.onChangeExecutionId,
@@ -4254,7 +4281,6 @@ var Details$1 = function Details(_ref) {
       data = _ref.data,
       frame = _ref.frame,
       loading = _ref.loading,
-      currentUser = _ref.currentUser,
       backUrl = _ref.backUrl,
       user = _ref.user,
       stack = _ref.stack,
@@ -4316,6 +4342,11 @@ var Details$1 = function Details(_ref) {
   var _actions = actions$1(),
       executeStack = _actions.executeStack,
       pollStack = _actions.pollStack;
+
+  var _useAppStore = useAppStore(),
+      currentUser = _useAppStore[0].currentUser;
+
+  var currentUserName = (_currentUser$data = currentUser.data) === null || _currentUser$data === void 0 ? void 0 : _currentUser$data.user;
 
   var getFormFromViews = function getFormFromViews(views) {
     if (!views || !Array.isArray(views)) return {};
@@ -4637,9 +4668,17 @@ var Details$1 = function Details(_ref) {
   })), data['access_level'] === 'private' && /*#__PURE__*/React__default.createElement(PermissionUsers, {
     className: css$E.permissions,
     permissions: data.permissions
+  }), data['access_level'] === 'private' && /*#__PURE__*/React__default.createElement(PermissionUsers, {
+    className: css$E.permissions,
+    permissions: data.permissions
+  }), data.user !== currentUserName && /*#__PURE__*/React__default.createElement(Avatar, {
+    withBorder: true,
+    size: "small",
+    className: css$E.owner,
+    name: data.user
   }), /*#__PURE__*/React__default.createElement("div", {
     className: css$E.sideHeader
-  }, data && data.user === currentUser && /*#__PURE__*/React__default.createElement(Share, {
+  }, data && data.user === currentUserName && /*#__PURE__*/React__default.createElement(Share, {
     instancePath: user + "/" + stack,
     stackName: stack,
     onChangeAccessLevel: changeAccessLevel,

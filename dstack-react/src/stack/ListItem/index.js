@@ -4,6 +4,8 @@ import moment from 'moment';
 import cn from 'classnames';
 import getStackCategory from '../../utils/getStackCategory';
 import PermissionUsers from '../../PermissionUsers';
+import {useAppStore} from '../../AppStore';
+import Avatar from '../../Avatar';
 import {ReactComponent as ChartIcon} from './assets/chart.svg';
 import {ReactComponent as MLIcon} from './assets/ml.svg';
 import {ReactComponent as TableIcon} from './assets/table.svg';
@@ -32,6 +34,8 @@ const Item = ({
 }: Props) => {
     const {t} = useTranslation();
     const ref = useRef(null);
+    const [{currentUser}] = useAppStore();
+    const currentUserName = currentUser.data?.user;
 
     const onClickDelete = event => {
         event.stopPropagation();
@@ -78,15 +82,24 @@ const Item = ({
 
             <div className={css.top}>
                 <div className={css.name} title={data.name}>{data.name}</div>
-                <span className={`mdi mdi-lock${data.private ? '' : '-open'}`} />
+                <span className={`mdi mdi-lock${data['access_level'] === 'private' ? '' : '-open'}`} />
 
-                {data.private && (
+                {data['access_level'] === 'private' && (
                     <PermissionUsers
                         variant="list"
                         owner={data.user}
                         className={css.permissions}
                         permissions={data.permissions}
                         maxLength={3}
+                    />
+                )}
+
+                {data.user !== currentUserName && (
+                    <Avatar
+                        withBorder
+                        size="list"
+                        className={css.owner}
+                        name={data.user}
                     />
                 )}
             </div>

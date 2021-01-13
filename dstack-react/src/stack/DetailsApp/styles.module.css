@@ -44,6 +44,9 @@
 .permissions {
     margin-left: 10px;
 }
+.owner {
+    margin-left: 10px;
+}
 .sideHeader {
     display: flex;
     align-items: center;
