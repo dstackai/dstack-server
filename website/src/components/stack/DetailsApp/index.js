@@ -190,9 +190,14 @@ const Details = ({
                 setError(null);
                 updateExecuteData(data);
 
-                if (apply) {
+                if (apply && data.status !== STATUSES.SCHEDULED) {
                     checkFinished({id: data.id, isUpdateData: apply});
                     setActiveExecutionId(data.id);
+                }
+
+                if (data.status === STATUSES.SCHEDULED) {
+                    setIsScheduled(true);
+                    checkFinished({id: data.id, isUpdateData: true});
                 }
             })
             .catch(() => {
