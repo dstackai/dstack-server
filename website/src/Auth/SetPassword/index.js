@@ -2,8 +2,11 @@ import React, {useState} from 'react';
 import {connect} from 'react-redux';
 import {useTranslation} from 'react-i18next';
 import Auth from 'Auth';
-import {TextField, Button, appStoreActionTypes, useAppStore} from '@dstackai/dstack-react';
-import {parseSearch} from '@dstackai/dstack-react/dist/utils';
+import TextField from 'components/TextField';
+import Button from 'components/Button';
+import {useAppStore} from 'AppStore';
+import appStoreActionTypes from 'AppStore/actionsTypes';
+import {parseSearch} from 'utils';
 import {updatePassword} from './actions';
 import {fetchUser} from 'App/actions';
 

@@ -2,13 +2,16 @@ import React, {useState} from 'react';
 import {connect} from 'react-redux';
 import {Link} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
-import {TextField, Button, appStoreActionTypes, useAppStore} from '@dstackai/dstack-react';
+import TextField from 'components/TextField';
+import Button from 'components/Button';
+import {useAppStore} from 'AppStore';
+import appStoreActionTypes from 'AppStore/actionsTypes';
 import Auth from 'Auth';
 import routes from 'routes';
 import {signUp} from './actions';
 import {fetchUser} from 'App/actions';
-import {parseSearch} from '@dstackai/dstack-react/dist/utils';
-import {isValidEmail, isValidUserName, isValidPassword} from '@dstackai/dstack-react/dist/validators';
+import {parseSearch} from 'utils';
+import {isValidEmail, isValidUserName, isValidPassword} from 'utils/validations';
 
 import css from 'Auth/form.module.css';
 

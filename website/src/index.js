@@ -2,8 +2,8 @@ import React from 'react';
 import {render} from 'react-dom';
 import {Provider} from 'react-redux';
 import {BrowserRouter} from 'react-router-dom';
-import {StackAttachmentProvider, DnDGridContextProvider, DndProvider, AppStoreProvider} from '@dstackai/dstack-react';
-import HTML5Backend from 'react-dnd-html5-backend';
+import {StateProvider as StackAttachmentProvider} from 'components/stack/Attachment/store';
+import {AppStoreProvider} from 'AppStore';
 import config from 'config';
 
 import App from 'App';
@@ -13,7 +13,6 @@ import * as serviceWorker from './serviceWorker';
 import './i18next';
 import './index.css';
 
-
 const
     rootElement = document.getElementById('root');
 
@@ -21,15 +20,11 @@ if (rootElement instanceof Element) {
     render(
         <Provider store={store}>
             <BrowserRouter>
-                <DndProvider backend={HTML5Backend}>
-                    <DnDGridContextProvider>
-                        <AppStoreProvider apiUrl={config.API_URL}>
-                            <StackAttachmentProvider apiUrl={config.API_URL}>
-                                <App/>
-                            </StackAttachmentProvider>
-                        </AppStoreProvider>
-                    </DnDGridContextProvider>
-                </DndProvider>
+                <AppStoreProvider apiUrl={config.API_URL}>
+                    <StackAttachmentProvider apiUrl={config.API_URL}>
+                        <App/>
+                    </StackAttachmentProvider>
+                </AppStoreProvider>
             </BrowserRouter>
         </Provider>,
 

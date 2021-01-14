@@ -1,4 +1,6 @@
 @import "styles/variables.css";
+@import "styles/rc-tooltip.css";
+@import "styles/plain-text.css";
 
 body {
     margin: 0;

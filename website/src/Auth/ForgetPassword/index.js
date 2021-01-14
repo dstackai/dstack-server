@@ -3,7 +3,8 @@ import {connect} from 'react-redux';
 import {Link} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
 import Auth from 'Auth';
-import {TextField, Button} from '@dstackai/dstack-react';
+import TextField from 'components/TextField';
+import Button from 'components/Button';
 import routes from 'routes';
 import {resetPassword} from './actions';
 

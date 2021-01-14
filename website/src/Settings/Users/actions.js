@@ -1,5 +1,6 @@
 // @flow
-import {useAppStore, apiFabric} from '@dstackai/dstack-react';
+import {useAppStore} from 'AppStore';
+import {apiFabric} from 'utils';
 import config from 'config';
 
 const api = apiFabric();

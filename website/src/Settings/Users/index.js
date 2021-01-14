@@ -1,9 +1,13 @@
+// @flow
 import React, {useState} from 'react';
 import cn from 'classnames';
 import {useTranslation} from 'react-i18next';
 import useSWR from 'swr';
-import {Button, Avatar, Dropdown, useAppStore} from '@dstackai/dstack-react';
-import {dataFetcher} from '@dstackai/dstack-react/dist/utils';
+import Button from 'components/Button';
+import Avatar from 'components/Avatar';
+import Dropdown from 'components/Dropdown';
+import {useAppStore} from 'AppStore';
+import {dataFetcher} from 'utils';
 import config from 'config';
 import Edit from './Edit';
 import LinkModal from './LinkModal';
