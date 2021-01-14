@@ -35,4 +35,7 @@
     @media (--mobile) {
         height: 30px !important;
     }
+    &:nth-child(n+2) {
+        margin-left: 20px;
+    }
 }
