@@ -2,8 +2,12 @@
 import React, {useEffect} from 'react';
 import cn from 'classnames';
 import {useTranslation} from 'react-i18next';
-import {Modal, TextField, SelectField, Button, Copy} from '@dstackai/dstack-react';
-import {useForm} from '@dstackai/dstack-react/dist/hooks';
+import Button from 'components/Button';
+import Modal from 'components/Modal';
+import TextField from 'components/TextField';
+import SelectField from 'components/SelectField';
+import Copy from 'components/Copy';
+import {useForm} from 'hooks';
 import css from './styles.module.css';
 
 type Props = {

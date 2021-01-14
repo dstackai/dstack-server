@@ -1,7 +1,9 @@
 import React from 'react';
 import cn from 'classnames';
 import {useTranslation} from 'react-i18next';
-import {Modal, TextField, Copy} from '@dstackai/dstack-react';
+import Modal from 'components/Modal';
+import TextField from 'components/TextField';
+import Copy from 'components/Copy';
 import css from './styles.module.css';
 
 const LinkModal = ({isShow, link, refresh, onClose}) => {

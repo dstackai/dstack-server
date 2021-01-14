@@ -1,6 +1,6 @@
 // @flow
 import api from 'api';
-import {getDataFailedRequest} from '@dstackai/dstack-react/dist/utils';
+import {getDataFailedRequest} from 'utils';
 import actionsTypes from './actionsTypes';
 import config from 'config';
 

@@ -2,7 +2,8 @@ import React, {useState} from 'react';
 import cn from 'classnames';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
-import {ProgressBar, useAppStore} from '@dstackai/dstack-react';
+import ProgressBar from 'components/ProgressBar';
+import {useAppStore} from 'AppStore';
 import config from 'config';
 
 

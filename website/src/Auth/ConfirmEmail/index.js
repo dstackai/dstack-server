@@ -3,11 +3,13 @@ import React, {useEffect} from 'react';
 import {connect} from 'react-redux';
 import {Link} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
-import {appStoreActionTypes, Loader, useAppStore} from '@dstackai/dstack-react';
+import Loader from 'components/Loader';
+import {useAppStore} from 'AppStore';
+import appStoreActionTypes from 'AppStore/actionsTypes';
 import routes from 'routes';
 import {verifyUser} from './actions';
 import {fetchUser} from 'App/actions';
-import {parseSearch} from '@dstackai/dstack-react/dist/utils';
+import {parseSearch} from 'utils';
 import css from './styles.module.css';
 
 type Props = {

@@ -5,11 +5,14 @@ import {connect} from 'react-redux';
 import {Switch, Route, withRouter, Redirect} from 'react-router-dom';
 import routes from 'routes';
 import '@mdi/font/css/materialdesignicons.min.css';
-import '@dstackai/dstack-react/dist/index.css';
 
-import {NotFound, Loader, UnAuthorizedLayout,
-    appStoreActionTypes, useAppStore} from '@dstackai/dstack-react';
+import Loader from 'components/Loader';
+import NotFound from 'components/NotFound';
+
+import {actionsTypes as appStoreActionTypes, useAppStore} from 'AppStore';
+
 import DefaultLayout from 'layouts/Default';
+import UnAuthorizedLayout from 'layouts/UnAuthorized';
 
 import Login from 'Auth/Login';
 import SignUp from 'Auth/SignUp';
@@ -21,7 +24,7 @@ import ConfirmMessage from 'Auth/ConfirmMessage';
 import Stacks from 'Stacks';
 import Settings from 'Settings';
 
-import {isSignedIn} from '@dstackai/dstack-react/dist/utils';
+import {isSignedIn} from 'utils';
 import {fetchUser, fetchConfigInfo} from './actions';
 import css from './styles.module.css';
 
