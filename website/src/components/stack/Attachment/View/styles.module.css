@@ -70,35 +70,6 @@
         max-width: 710px;
         margin-top: 18px;
     }
-    & .markdown {
-        font-size: 14px;
-        line-height: 22px;
-        h1 {
-            font-weight: 500;
-            font-size: 46px;
-            line-height: 50px;
-        }
-        h2 {
-            font-weight: 500;
-            font-size: 32px;
-            line-height: 36px;
-        }
-        h3 {
-            font-weight: 500;
-            font-size: 24px;
-            line-height: 28px;
-        }
-        h4 {
-            font-weight: 500;
-            font-size: 16px;
-            line-height: 19px;
-        }
-        p {
-            margin-top: 5px;
-            margin-bottom: 5px;
-            text-align: left;
-        }
-    }
     & .footer {
         font-size: 14px;
         line-height: 20px;

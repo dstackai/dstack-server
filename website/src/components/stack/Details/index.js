@@ -16,9 +16,10 @@ import Tabs from './components/Tabs';
 import Readme from './components/Readme';
 import useForm from 'hooks/useForm';
 import {parseStackParams, parseStackTabs} from 'utils';
-import css from './styles.module.css';
 import {useAppStore} from 'AppStore';
 import Avatar from 'components/Avatar';
+import Markdown from 'components/stack/Markdown';
+import css from './styles.module.css';
 
 type Props = {
     loading: boolean,
@@ -115,15 +116,17 @@ const Details = ({
             didMountRef.current = true;
     }, []);
 
-    const getCurrentAttachment = selectedTab => {
+    const getCurrentAttachment = tabName => {
         const attachments = get(frame, 'attachments');
 
         let attachment;
 
-        if (selectedTab) {
+        if (tabName) {
+            const tab = tabs.find(t => t.value === tabName);
+
             attachment = attachments.find(attach => {
-                return (attach.params[selectedTab.value]?.type === 'tab'
-                    || attach.params[selectedTab.key]?.title === selectedTab.value
+                return (attach.params[tab.value]?.type === 'tab'
+                    || attach.params[tab.key]?.title === tab.value
                 );
             });
 
@@ -159,8 +162,8 @@ const Details = ({
 
     const parseParams = () => {
         const attachments = get(frame, 'attachments');
+        const attachment = getCurrentAttachment(activeTab);
         const tab = tabs.find(t => t.value === activeTab);
-        const attachment = getCurrentAttachment(tab);
         const fields = parseStackParams(attachments, tab);
 
         setFields(fields);
@@ -181,6 +184,8 @@ const Details = ({
 
     if (loading)
         return <Loader />;
+
+    const attachment = getCurrentAttachment(activeTab);
 
     return (
         <div className={cx(css.details)}>
@@ -258,6 +263,10 @@ const Details = ({
                     onChange={onChange}
                     className={cx(css.filters)}
                 />
+
+                {attachment?.description && (
+                    <Markdown className={css.description}>{attachment.description}</Markdown>
+                )}
 
                 {frame && (
                     <StackAttachment

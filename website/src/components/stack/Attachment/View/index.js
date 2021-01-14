@@ -2,11 +2,11 @@ import React, {memo, useEffect, useState, useRef} from 'react';
 import cx from 'classnames';
 import {useTranslation} from 'react-i18next';
 import Plot from 'react-plotly.js';
-import ReactMarkdown from 'react-markdown';
 import {isEqual, get, isString} from 'lodash-es';
 import {unicodeBase64Decode} from 'utils';
 import Table from './Table';
 import CodeViewer from 'components/CodeViewer';
+import Markdown from 'components/stack/Markdown';
 import {isImageType, base64ToJSON} from '../utils';
 import * as CSV from 'csv-string';
 import css from './styles.module.css';
@@ -160,11 +160,9 @@ const View = ({frameId, attachment, fullAttachment, isList, className, requestSt
             return null;
 
         return (
-            <div className={css.markdown}>
-                <ReactMarkdown>
-                    {text}
-                </ReactMarkdown>
-            </div>
+            <Markdown>
+                {text}
+            </Markdown>
         );
     };
 

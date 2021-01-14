@@ -13,15 +13,16 @@ import BackButton from 'components/BackButton';
 import Share from 'components/Share';
 import PermissionUsers from 'components/PermissionUsers';
 import StackFilters from 'components/StackFilters';
-import StackAttachment from '../Attachment';
-import Loader from '../Details/components/Loader';
-import FilterLoader from './components/Loader';
-import Tabs from '../Details/components/Tabs';
-import Readme from '../Details/components/Readme';
+import Markdown from 'components/stack/Markdown';
+import StackAttachment from 'components/stack/Attachment';
+import Loader from 'components/stack/Details/components/Loader';
+import Tabs from 'components/stack/Details/components/Tabs';
+import Readme from 'components/stack/Details/components/Readme';
 import Progress from './components/Progress';
+import FilterLoader from './components/Loader';
+import actions from '../actions';
 import useForm from 'hooks/useForm';
 import {parseStackTabs, parseStackViews} from 'utils';
-import actions from '../actions';
 import {useAppStore} from 'AppStore';
 import Avatar from 'components/Avatar';
 import css from './styles.module.css';
@@ -272,18 +273,20 @@ const Details = ({
         };
     }, []);
 
-    const getCurrentAttachment = selectedTab => {
+    const getCurrentAttachment = tabName => {
         const attachments = get(frame, 'attachments');
 
         let attachment;
 
-        if (selectedTab) {
+        if (tabName) {
+            const tab = tabs.find(t => t.value === tabName);
+
             attachment = attachments.find(attach => {
-                return (attach.params[selectedTab.value]?.type === 'tab'
-                    || attach.params[selectedTab.key]?.title === selectedTab.value
+                return (attach.params[tab.value]?.type === 'tab'
+                    || attach.params[tab.key]?.title === tab.value
                 );
             });
-
+            
         } else if (attachmentIndex !== undefined) {
             if (attachments[attachmentIndex]) {
                 attachment = attachments[attachmentIndex];
@@ -407,6 +410,8 @@ const Details = ({
         return index >= 3;
     });
 
+    const attachment = getCurrentAttachment(activeTab);
+
     return (
         <div className={cx(css.details)}>
             <div className={css.header}>
@@ -493,6 +498,10 @@ const Details = ({
                         isSidebar={withSidebar}
                         disabled={executing || calculating}
                     />
+
+                    {attachment?.description && (
+                        <Markdown className={css.description}>{attachment.description}</Markdown>
+                    )}
 
                     {appAttachment && !calculating && (
                         <StackAttachment

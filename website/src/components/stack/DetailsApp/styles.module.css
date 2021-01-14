@@ -181,6 +181,7 @@
         &.withSidebar {
             display: grid;
             grid-template-areas:
+                "filters description"
                 "filters content"
                 "filters logs"
             ;
@@ -198,8 +199,13 @@
 .filterLoader {
     grid-column: 1 / -1;
 }
-.filters + .attachment {
+.filters + .attachment,
+.filters + .description,
+.description + .attachment {
     margin-top: 20px;
+}
+.description {
+    grid-area: description;
 }
 .attachment {
     grid-area: content;
