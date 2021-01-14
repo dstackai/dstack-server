@@ -257,16 +257,16 @@ const Details = ({
             />}
 
             <div className={cx(css.container, {[css.withFilters]: Object.keys(fields).length})}>
+                {attachment?.description && (
+                    <Markdown className={css.description}>{attachment.description}</Markdown>
+                )}
+
                 <StackFilters
                     fields={fields}
                     form={form}
                     onChange={onChange}
                     className={cx(css.filters)}
                 />
-
-                {attachment?.description && (
-                    <Markdown className={css.description}>{attachment.description}</Markdown>
-                )}
 
                 {frame && (
                     <StackAttachment

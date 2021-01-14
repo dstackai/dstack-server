@@ -172,9 +172,9 @@
         background-color: #F8F7F9;
     }
 }
-.filters + .attachment,
-.filters + .description,
-.description + .attachment {
+.description + .filters,
+.description + .attachment,
+.filters + .attachment {
     margin-top: 20px;
 }
 .description {

@@ -489,6 +489,12 @@ const Details = ({
 
             {executeData && (
                 <div className={cx(css.container, {[css.withSidebar]: withSidebar})}>
+                    {attachment?.description && (
+                        <Markdown className={css.description}>
+                            {attachment.description}
+                        </Markdown>
+                    )}
+
                     <StackFilters
                         fields={fields}
                         form={form}
@@ -498,10 +504,6 @@ const Details = ({
                         isSidebar={withSidebar}
                         disabled={executing || calculating}
                     />
-
-                    {attachment?.description && (
-                        <Markdown className={css.description}>{attachment.description}</Markdown>
-                    )}
 
                     {appAttachment && !calculating && (
                         <StackAttachment
