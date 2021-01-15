@@ -7,7 +7,6 @@ import Tabs from 'components/Tabs';
 import Upload from './Upload';
 import css from './styles.module.css';
 import config from 'config';
-import {reportModelPythonCode, reportPlotPythonCode} from 'config';
 
 type Props = {
     user?: string,
@@ -25,24 +24,11 @@ const UploadStack = ({
 }: Props) => {
     const {t} = useTranslation();
     const [activeCodeTab, setActiveCodeTab] = useState(1);
-    const [activePublishTab, setActivePublishTab] = useState(1);
 
     const tabs = [
         {
             label: t('python'),
             value: 1,
-        },
-    ];
-
-    const publishTabs = [
-        {
-            label: t('model'),
-            value: 1,
-        },
-
-        {
-            label: t('chart'),
-            value: 2,
         },
     ];
 
@@ -83,27 +69,6 @@ const UploadStack = ({
                 </CodeViewer>
 
                 <div className={css.description}>{t('reportPlotIntro')}</div>
-
-                <Tabs
-                    className={css.tabs}
-                    value={activePublishTab}
-                    onChange={setActivePublishTab}
-                    tabs={publishTabs}
-                />
-
-                {activePublishTab === 1 && <CodeViewer
-                    className={css.code}
-                    language="python"
-                >
-                    {reportModelPythonCode}
-                </CodeViewer>}
-
-                {activePublishTab === 2 && <CodeViewer
-                    className={css.code}
-                    language="python"
-                >
-                    {reportPlotPythonCode}
-                </CodeViewer>}
             </div>}
 
             {activeCodeTab === 3 && <Upload

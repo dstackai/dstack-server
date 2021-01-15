@@ -6,7 +6,7 @@ import Button from 'components/Button';
 import Dropdown from 'components/Dropdown';
 import SettingsInformation from 'components/settings/Information';
 import TextField from 'components/TextField';
-import UploadStack from 'components/stack/Upload';
+import UploadStack from 'components/stack/UploadStack';
 import config from 'config';
 import {updateToken} from '../../App/actions';
 import {updateSettings} from './actions';
