@@ -13,12 +13,15 @@
         padding: 14px 20px;
     }
     & > pre {
-        margin: 0;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: none !important;
         white-space: pre-wrap;
         & > code {
             font-family: 'Roboto Mono', monospace;
             padding: 0;
             line-height: 1.6;
+            background: none !important;
             @media (--mobile) {
                 font-size: 12px;
             }

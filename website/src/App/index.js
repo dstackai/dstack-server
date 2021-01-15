@@ -26,6 +26,9 @@ import Settings from 'Settings';
 
 import {isSignedIn} from 'utils';
 import {fetchUser, fetchConfigInfo} from './actions';
+import 'prismjs/components/prism-python';
+import 'prismjs/components/prism-bash';
+import 'prismjs/themes/prism.css';
 import css from './styles.module.css';
 
 const DefaultLayoutRoute = ({component: Component, ...rest}) => {

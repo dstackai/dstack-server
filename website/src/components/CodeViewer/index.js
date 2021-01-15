@@ -1,8 +1,8 @@
 // @flow
 
-import React from 'react';
-import Highlight from 'react-highlight.js';
+import React, {useEffect} from 'react';
 import {useTranslation} from 'react-i18next';
+import Prism from 'prismjs';
 import Copy from 'components/Copy';
 import cx from 'classnames';
 import './theme.css';
@@ -18,11 +18,15 @@ type Props = {
 const CodeViewer = ({className, language, children, fontSize}: Props) => {
     const {t} = useTranslation();
 
+    useEffect(() => {
+        Prism.highlightAll();
+    }, []);
+
     return (
         <div className={cx(css.code, className, fontSize && `font-size-${fontSize}`)}>
-            <Highlight language={language}>
-                {children}
-            </Highlight>
+            <pre>
+                <code className={`language-${language}`}>{children}</code>
+            </pre>
 
             <Copy
                 className={css.copy}
