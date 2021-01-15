@@ -32,6 +32,21 @@
         }
     }
 }
+
+.dropdown {
+    flex-shrink: 0;
+}
+.dropdownButton {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    white-space: nowrap;
+    min-width: 0 !important;
+    max-width: initial !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    outline: none;
+}
 .label, .value {
     height: 20px;
     font-size: 14px;

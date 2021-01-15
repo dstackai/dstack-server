@@ -1,10 +1,10 @@
 import React, {useState, useEffect, useRef, useCallback} from 'react';
-import {debounce as _debounce, get} from 'lodash-es';
+import {debounce as _debounce} from 'lodash-es';
 import {useTranslation} from 'react-i18next';
 import {connect} from 'react-redux';
 import Button from 'components/Button';
-import CheckboxField from 'components/CheckboxField';
 import Copy from 'components/Copy';
+import Dropdown from 'components/Dropdown';
 import SettingsInformation from 'components/settings/Information';
 import TextField from 'components/TextField';
 import UploadStack from 'components/stack/Upload';
@@ -32,13 +32,20 @@ const Account = ({updateToken, currentUser, userData, currentUserToken, updateSe
     const [isEditName, setIsEditName] = useState(false);
     const updateSettingsDebounce = useCallback(_debounce(updateSettings, 300), []);
 
-    const [form, setForm] = useState({private: get(userData, 'settings.general.default_access_level') === 'private'});
+    const dropdownOptionsMap = {
+        public: t('public'),
+        internal: t('forDstackaiUsersOnly'),
+        private: t('forSelectedUsers'),
+    };
+
+    const [form, setForm] = useState(
+        {'default_access_level': userData?.settings?.general['default_access_level']},
+    );
 
     useEffect(() => {
         setForm({
             ...form,
-            private: get(userData, 'settings.general.default_access_level') === 'private',
-
+            'default_access_level': userData?.settings?.general['default_access_level'],
         });
     }, [currentUser]);
 
@@ -46,11 +53,11 @@ const Account = ({updateToken, currentUser, userData, currentUserToken, updateSe
         if (availableSendingSettings.current)
             updateSettingsDebounce({
                 user: currentUser,
-                general: {'default_access_level': form.private ? 'private' : 'public'},
+                general: form,
             });
         else
             availableSendingSettings.current = true;
-    }, [form.private, form.comments]);
+    }, [form['default_access_level'], form.comments]);
 
     const cancelEditName = () => {
         setForm({
@@ -59,6 +66,10 @@ const Account = ({updateToken, currentUser, userData, currentUserToken, updateSe
         });
 
         setIsEditName(false);
+    };
+
+    const onChangeDropdown = value => {
+        setForm({'default_access_level': value});
     };
 
     const onChange = (event: SyntheticEvent) => {
@@ -130,16 +141,28 @@ const Account = ({updateToken, currentUser, userData, currentUserToken, updateSe
                 <div className={css['section-title']}>{t('general')}</div>
 
                 <div className={css.item}>
-                    <CheckboxField
-                        align="right"
-                        appearance="switcher"
-                        label={t('theDefaultAccessLevel')}
-                        offLabel={t('public')}
-                        onLabel={t('private')}
-                        name="private"
-                        value={form.private}
-                        onChange={onChange}
-                    />
+                    <Dropdown
+                        className={css.dropdown}
+
+                        items={
+                            Object
+                                .keys(dropdownOptionsMap)
+                                .map(key => ({
+                                    title: dropdownOptionsMap[key],
+                                    value: key,
+                                    onClick: () => onChangeDropdown(key),
+                                }))
+                        }
+                    >
+                        <Button
+                            className={css.dropdownButton}
+                            color="primary"
+                            size="small"
+                        >
+                            {dropdownOptionsMap[form['default_access_level']]}
+                            <span className="mdi mdi-chevron-down" />
+                        </Button>
+                    </Dropdown>
                 </div>
             </div>
 
