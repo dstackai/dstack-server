@@ -648,6 +648,7 @@ val UpdateSettingsPayload?.isMalformed
             )
             || (this.general?.defaultAccessLevel != null && !setOf(
             "private",
+            "internal",
             "public"
     ).contains(this.general.defaultAccessLevel))
             || this.general?.defaultAccessLevel == null
