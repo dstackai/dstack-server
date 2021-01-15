@@ -62,7 +62,8 @@ const Attachment = ({
             && attachment.preview
             && isImageType(attachment['content_type'])
         ) {
-            fetchFullAttachment();
+            fetchFullAttachment()
+                .catch(console.log);
         }
     }, [data]);
 
@@ -72,7 +73,8 @@ const Attachment = ({
             && (typeof id === 'number' && frameId)
             && ((!attachment.data && !error) || (attachment?.index !== id))
         ) {
-            fetchAttachment(stack, frameId, id);
+            fetchAttachment(stack, frameId, id)
+                .catch(console.log);;
         }
     }, [id, frameId]);
 
@@ -85,7 +87,8 @@ const Attachment = ({
                 || (attachment.data && attachment.index !== id)
             )
         )
-            fetchAttachment(stack, frameId, id);
+            fetchAttachment(stack, frameId, id)
+                .catch(console.log);
     }, {}, [id, frameId, data]);
 
     return (

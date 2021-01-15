@@ -103,14 +103,16 @@ const Users = () => {
                         ...response,
                     };
 
-                mutate([...data]);
+                mutate([...data])
+                    .catch(console.log);
             });
     };
 
     const getDeleteUserFunction = name => () => {
         deleteUser({name})
             .then(() => {
-                mutate(data.filter(i => i.user !== name));
+                mutate(data.filter(i => i.user !== name))
+                    .catch(console.log);
             });
     };
 
@@ -134,7 +136,8 @@ const Users = () => {
                         ...response,
                     };
 
-                mutate([...data]);
+                mutate([...data])
+                    .catch(console.log);
                 
                 if (linkData)
                     setLinkData(data[userIndex]);

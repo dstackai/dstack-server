@@ -10,6 +10,6 @@ i18n
         fallbackLng: 'en',
 
         interpolation: {escapeValue: false},
-    });
+    }).catch(console.log);;
 
 export default i18n;
