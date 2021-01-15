@@ -200,6 +200,7 @@ export default {
     'reportPlotIntro': 'Now you are ready to publish your first plot:',
     'reports': 'Reports',
     'reportsOf': 'Reports of {{name}}',
+    'reset': 'Reset',
     'run': 'Run',
     'runtime': 'Runtime',
     'pleaseEnterAFullName': 'Jane Doe',

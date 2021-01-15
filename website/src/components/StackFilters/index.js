@@ -14,10 +14,12 @@ type Props = {
     fields: {},
     form: {},
     onChange: Function,
+    onApply?: Function,
+    onReset?: Function,
     className?: string,
 }
 
-const StackFilters = ({className, fields, form, onChange, onApply, isSidebar, disabled}: Props) => {
+const StackFilters = ({className, fields, form, onChange, onApply, onReset, isSidebar, disabled}: Props) => {
     const {t} = useTranslation();
 
     if (!Object.keys(fields).length)
@@ -110,13 +112,28 @@ const StackFilters = ({className, fields, form, onChange, onApply, isSidebar, di
                                     {t('apply')}
                                 </Button>
                             )}
-
                         </div>;
 
                     default:
                         return null;
                 }
             })}
+
+            {onReset && (
+                <div
+                    className={cx(css.field, css.buttons)}
+                >
+                    <Button
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                        onClick={onReset}
+                        disabled={disabled}
+                    >
+                        {t('reset')}
+                    </Button>
+                </div>
+            )}
         </div>
     );
 };

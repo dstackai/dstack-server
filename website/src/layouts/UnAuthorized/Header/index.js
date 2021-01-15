@@ -24,6 +24,7 @@ const Header = ({className}: Props) => {
 
         <div className={css.buttons}>
             <Button
+                size="small"
                 Component={Link}
                 to={routes.authLogin()}
                 className={css.button}
@@ -33,6 +34,7 @@ const Header = ({className}: Props) => {
 
 
             {get(configInfo, 'data.email_enabled') && <Button
+                size="small"
                 Component={Link}
                 to={routes.authSignUp()}
                 className={css.button}

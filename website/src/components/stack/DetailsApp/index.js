@@ -155,10 +155,6 @@ const Details = ({
 
         if (apply)
             setCalculating(true);
-        else {
-            setAppAttachment(null);
-            setActiveExecutionId(undefined);
-        }
 
         executeStack({
             user: data.user,
@@ -190,10 +186,10 @@ const Details = ({
                 setExecuting(false);
                 setError(null);
                 updateExecuteData(data);
+                setActiveExecutionId(data.id);
 
                 if (apply && data.status !== STATUSES.SCHEDULED) {
                     checkFinished({id: data.id, isUpdateData: apply});
-                    setActiveExecutionId(data.id);
                 }
 
                 if (data.status === STATUSES.SCHEDULED) {
@@ -216,6 +212,8 @@ const Details = ({
 
     const onApply = () => submit(form);
 
+    const onReset = () => startExecute();
+
     useEffect(() => {
         if (executeData && executeData.status === STATUSES.READY && !appAttachment && !executing) {
             if (!hasApplyButton())
@@ -223,32 +221,38 @@ const Details = ({
         }
     }, [executeData]);
 
+    const startExecute = () => {
+        setExecuting(true);
+        setExecuteData(null);
+        setAppAttachment(null);
+
+        executeStack({
+            user: data.user,
+            stack: data.name,
+            frame: frame?.id,
+            attachment: attachmentIndex || 0,
+        })
+            .then(data => {
+                setExecuting(false);
+                setError(null);
+                updateExecuteData(data);
+                setActiveExecutionId(data.id);
+
+                if (data.status === STATUSES.SCHEDULED) {
+                    setIsScheduled(true);
+                    checkFinished({id: data.id, isUpdateData: true});
+                }
+            })
+            .catch(() => {
+                setExecuting(false);
+                setError({status: null});
+            });
+    };
+
     useEffect(() => {
         if (data?.user && data?.name && frame && !loading) {
             if (!executionId || !isEqual(frame, prevFrame)) {
-                setExecuting(true);
-                setExecuteData(null);
-                setAppAttachment(null);
-
-                executeStack({
-                    user: data.user,
-                    stack: data.name,
-                    frame: frame?.id,
-                    attachment: attachmentIndex || 0,
-                })
-                    .then(data => {
-                        setExecuting(false);
-                        setError(null);
-                        updateExecuteData(data);
-                        if (data.status === STATUSES.SCHEDULED) {
-                            setIsScheduled(true);
-                            checkFinished({id: data.id, isUpdateData: true});
-                        }
-                    })
-                    .catch(() => {
-                        setExecuting(false);
-                        setError({status: null});
-                    });
+                startExecute();
             } else {
                 setExecuting(true);
                 setCalculating(true);
@@ -349,6 +353,7 @@ const Details = ({
         pollStack({id: id})
             .then(data => {
                 setIsScheduled(data.status === STATUSES.SCHEDULED);
+                setActiveExecutionId(data.id);
 
                 if ([STATUSES.SCHEDULED, STATUSES.RUNNING].indexOf(data.status) >= 0)
                     if (didMountRef.current)
@@ -394,7 +399,6 @@ const Details = ({
                         });
                     }
 
-                    setActiveExecutionId(null);
                     setError({status: data.status});
                 }
             });
@@ -500,7 +504,8 @@ const Details = ({
                         form={form}
                         onChange={onChange}
                         onApply={onApply}
-                        className={cx(css.filters)}
+                        onReset={onReset}
+                        className={css.filters}
                         isSidebar={withSidebar}
                         disabled={executing || calculating}
                     />
