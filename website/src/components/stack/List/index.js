@@ -1,6 +1,6 @@
 // @flow
 
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useMemo} from 'react';
 import cn from 'classnames';
 import {Link} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
@@ -54,6 +54,20 @@ const List = ({
         setIsShowWelcomeModal(false);
     };
 
+    const categoryItems = useMemo(() => {
+        if (!data || !data.length)
+            return [];
+
+        return data.filter(stack => {
+            const stackCategory = getStackCategory({
+                application: stack.head?.preview?.application,
+                contentType: stack.head?.preview?.content_type,
+            });
+
+            return stackCategory === categoryMap[category];
+        });
+    }, [data, category]);
+
     useEffect(() => {
         if (isInitialMount.current) {
             isInitialMount.current = false;
@@ -61,7 +75,7 @@ const List = ({
             if (!localStorage.getItem('welcome-modal-is-showing') && !loading && !data.length)
                 showWelcomeModal();
         }
-    }, [data]);
+    }, [categoryItems]);
 
     const deleteItem = () => {
         deleteStack(deletingStack);
@@ -76,20 +90,11 @@ const List = ({
     const getItems = () => {
         let filteredItems = [];
 
-        const items = data.filter(stack => {
-            const stackCategory = getStackCategory({
-                application: stack.head?.preview?.application,
-                contentType: stack.head?.preview?.content_type,
-            });
-
-            return stackCategory === categoryMap[category];
-        });
-
-        if (items && items.length) {
+        if (categoryItems && categoryItems.length) {
             if (search.length)
-                filteredItems = items.filter(i => i.name.indexOf(search) >= 0);
+                filteredItems = categoryItems.filter(i => i.name.indexOf(search) >= 0);
             else
-                filteredItems = items;
+                filteredItems = categoryItems;
         }
 
         return filteredItems;
@@ -97,34 +102,34 @@ const List = ({
 
     const items = getItems();
 
+    const categoryTitleMap = {
+        applications: t('application_plural'),
+        models: t('mlModel_plural'),
+    };
+
     return (
         <div className={css.list}>
             <div className={css.header}>
                 <div className={css.title}>
-                    {{
-                        applications: t('application_plural'),
-                        models: t('mlModel_plural'),
-                    }[category]}
+                    {categoryTitleMap[category]}
                 </div>
 
-                {Boolean(data.length) && (
+                {Boolean(categoryItems.length) && (
                     <div className={css.headerSide}>
-                        {Boolean(data.length) && (
-                            <SearchField
-                                className={css.search}
-                                showEverything
-                                isDark
-                                placeholder={t('findStack')}
-                                size="small"
-                                value={search}
-                                onChange={onChangeSearch}
-                            />
-                        )}
+                        <SearchField
+                            className={css.search}
+                            showEverything
+                            isDark
+                            placeholder={t('findStack')}
+                            size="small"
+                            value={search}
+                            onChange={onChangeSearch}
+                        />
                     </div>
                 )}
             </div>
 
-            {loading && !Boolean(data.length) && (
+            {loading && !Boolean(categoryItems.length) && (
                 <div className={cn(css.itemList)}>
                     {new Array(12).fill({}).map((i, index) => (
                         <div key={index} className={css.loadingItem} />
@@ -132,16 +137,32 @@ const List = ({
                 </div>
             )}
 
-            {!loading && !data.length && (
+            {!loading && !categoryItems.length && (
                 <div className={css.message}>
-                    {user === currentUserName
-                        ? t('youHaveNoStacksYet')
-                        : t('theUserHasNoStacksYetByName', {name: user})
-                    }
+                    <div className={css.messageText} dangerouslySetInnerHTML={{
+                        __html: (user === currentUserName
+                            ? t('youHaveNoStacksYetByCategory', {category: categoryTitleMap[category].toLowerCase()})
+
+                            : t('theUserHasNoStacksYetByNameAndCategory', {
+                                name: user,
+                                category: categoryTitleMap[category].toLowerCase(),
+                            })
+                        ),
+                    }} />
+
+                    <Button
+                        Component="a"
+                        href="https://docs.dstack.ai/"
+                        target="_blank"
+                        color="primary"
+                        variant="contained"
+                        size="small"
+                        className={css.messageButton}
+                    >{t('getStarted')}</Button>
                 </div>
             )}
 
-            {Boolean(data.length && items.length) && (
+            {Boolean(categoryItems.length && items.length) && (
                 <div className={css.itemList}>
                     {items.map((item, index) => <StackListItem
                         className={css.item}
@@ -154,7 +175,7 @@ const List = ({
                 </div>
             )}
 
-            {Boolean(data.length && !items.length) && <div className={css.text}>
+            {Boolean(categoryItems.length && !items.length) && <div className={css.text}>
                 {{
                     applications: t('noApplicationsMatchingTheSearchCriteria'),
                     models: t('noMlModelsMatchingTheSearchCriteria'),
