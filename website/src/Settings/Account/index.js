@@ -3,7 +3,6 @@ import {debounce as _debounce} from 'lodash-es';
 import {useTranslation} from 'react-i18next';
 import {connect} from 'react-redux';
 import Button from 'components/Button';
-import Copy from 'components/Copy';
 import Dropdown from 'components/Dropdown';
 import SettingsInformation from 'components/settings/Information';
 import TextField from 'components/TextField';
@@ -141,6 +140,8 @@ const Account = ({updateToken, currentUser, userData, currentUserToken, updateSe
                 <div className={css['section-title']}>{t('general')}</div>
 
                 <div className={css.item}>
+                    <div className={css.label}>{t('theDefaultAccessLevel')}</div>
+
                     <Dropdown
                         className={css.dropdown}
 
@@ -171,18 +172,6 @@ const Account = ({updateToken, currentUser, userData, currentUserToken, updateSe
 
                 <div className={css.apitoken}>
                     <div className={css.token}>{currentUserToken}</div>
-
-                    <Copy
-                        className={css.copy}
-                        copyText={currentUserToken}
-                        successMessage={t('tokenIsCopied')}
-                    >
-                        {({onClick}) => (
-                            <div className={css['copy-button']} onClick={onClick}>
-                                <span className="mdi mdi-content-copy" />
-                            </div>
-                        )}
-                    </Copy>
 
                     <SettingsInformation
                         renderModalContent={() => (
