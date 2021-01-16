@@ -37,26 +37,33 @@ class LocalExecutionService @Autowired constructor(
                          views: List<Map<String, Any?>>?, apply: Boolean): ExecutionStatus {
         val id = UUID.randomUUID().toString()
         val minorPythonVersion = frame.minorPythonVersion
-        val pythonExecutable = config.findPythonExecutable(minorPythonVersion)
-        return if (pythonExecutable != null) {
-            extractApplicationIfMissing(attachment)
+        return  if (minorPythonVersion != null) {
+            val pythonExecutable = config.pythonExecutables[minorPythonVersion]
+            if (pythonExecutable != null) {
+                extractApplicationIfMissing(attachment)
 
-            writeExecutionMetaFile(stack.path, id)
-            writeStagedExecutionFile(id, views)
+                writeExecutionMetaFile(stack.path, id)
+                writeStagedExecutionFile(id, views)
 
-            installVenvAndStartProcessIfNeeded(attachment, pythonExecutable, user)
-            addExecutionRequestToQueue(attachment, ExecutionRequest(id, views, apply))
-            return poll(id)!!
+                installVenvAndStartProcessIfNeeded(attachment, pythonExecutable, user)
+                addExecutionRequestToQueue(attachment, ExecutionRequest(id, views, apply))
+                return poll(id)!!
+            } else {
+                val failedExecution = failedExecution(id,
+                        "The required Python version is not supported: $minorPythonVersion")
+                        .toByteArray()
+                ExecutionStatus(stack.path, failedExecution.inputStream(), failedExecution.size.toLong())
+            }
         } else {
             val failedExecution = failedExecution(id,
-                    "The required Python version is not supported: $minorPythonVersion")
+                    "The Python version is missing in the application. Make sure you use the latest client to push the application.")
                     .toByteArray()
             ExecutionStatus(stack.path, failedExecution.inputStream(), failedExecution.size.toLong())
         }
     }
 
     private fun failedExecution(id: String, logs: String): String {
-        val execution = mutableMapOf<String, Any?>("id" to id, "status" to "SCHEDULED")
+        val execution = mutableMapOf<String, Any?>("id" to id, "status" to "FAILED", "logs" to logs)
         return executionFileObjectMapper.writeValueAsString(execution)
     }
 
@@ -65,9 +72,6 @@ class LocalExecutionService @Autowired constructor(
         queue!!.put(request)
     }
 
-    private fun AppConfig.findPythonExecutable(minorPythonVersion: String?): String? =
-            (minorPythonVersion?.let { this@LocalExecutionService.config.pythonExecutables[it] }
-                    ?: this.pythonExecutables.values.firstOrNull())
 
     private fun installVenvAndStartProcessIfNeeded(attachment: Attachment, pythonExecutable: String, user: User) =
             executionRequestQueues.putIfAbsent(attachment.filePath,
