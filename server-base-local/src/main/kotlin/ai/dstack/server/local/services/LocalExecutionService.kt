@@ -79,9 +79,12 @@ class LocalExecutionService @Autowired constructor(
                         object : Thread() {
                             override fun run() {
                                 val venvPythonExecutableFile = installVenvPythonExecutableIfMissing(attachment, pythonExecutable)
-                                val p = startVenvPythonProcess(user, attachment, venvPythonExecutableFile.absolutePath)
+                                var p: Process? = null
                                 while (true) {
                                     val request = it.take()
+                                    if (p == null || !p.isAlive) {
+                                        p = startVenvPythonProcess(user, attachment, venvPythonExecutableFile.absolutePath)
+                                    }
                                     synchronized(p) {
                                         // TODO: Make sure the virtual environment is set up correctly,
                                         //  as well as the process is started correctly.
@@ -270,16 +273,6 @@ class LocalExecutionService @Autowired constructor(
     private fun executionFile(id: String, stage: String) = File(File(File(config.executionDirectory), stage), "$id.json")
 
     private fun executionMetaFile(id: String) = File(File(File(config.executionDirectory), "meta"), "$id.txt")
-
-    private fun newFile(destinationDir: File, zipEntry: ZipEntry): File {
-        val destFile = File(destinationDir, zipEntry.name)
-        val destDirPath = destinationDir.canonicalPath
-        val destFilePath = destFile.canonicalPath
-        if (!destFilePath.startsWith(destDirPath + File.separator)) {
-            throw IOException("Entry is outside of the target dir: " + zipEntry.name)
-        }
-        return destFile
-    }
 
     private fun writeExecutorFile(executorFile: File) {
         ClassPathResource("executor.py", this.javaClass.classLoader).inputStream.copyTo(FileOutputStream(executorFile))
