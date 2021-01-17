@@ -53,7 +53,7 @@ class UploadResources {
             } else {
                 uploadUrl = fileService.upload(filePath, null).toString()
             }
-            ok(UploadStatus(id, payload.fileName, payload.length, uploadUrl))
+            ok(UploadStatus(id, payload.fileName, payload.length, createdDate.toString(), uploadUrl))
         }
     }
 
@@ -72,11 +72,12 @@ class UploadResources {
                 val filePath = "uploads/${upload.createdDate}/$id"
                 if (upload.length < MAX_DATA_LENGTH) {
                     val data = Base64.getEncoder().encodeToString(fileService.get(upload.filePath)).toString()
-                    ok(GetUploadStatus(id, upload.fileName, upload.length, data, null))
+                    ok(GetUploadStatus(id, upload.fileName, upload.length, upload.createdDate.toString(),
+                            data, null))
                 } else {
-                    ok(GetUploadStatus(id, upload.fileName, upload.length, null,
-                            fileService.download(filePath, null, upload.fileName
-                                    ?: id, null).toString()))
+                    ok(GetUploadStatus(id, upload.fileName, upload.length, upload.createdDate.toString(),
+                            null, fileService.download(filePath, null, upload.fileName
+                            ?: id, null).toString()))
                 }
             }
         }

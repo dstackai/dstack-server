@@ -388,10 +388,6 @@ class TestControls(TestCase):
         self.assertFalse(p3["optional"])
         self.assertEqual(["Hello", "World"], p3["titles"])
 
-        c4 = ctrl.FileUploader(is_text=True, id="c4")
-        p4 = c4.view().pack()
-        self.assertTrue(p4["is_text"])
-
         c5 = ctrl.Slider(range(0, 10), id="c5", selected=3)
         p5 = c5.view().pack()
         self.assertEqual(list(range(0, 10)), p5["data"])

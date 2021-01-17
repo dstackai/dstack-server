@@ -9,6 +9,8 @@ data class GetUploadStatus(
         @JsonProperty("file_name")
         val fileName: String?,
         val length: Long,
+        @JsonProperty("created_date")
+        val createdDate: String,
         val data: String?,
         @JsonProperty("download_url")
         val downloadUrl: String?
