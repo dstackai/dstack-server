@@ -1,5 +1,6 @@
 import typing as ty
 from abc import ABC, abstractmethod
+from datetime import date, datetime
 from uuid import uuid4
 from copy import copy
 
@@ -192,6 +193,7 @@ class TextField(Control[TextFieldView], ty.Generic[T]):
         self.data = view.data
 
     def _value(self) -> ty.Optional[ty.Any]:
+        # TODO: Check if data can be ty.Callable
         return self.data
 
     def _check_pickle(self):
@@ -200,7 +202,6 @@ class TextField(Control[TextFieldView], ty.Generic[T]):
             self.long = None
 
 
-# TODO: remove optional
 class CheckBox(Control[CheckBoxView], ty.Generic[T]):
     def __init__(self,
                  selected: ty.Union[bool, ty.Callable[[], bool]] = False,
@@ -208,10 +209,9 @@ class CheckBox(Control[CheckBoxView], ty.Generic[T]):
                  label: ty.Optional[str] = None,
                  id: ty.Optional[str] = None,
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
-                 require_apply: bool = False,
-                 optional: ty.Optional[bool] = None
+                 require_apply: bool = False
                  ):
-        super().__init__(label, id, depends, handler, require_apply, optional)
+        super().__init__(label, id, depends, handler, require_apply, False)
         self.selected = selected
 
     def _view(self) -> CheckBoxView:
@@ -419,41 +419,67 @@ class Slider(Control[SliderView]):
             self.selected = 0
 
 
-class FileUploadView(View):
-    def __init__(self, id: str, is_text: bool, stream: ty.Optional[ty.IO], enabled: ty.Optional[bool] = None,
+class Upload:
+    def __init__(self, id: str, file_name: str, length: int, created_date: date):
+        self.id = id
+        self.file_name = file_name
+        self.length = length
+        self.created_date = created_date
+
+    def stream(self) -> ty.IO:
+        # TODO: As a workaround, read the file directly from /files/uploads/{created_date}/{id}
+        # TODO: Implement reading files by ID
+        pass
+
+
+class FileUploaderView(View):
+    def __init__(self, id: str, uploads: ty.List[Upload], multiple: bool, enabled: ty.Optional[bool] = None,
                  label: ty.Optional[str] = None, optional: ty.Optional[bool] = None):
         super().__init__(id, enabled, label, optional)
-        self.is_text = is_text
-        self.stream = stream
+        self.uploads = uploads
+        self.multiple = multiple
 
     def _pack(self) -> ty.Dict:
-        return {"is_text": self.is_text}
+        uploads_d = {
+            "uploads": [{"id": u.id, "file_name": u.file_name, "length": u.length,
+                         "created_date": u.created_date.strftime("%Y-%m-%d")} for u in self.uploads]
+        }
+        if self.multiple:
+            uploads_d["multiple"] = True
+        return uploads_d
 
 
-class FileUpload(Control[FileUploadView]):
+class FileUploader(Control[FileUploaderView]):
     def __init__(self,
-                 is_text: bool = True,
+                 data: ty.Union[ty.Optional[ty.List[Upload]],
+                                ty.Callable[[], ty.List[Upload]]] = None,
+                 multiple: bool = False,
                  label: ty.Optional[str] = None,
                  id: ty.Optional[str] = None,
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
                  handler: ty.Optional[ty.Callable[..., None]] = None,
+                 require_apply: bool = False,
                  optional: ty.Optional = None
                  ):
-        super().__init__(label, id, depends, handler, True, optional)
-        self.is_text = is_text
-        self.stream: ty.Optional[ty.IO] = None
+        super().__init__(label, id, depends, handler, require_apply, optional)
+        self.data: ty.Union[ty.List[Upload], ty.Callable[[], ty.List[Upload]]] = data if data else []
+        self.multiple = multiple
 
-    def _view(self) -> FileUploadView:
-        return FileUploadView(self.get_id(), self.is_text, None, self.enabled, self.label, self.optional)
+    def _view(self) -> FileUploaderView:
+        if isinstance(self.data, list):
+            uploads = self.data
+        elif isinstance(self.data, ty.Callable):
+            uploads = self.data()
+        return FileUploaderView(self.get_id(), uploads, self.multiple, self.enabled, self.label, self.optional)
 
-    def _apply(self, view: FileUploadView):
-        assert isinstance(view, FileUploadView)
+    def _apply(self, view: FileUploaderView):
+        assert isinstance(view, FileUploaderView)
         assert self._id == view.id
-        self.is_text = view.is_text
-        self.stream = view.stream
+        self.data = view.uploads
 
-    def _value(self) -> ty.Optional[ty.Any]:
-        return self.stream
+    def _value(self) -> ty.List[Upload]:
+        # TODO: Check if data can be ty.Callable
+        return self.data
 
 
 # TODO: Decode automatically
@@ -480,8 +506,12 @@ def unpack_view(source: ty.Dict) -> View:
     elif type == "SliderView":
         return SliderView(source["id"], source.get("selected"), source.get("data"), source.get("enabled"),
                           source.get("label"))
+    elif type == "FileUploaderView":
+        uploads = [Upload(u["id"], u["file_name"], u["length"],
+                          datetime.strptime(u["created_date"], "%Y-%m-%d").date()) for u in source["uploads"]]
+        return FileUploaderView(source["id"], uploads, source.get("multiple"), source.get("enabled"),
+                                source.get("label"), source.get("optional"))
     else:
-        # TODO: Support FileUploadView
         raise AttributeError("Unsupported view: " + str(source))
 
 

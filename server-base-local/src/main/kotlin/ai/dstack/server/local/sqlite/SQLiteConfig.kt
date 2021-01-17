@@ -18,7 +18,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 
 @Configuration
 @Profile("sqlite")
-@EnableJpaRepositories(basePackages=["ai.dstack.server.local.sqlite.repositories"])
+@EnableJpaRepositories(basePackages = ["ai.dstack.server.local.sqlite.repositories"])
 open class SQLiteConfig {
     @Bean
     open fun dataSource(@Autowired config: AppConfig): DataSource? {
@@ -43,7 +43,12 @@ open class SQLiteConfig {
     open fun attachmentService(@Autowired repository: AttachmentRepository): AttachmentService {
         return SQLiteAttachmentService(repository)
     }
-    
+
+    @Bean
+    open fun uploadService(@Autowired repository: UploadRepository): UploadService {
+        return SQLiteUploadService(repository)
+    }
+
     @Bean
     open fun frameService(@Autowired repository: FrameRepository): FrameService {
         return SQLiteFrameService(repository)
