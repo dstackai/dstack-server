@@ -366,7 +366,6 @@ const Details = ({
                         }, REFRESH_INTERVAL);
                     }
 
-
                 if (
                     [
                         STATUSES.FINISHED,
