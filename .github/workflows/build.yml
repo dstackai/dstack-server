@@ -126,7 +126,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
   publish-docker-release:
-    needs: publish-release
+    needs: publish-server-release
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
 
