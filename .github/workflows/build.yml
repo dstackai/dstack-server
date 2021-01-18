@@ -191,25 +191,7 @@ jobs:
           DSTACK_VERSION=${{ steps.build.outputs.dstack_version }}
           python -c "from dstack import push_frame; from dstack.cli.installer import Installer; from pathlib import Path; print(push_frame(Installer._STACK, Path('server-local-cli/build/libs/server-local-cli-$DSTACK_VERSION.jar'), version='$DSTACK_VERSION', jdk_version='8', jdk_compatible_versions='1.8.0_.*'))"
 
-  create-release:
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
-
-  publish-release:
+  publish-server-release:
     needs: build-server
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
@@ -231,7 +213,7 @@ jobs:
       - name: Build with Gradle
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
-          ./gradlew -Pdstack_version=$VERSION clean build -Dorg.gradle.internal.http.socketTimeout=120000 -Dorg.gradle.internal.http.connectionTimeout=120000
+          ./gradlew -Pdstack_version=$VERSION clean build
       - name: Set up Python 3.6
         uses: actions/setup-python@v2
         with:
