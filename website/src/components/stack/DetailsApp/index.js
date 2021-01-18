@@ -4,10 +4,9 @@ import React, {useEffect, useState, useRef} from 'react';
 import cx from 'classnames';
 import {isEqual, get} from 'lodash-es';
 import {useDebounce} from 'react-use';
-import usePrevious from 'hooks/usePrevious';
 import moment from 'moment';
 import {useTranslation} from 'react-i18next';
-import {Link} from 'react-router-dom';
+import {Link, useParams} from 'react-router-dom';
 import Button from 'components/Button';
 import BackButton from 'components/BackButton';
 import Share from 'components/Share';
@@ -73,6 +72,7 @@ const Details = ({
     updatePermissions,
 }: Props) => {
     const {t} = useTranslation();
+    const params = useParams();
     const didMountRef = useRef(false);
     const pollTimeoutRef = useRef(null);
     const {form, setForm, onChange} = useForm({});
@@ -86,11 +86,14 @@ const Details = ({
     const [isScheduled, setIsScheduled] = useState(false);
     const [activeTab, setActiveTab] = useState();
     const [tabs, setTabs] = useState([]);
-    const prevFrame = usePrevious(frame);
     const {executeStack, pollStack} = actions();
 
     const [{currentUser}] = useAppStore();
     const currentUserName = currentUser.data?.user;
+
+    const stackOwner = data?.user;
+    const stackName = data?.name;
+    const frameId = data?.head?.id;
 
     const getFormFromViews = views => {
         if (!views || !Array.isArray(views))
@@ -160,7 +163,7 @@ const Details = ({
         executeStack({
             user: data.user,
             stack: data.name,
-            frame: frame?.id,
+            frame: frameId,
             attachment: attachmentIndex || 0,
             apply,
             views: executeData.views && executeData.views.map((view, index) => {
@@ -228,9 +231,9 @@ const Details = ({
         setAppAttachment(null);
 
         executeStack({
-            user: data.user,
-            stack: data.name,
-            frame: frame?.id,
+            user: stackOwner,
+            stack: stackName,
+            frame: frameId,
             attachment: attachmentIndex || 0,
         })
             .then(data => {
@@ -251,8 +254,11 @@ const Details = ({
     };
 
     useEffect(() => {
-        if (data?.user && data?.name && frame && !loading) {
-            if (!executionId || !isEqual(frame, prevFrame)) {
+        if (stackOwner !== params.user || stackName !== params.stack)
+            return;
+
+        if (stackOwner && stackName && frameId && !loading) {
+            if (!executionId) {
                 startExecute();
             } else {
                 setExecuting(true);
@@ -261,13 +267,12 @@ const Details = ({
                 checkFinished({id: executionId, isUpdateData: true});
             }
         }
-
-    }, [data, frame, attachmentIndex]);
+    }, [stackOwner, stackName, frameId, attachmentIndex]);
 
     useEffect(() => {
-        if ((!isEqual(prevFrame, frame) || !didMountRef.current) && frame)
+        if (!didMountRef.current && frameId)
             parseTabs();
-    }, [frame]);
+    }, [frameId]);
 
     useEffect(() => {
         if (!didMountRef.current)
@@ -279,7 +284,7 @@ const Details = ({
     }, []);
 
     const getCurrentAttachment = tabName => {
-        const attachments = get(frame, 'attachments');
+        const attachments = get(data, 'head.attachments');
 
         let attachment;
 
@@ -304,7 +309,7 @@ const Details = ({
     };
 
     const parseTabs = () => {
-        const attachments = get(frame, 'attachments');
+        const attachments = get(data, 'head.attachments');
 
         if (!attachments || !attachments.length)
             return;
@@ -325,7 +330,7 @@ const Details = ({
     const onChangeTab = tabName => {
         setActiveTab(tabName);
 
-        const attachments = get(frame, 'attachments');
+        const attachments = get(data, 'head.attachments');
         const tab = tabs.find(t => t.value === tabName);
 
         if (!attachments)
@@ -463,7 +468,7 @@ const Details = ({
 
                             urlParams={{
                                 a: attachmentIndex ? attachmentIndex : null,
-                                f: frame?.id !== data?.head?.id ? frame?.id : null,
+                                f: frameId !== data?.head?.id ? frame?.id : null,
                                 'execution_id': executionId,
                             }}
 
@@ -474,15 +479,6 @@ const Details = ({
                     )}
                 </div>
             </div>
-
-            {/*<StackFrames*/}
-            {/*    frames={get(data, 'frames', [])}*/}
-            {/*    frame={currentFrameId}*/}
-            {/*    headId={headId}*/}
-            {/*    onMarkAsHead={onChangeHeadFrame}*/}
-            {/*    onChange={onChangeFrame}*/}
-            {/*    className={css.revisions}*/}
-            {/*/>*/}
 
             {Boolean(tabs.length) && <Tabs
                 className={css.tabs}
