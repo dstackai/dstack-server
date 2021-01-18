@@ -74,6 +74,7 @@ const Details = ({
 }: Props) => {
     const {t} = useTranslation();
     const didMountRef = useRef(false);
+    const pollTimeoutRef = useRef(null);
     const {form, setForm, onChange} = useForm({});
     const [fields, setFields] = useState({});
     const [logsExpand, setExpandLogs] = useState(false);
@@ -356,10 +357,15 @@ const Details = ({
                 setActiveExecutionId(data.id);
 
                 if ([STATUSES.SCHEDULED, STATUSES.RUNNING].indexOf(data.status) >= 0)
-                    if (didMountRef.current)
-                        setTimeout(() => {
+                    if (didMountRef.current) {
+                        if (pollTimeoutRef.current)
+                            clearTimeout(pollTimeoutRef.current);
+
+                        pollTimeoutRef.current = setTimeout(() => {
                             checkFinished({id: data.id, isUpdateData});
                         }, REFRESH_INTERVAL);
+                    }
+
 
                 if (
                     [
