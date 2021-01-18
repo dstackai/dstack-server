@@ -20,8 +20,9 @@ class LocalFileService(@Autowired val config: AppConfig) : FileService {
         File(config.fileDirectory).mkdirs()
     }
 
-    override fun upload(path: String, user: User): URI {
-        return URI.create("${config.address}/api/files/$path?user=${user.name}&code=${user.verificationCode}")
+    override fun upload(path: String, user: User?): URI {
+        return URI.create("${config.address}/api/files/$path" +
+                (if (user != null) "?user=${user.name}&code=${user.verificationCode}" else ""))
     }
 
     override fun save(path: String, data: ByteArray) {
@@ -44,11 +45,15 @@ class LocalFileService(@Autowired val config: AppConfig) : FileService {
         }
     }
 
-    override fun download(path: String, user: User, filename: String, contentType: String): URI {
+    override fun download(path: String, user: User?, filename: String, contentType: String?): URI {
         return URI.create(
-            "${config.address}/api/files/$path?user=${user.name}&code=${user.verificationCode}&filename=${filename}&content_type=${URLEncoder.encode(
-                patchContentType(contentType), StandardCharsets.UTF_8.toString()
-            )}"
+                "${config.address}/api/files/$path?filename=${filename}"
+                        + (if (user != null) "&user=${user.name}&code=${user.verificationCode}" else "")
+                        + (if (contentType != null) "&content_type=${
+                    URLEncoder.encode(
+                            contentType, StandardCharsets.UTF_8.toString()
+                    )
+                }" else "")
         )
     }
 }

@@ -1,5 +1,6 @@
 import typing as ty
 from unittest import TestCase
+from datetime import date, datetime
 
 import dstack.controls as ctrl
 from dstack.controls import Controller, ApplyView
@@ -147,6 +148,41 @@ class TestControls(TestCase):
         self.assertEqual("20", v2.data)
         self.assertEqual("40", v3.data)
         self.assertEqual("40", v4.data)
+
+    def test_file_uploader(self):
+        file_uploader = ctrl.FileUploader()
+        self.assertTrue(isinstance(file_uploader.data, list))
+
+        controller = Controller([file_uploader])
+        views = controller.list()
+        file_uploader_view = ty.cast(ctrl.FileUploaderView, self.get_by_id(file_uploader.get_id(), views))
+        self.assertTrue(isinstance(file_uploader_view.uploads, list))
+        self.assertEqual({"uploads": []}, file_uploader_view._pack())
+        today = date.today()
+        file_uploader_view.uploads.append(ctrl.Upload("some_file_id", "some_file_name", 123, today))
+        packed_view = {"id": file_uploader._id, "enabled": True, "label": None, "optional": False,
+                       "type": "FileUploaderView", "uploads": [
+                {"id": "some_file_id", "file_name": "some_file_name", "length": 123,
+                 "created_date": today.strftime("%Y-%m-%d")}]}
+        self.assertEqual(packed_view,
+                         file_uploader_view.pack())
+        file_uploader.apply(file_uploader_view)
+        value = file_uploader.value()
+        self.assertTrue(isinstance(value, list))
+        self.assertEqual(len(value), 1)
+        self.assertEqual(value[0].id, "some_file_id")
+        self.assertEqual(value[0].file_name, "some_file_name")
+        self.assertEqual(value[0].length, 123)
+        self.assertEqual(value[0].created_date, today)
+        unpacked_view = ctrl.unpack_view(packed_view)
+        self.assertTrue(isinstance(unpacked_view, ctrl.FileUploaderView))
+        self.assertTrue(isinstance(unpacked_view.uploads, list))
+        self.assertEqual(len(unpacked_view.uploads), 1)
+        unpacked_upload = unpacked_view.uploads[0]
+        self.assertEqual(unpacked_upload.id, "some_file_id")
+        self.assertEqual(unpacked_upload.file_name, "some_file_name")
+        self.assertEqual(unpacked_upload.length, 123)
+        self.assertEqual(unpacked_upload.created_date, today)
 
     def test_combo_box(self):
         def update(control: ctrl.ComboBox, parent: ctrl.ComboBox):
@@ -351,10 +387,6 @@ class TestControls(TestCase):
         self.assertEqual(0, p3["selected"])
         self.assertFalse(p3["optional"])
         self.assertEqual(["Hello", "World"], p3["titles"])
-
-        c4 = ctrl.FileUpload(is_text=True, id="c4")
-        p4 = c4.view().pack()
-        self.assertTrue(p4["is_text"])
 
         c5 = ctrl.Slider(range(0, 10), id="c5", selected=3)
         p5 = c5.view().pack()

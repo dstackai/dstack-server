@@ -56,6 +56,11 @@ internal fun userNotFound() = response(
     OpStatus("user not found")
 )
 
+internal fun uploadNotFound() = response(
+    Response.Status.NOT_FOUND,
+    OpStatus("upload not found")
+)
+
 internal fun userEmailAlreadyRegistered() =
     response(
         Response.Status.BAD_REQUEST,
