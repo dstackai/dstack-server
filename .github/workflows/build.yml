@@ -137,7 +137,10 @@ jobs:
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
           chmod +x docker/base-image/variables.sh
+          chmod +x docker/base-image/build.sh
           chmod +x docker/base-image/release.sh
+      - name: Build base image
+        run: docker/base-image/build.sh
       - name: Release base image
         run: docker/base-image/release.sh
         env:
