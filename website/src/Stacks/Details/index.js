@@ -129,9 +129,11 @@ const Details = ({
     useEffect(() => {
         if (!data.head || !listData || (data.head.id !== listData.head))
             fetchData();
-
-        return () => clearDetails();
     }, [params.user, params.stack]);
+
+    useEffect(() => {
+        return () => clearDetails();
+    }, []);
 
     const setHeadFrame = frameId => {
         update({

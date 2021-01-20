@@ -35,6 +35,8 @@ export default {
     APPS_EXECUTE: '/apps/execute',
     APPS_POLL: '/apps/poll',
 
+    FILE_UPLOAD: '/uploads/upload',
+
     DASHBOARD_LIST: userName => `/dashboards/${userName}`,
     DASHBOARD_DETAILS: (userName, id) => `/dashboards/${userName}/${id}`,
     DASHBOARD_CREATE: '/dashboards/create',

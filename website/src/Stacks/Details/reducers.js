@@ -80,6 +80,7 @@ export default (state = initial, action) => {
                 loading: false,
                 loadingAttachment: false,
                 isPendingAddPermissions: false,
+                data: {},
             };
 
 

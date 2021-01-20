@@ -5,6 +5,7 @@ const typeMap = {
     'SliderView': 'slider',
     'CheckBoxView': 'checkbox',
     'ApplyView': 'apply',
+    'FileUploaderView': 'file',
 };
 
 export default views => {
