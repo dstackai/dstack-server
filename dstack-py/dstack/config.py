@@ -6,7 +6,7 @@ from typing import Optional, Dict, Union
 
 import yaml
 
-API_SERVER = "https://api.dstack.ai"
+API_SERVER = "https://api.stgn.dstack.ai"
 
 
 class ConfigurationError(Exception):
