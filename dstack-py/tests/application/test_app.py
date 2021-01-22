@@ -74,6 +74,7 @@ class TestApp(TestCase):
         def baz():
             print("baz")
 
+        c0 = ctrl.TextField("0", id="c0")
         c1 = ctrl.TextField("10", id="c1")
         c2 = ctrl.TextField(id="c2", depends=c1, handler=update)
 
@@ -82,8 +83,8 @@ class TestApp(TestCase):
             baz()
             self.data = int(x.value()) + int(y.value())
 
-        o1 = ctrl.Output(handler=output_handler)
-        my_app = app(controls=[c1, c2], outputs=[o1], depends=["tests.application.test_package"])
+        o1 = ctrl.Output(handler=output_handler, depends=[c1, c2])
+        my_app = app(controls=[c0, c1, c2], outputs=[o1], depends=["tests.application.test_package"])
 
         encoder = AppEncoder()
         frame_data = encoder.encode(my_app, None, None)
