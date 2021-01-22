@@ -50,6 +50,8 @@ class View(ABC):
 V = ty.TypeVar("V", bound=View)
 
 
+# TODO: Add position: ControlPosition[DEFAULT|SIDEBAR|HEADER|ONE_COLUMN|TWO_COLUMNS)
+# TODO: Extract Input(Control[V]):
 class Control(ABC, ty.Generic[V]):
     def __init__(self,
                  label: ty.Optional[str],
@@ -131,6 +133,7 @@ class Control(ABC, ty.Generic[V]):
     def _value(self) -> ty.Optional[ty.Any]:
         pass
 
+    # TODO: Rethink after multiple outputs refactoring is done
     def _check_pickle(self):
         if hasattr(self, '_update_func'):
             self._handler = getattr(self, '_update_func')
@@ -163,6 +166,7 @@ class CheckBoxView(View):
         return {"selected": self.selected}
 
 
+# TODO: Get rid of data. Keep only handler.
 class TextField(Control[TextFieldView], ty.Generic[T]):
     def __init__(self,
                  data: ty.Union[ty.Optional[str], ty.Callable[[], str]] = None,
@@ -543,10 +547,22 @@ class Apply(Control[ApplyView]):
         return None
 
 
+# TODO: Add position: OutputPosition[DEFAULT|ONE_COLUMN|TWO_COLUMNS)
+# TODO: Add label:str
+# TODO: Add depends=[ty.List[Control]
+class Output(ABC, ty.Generic[T]):
+    def __init__(self, handler: ty.Callable):
+        self._handler = handler
+
+
 class Controller(object):
-    def __init__(self, controls: ty.List[Control]):
+    def __init__(self, controls: ty.List[Control], outputs: ty.List[Output]):
         self.controls_by_id: ty.Dict[str, Control] = {}
         self.copy_of_controls_by_id = None
+        self._outputs: ty.Dict[int, Output] = {}
+
+        for i, o in enumerate(outputs):
+            self._outputs[i] = o
 
         require_apply = False
         has_apply = False
@@ -595,7 +611,7 @@ class Controller(object):
 
         return values
 
-    def apply(self, func: ty.Callable, views: ty.List[View]) -> ty.Any:
+    def apply(self, views: ty.List[View]) -> ty.Any:
         self.copy_of_controls_by_id = self.copy_controls_by_id()
 
         for view in views:
@@ -607,7 +623,7 @@ class Controller(object):
 
         self.copy_of_controls_by_id = None
 
-        return func(*values)
+        return self._outputs[0]._handler(*values)
 
     def _check_pickle(self):
         if hasattr(self, 'map'):
