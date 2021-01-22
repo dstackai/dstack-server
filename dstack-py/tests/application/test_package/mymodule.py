@@ -11,6 +11,7 @@ def foo():
     print("Here is foo!")
 
 
-def test_app(x: ctrl.TextField, y: ctrl.TextField):
+def test_app(self: ctrl.Output, x: ctrl.TextField, y: ctrl.TextField):
     foo()
     print(f"My app: x={x.value()} y={y.value()}")
+    self.data = int(x.value()) + int(y.value())

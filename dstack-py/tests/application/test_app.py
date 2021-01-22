@@ -24,7 +24,7 @@ class TestApp(TestCase):
 
         c1 = ctrl.TextField("10", id="c1")
         c2 = ctrl.TextField(id="c2", depends=c1, handler=update)
-        o1 = ctrl.Output(test_app)
+        o1 = ctrl.Output(handler=test_app)
 
         # def my_test_app(x: ctrl.TextField, y: ctrl.TextField):
         #     foo()
@@ -56,13 +56,14 @@ class TestApp(TestCase):
             controller = cloudpickle.load(f)
 
         views = controller.list()
-        controller.apply(views)
+        outputs = controller.apply(views)
+        print(outputs[0].data)
         """
         test_file = Path(app_dir) / "test_script.py"
         test_file.write_text(dedent(test_script).lstrip())
         output, error = env.run_script(["test_script.py"], app_dir)
         self.assertEqual("", error)
-        self.assertEqual(f"Here is bar!{os.linesep}Here is foo!{os.linesep}My app: x=10 y=20{os.linesep}", output)
+        self.assertEqual(f"Here is bar!{os.linesep}Here is foo!{os.linesep}My app: x=10 y=20{os.linesep}30{os.linesep}", output)
         env.dispose()
         shutil.rmtree(base_dir)
 
@@ -76,12 +77,12 @@ class TestApp(TestCase):
         c1 = ctrl.TextField("10", id="c1")
         c2 = ctrl.TextField(id="c2", depends=c1, handler=update)
 
-        def my_func(x: ctrl.TextField, y: ctrl.TextField):
+        def output_handler(self: ctrl.Output, x: ctrl.TextField, y: ctrl.TextField):
             foo()
             baz()
-            return int(x.value()) + int(y.value())
+            self.data = int(x.value()) + int(y.value())
 
-        o1 = ctrl.Output(my_func)
+        o1 = ctrl.Output(handler=output_handler)
         my_app = app(controls=[c1, c2], outputs=[o1], depends=["tests.application.test_package"])
 
         encoder = AppEncoder()
@@ -101,14 +102,15 @@ class TestApp(TestCase):
             controller = cloudpickle.load(f)
 
         views = controller.list()
-        controller.apply(views)
+        outputs = controller.apply(views)
+        print(outputs[0].data)
         """
         test_file = Path(app_dir) / "test_script.py"
         test_file.write_text(dedent(test_script).lstrip())
 
         output, error = env.run_script(["test_script.py"], app_dir)
         self.assertEqual("", error)
-        self.assertEqual(f"Here is bar!{os.linesep}Here is foo!{os.linesep}baz{os.linesep}", output)
+        self.assertEqual(f"Here is bar!{os.linesep}Here is foo!{os.linesep}baz{os.linesep}30{os.linesep}", output)
         env.dispose()
 
         shutil.rmtree(base_dir)

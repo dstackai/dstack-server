@@ -548,21 +548,24 @@ class Apply(Control[ApplyView]):
 
 
 # TODO: Add position: OutputPosition[DEFAULT|ONE_COLUMN|TWO_COLUMNS)
-# TODO: Add label:str
 # TODO: Add depends=[ty.List[Control]
 class Output(ABC, ty.Generic[T]):
-    def __init__(self, handler: ty.Callable):
+    def __init__(self,
+                 label: ty.Optional[str] = None,
+                 id: ty.Optional[str] = None,
+                 handler: ty.Optional[ty.Callable[..., None]] = None):
+        self.label = label
+        self.data = None
+
         self._handler = handler
+        self._id = id or str(uuid4())
 
 
 class Controller(object):
     def __init__(self, controls: ty.List[Control], outputs: ty.List[Output]):
         self.controls_by_id: ty.Dict[str, Control] = {}
         self.copy_of_controls_by_id = None
-        self._outputs: ty.Dict[int, Output] = {}
-
-        for i, o in enumerate(outputs):
-            self._outputs[i] = o
+        self._outputs = outputs
 
         require_apply = False
         has_apply = False
@@ -623,7 +626,10 @@ class Controller(object):
 
         self.copy_of_controls_by_id = None
 
-        return self._outputs[0]._handler(*values)
+        copy_of_outputs = [copy(o) for o in self._outputs]
+        for o in copy_of_outputs:
+            o._handler(o, *values)
+        return copy_of_outputs
 
     def _check_pickle(self):
         if hasattr(self, 'map'):

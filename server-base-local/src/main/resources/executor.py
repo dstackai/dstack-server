@@ -77,24 +77,35 @@ def execute(id, views, apply):
             if apply:
                 if dstack_version.startswith("0.6.dev") or dstack_version.startswith("0.6.0"):
                     if func:
-                        result = controller.apply(func, views)
+                        output = ctrl.Output()
+                        output.data = controller.apply(func, views)
+                        outputs = [output]
                     else:
                         raise ValueError("The client doesn't support this format of the application. "
                                          "Please make sure to update the client to 0.6.1 or higher.")
                 else:
                     if func:
-                        controller._outputs = [ctrl.Output(func)]
-                    result = controller.apply(views)
-                execution['status'] = 'FINISHED'
-                output = {}
+                        def handler(o, *args):
+                            o.data = func(*args)
+                        controller._outputs = [ctrl.Output(handler=handler)]
+                    outputs = controller.apply(views)
+                execution["status"] = "FINISHED"
                 encoder = AutoHandler()
-                frame_data = encoder.encode(result, None, None)
-                output['application'] = frame_data.application
-                output['content_type'] = frame_data.content_type
-                output['data'] = frame_data.data.base64value()
-                execution['output'] = output
+                execution_outputs = []
+                for o in outputs:
+                    frame_data = encoder.encode(o.data, None, None)
+                    output = {"id": o._id,
+                              "application": frame_data.application,
+                              "content_type": frame_data.content_type,
+                              "data": frame_data.data.base64value()}
+                    if o.label:
+                        output["label"] = o.label
+                    execution_outputs.append(output)
+                if len(execution_outputs) > 0:
+                    execution["output"] = execution_outputs[0]
+                execution["outputs"] = execution_outputs
         except Exception:
-            execution['status'] = 'FAILED'
+            execution["status"] = 'FAILED'
             print(str(traceback.format_exc()))
 
     if apply:
