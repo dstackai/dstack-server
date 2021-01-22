@@ -647,6 +647,7 @@ class Controller(object):
             for i in range(len(c._parents)):
                 c._parents[i] = self.controls_by_id[c._parents[i]._id]
 
-        for o in self._outputs:
-            for i in range(len(o._parents)):
-                o._parents[i] = self.controls_by_id[o._parents[i]._id]
+        if hasattr(self, '_outputs'):
+            for o in self._outputs:
+                for i in range(len(o._parents)):
+                    o._parents[i] = self.controls_by_id[o._parents[i]._id]
