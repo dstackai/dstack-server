@@ -1,5 +1,6 @@
-**[dstack](https://dstack.ai/) is an open-source Python library that makes it easy to build and manage web applications
-for data science and machine learning.**
+![](https://raw.githubusercontent.com/dstackai/dstack/master/splash.png)
+
+**[dstack](https://dstack.ai/) is an open-source platform to build and share data and ML applications within hours**
 
 [![Discord Chat](https://img.shields.io/discord/687649691688501294.svg)](https://discord.gg/)
 

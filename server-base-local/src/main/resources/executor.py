@@ -4,6 +4,7 @@ import json
 import traceback
 
 from pathlib import Path
+from importlib import import_module
 from io import StringIO
 from contextlib import redirect_stdout
 
@@ -101,8 +102,6 @@ def execute(id, views, apply):
                     if o.label:
                         output["label"] = o.label
                     execution_outputs.append(output)
-                if len(execution_outputs) > 0:
-                    execution["output"] = execution_outputs[0]
                 execution["outputs"] = execution_outputs
         except Exception:
             execution["status"] = 'FAILED'
