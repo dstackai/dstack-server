@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component
 import java.io.*
 import java.util.zip.ZipInputStream
 import java.io.IOException
-import java.util.zip.ZipEntry
 import java.io.FileOutputStream
 import java.lang.IllegalStateException
 import java.util.*
@@ -41,25 +40,24 @@ class LocalExecutionService @Autowired constructor(
             val pythonExecutable = config.pythonExecutables[minorPythonVersion]
             if (pythonExecutable != null) {
                 extractApplicationIfMissing(attachment)
-
                 writeExecutionMetaFile(stack.path, id)
-                writeStagedExecutionFile(id, views)
-
+                writeExecutionFile(EXECUTION_STAGE_ORIGINAL, id, views, "SCHEDULED", null)
                 installVenvAndStartProcessIfNeeded(attachment, pythonExecutable, user)
                 addExecutionRequestToQueue(attachment, ExecutionRequest(id, views, apply))
                 return poll(id)!!
             } else {
-                val failedExecution = failedExecution(id,
-                        "The required Python version is not supported: $minorPythonVersion")
-                        .toByteArray()
-                ExecutionStatus(stack.path, failedExecution.inputStream(), failedExecution.size.toLong())
+                failed(stack, id, views, "The required Python version is not supported: $minorPythonVersion")
             }
         } else {
-            val failedExecution = failedExecution(id,
-                    "The Python version is missing in the application. Make sure you use the latest client to push the application.")
-                    .toByteArray()
-            ExecutionStatus(stack.path, failedExecution.inputStream(), failedExecution.size.toLong())
+            failed(stack, id, views, "The Python version is missing in the application. " +
+                    "Make sure you use the latest client to push the application.")
         }
+    }
+
+    private fun failed(stack: Stack, id: String, views: List<Map<String, Any?>>?, logs: String): ExecutionStatus {
+        val failedExecution = failedExecution(id, logs).toByteArray()
+        writeExecutionFile(EXECUTION_STAGE_FINAL, id, views, "FAILED", logs)
+        return ExecutionStatus(stack.path, failedExecution.inputStream(), failedExecution.size.toLong())
     }
 
     private fun failedExecution(id: String, logs: String): String {
@@ -144,12 +142,15 @@ class LocalExecutionService @Autowired constructor(
     private fun startVenvPythonProcess(user: User, attachment: Attachment, venvPythonExecutable: String): Process {
         // TODO: Capture logs from installation and save them per application
         val executorFile = executorFile(attachment)
-        val attachmentSettings = attachment.settings["function"] as Map<*, *>
-        val functionType = attachmentSettings["type"] as String
-        val functionData = attachmentSettings["data"] as String
         val server = "http://localhost${if (config.internalPort != 80) ":${config.internalPort}" else ""}/api"
         val commands = mutableListOf(venvPythonExecutable, executorFile.name,
-                executionHome, functionType, functionData, user.name, user.token, server)
+                executionHome, user.name, user.token, server)
+        val attachmentSettings = attachment.settings["function"] as Map<*, *>?
+        val functionType = attachmentSettings?.get("type") as String?
+        val functionData = attachmentSettings?.get("data") as String?
+        if (functionType != null && functionData != null) {
+            commands.addAll(listOf(functionType, functionData))
+        }
         return ProcessBuilder(commands).directory(destDir(attachment)).start().also {
             ErrorLogger(it.errorStream).start()
         }
@@ -217,12 +218,16 @@ class LocalExecutionService @Autowired constructor(
     private val executionRequestsObjectMapper = ObjectMapper()
             .registerModule(KotlinModule())
 
-    private fun writeStagedExecutionFile(id: String, views: List<Map<String, Any?>>?) {
-        val executionFile = executionFile(id, EXECUTION_STAGE_ORIGINAL)
+    private fun writeExecutionFile(stage: String, id: String,
+                                   views: List<Map<String, Any?>>?, status: String, logs: String?) {
+        val executionFile = executionFile(id, stage)
         executionFile.parentFile.mkdirs()
-        val execution = mutableMapOf<String, Any?>("id" to id, "status" to "SCHEDULED")
+        val execution = mutableMapOf<String, Any?>("id" to id, "status" to status)
         views?.let {
             execution["views"] = it
+        }
+        logs?.let {
+            execution["logs"] = it
         }
         executionFileObjectMapper.writeValue(executionFile, execution)
     }
@@ -266,7 +271,7 @@ class LocalExecutionService @Autowired constructor(
     private fun destDir(attachment: Attachment) =
             File(config.appDirectory + "/" + attachment.filePath)
 
-    private val executorVersion = 14
+    private val executorVersion = 15
 
     private fun executorFile(attachment: Attachment) = File(destDir(attachment), "execute_v${executorVersion}.py")
 

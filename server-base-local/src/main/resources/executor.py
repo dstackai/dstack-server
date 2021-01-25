@@ -4,22 +4,26 @@ import json
 import traceback
 
 from pathlib import Path
-from importlib import import_module
 from io import StringIO
 from contextlib import redirect_stdout
 
-from dstack.controls import unpack_view
+import dstack.controls as ctrl
 from dstack import AutoHandler
-from dstack.controls import Apply
 from dstack import config as dstack_config
 from dstack.config import InPlaceConfig, Profile
+from dstack.version import __version__ as dstack_version
 
 executions_home = sys.argv[1]
-function_type = sys.argv[2]
-function_data = sys.argv[3]
-user = sys.argv[4]
-token = sys.argv[5]
-server = sys.argv[6]
+
+user = sys.argv[2]
+token = sys.argv[3]
+server = sys.argv[4]
+if len(sys.argv) > 5:
+    function_type = sys.argv[5]
+    function_data = sys.argv[6]
+else:
+    function_type = None
+    function_data = None
 
 in_place_config = InPlaceConfig()
 in_place_config.add_or_replace_profile(Profile("default", user, token, server, verify=True))
@@ -31,17 +35,20 @@ with open("controller.pickle", "rb") as f:
 
 controller.init()
 
-if function_type == "source":
-    t = function_data.rsplit(".", -1)
-    function_package = ".".join(t[:-1])
-    function_name = t[-1]
-    print(function_package)
-    print(function_name)
-    function_module = import_module(function_package)
-    func = getattr(function_module, function_name)
+if function_type and function_data:
+    if function_type == "source":
+        t = function_data.rsplit(".", -1)
+        function_package = ".".join(t[:-1])
+        function_name = t[-1]
+        print(function_package)
+        print(function_name)
+        function_module = import_module(function_package)
+        func = getattr(function_module, function_name)
+    else:
+        with open(function_data, "rb") as f:
+            func = cloudpickle.load(f)
 else:
-    with open(function_data, "rb") as f:
-        func = cloudpickle.load(f)
+    func = None
 
 
 def execute(id, views, apply):
@@ -68,17 +75,37 @@ def execute(id, views, apply):
             execution_file.write_text(json.dumps(execution))
 
             if apply:
-                result = controller.apply(func, views)
-                execution['status'] = 'FINISHED'
-                output = {}
+                if dstack_version.startswith("0.6.dev") or dstack_version.startswith("0.6.0"):
+                    if func:
+                        output = ctrl.Output()
+                        output.data = controller.apply(func, views)
+                        outputs = [output]
+                    else:
+                        raise ValueError("The client doesn't support this format of the application. "
+                                         "Please make sure to update the client to 0.6.1 or higher.")
+                else:
+                    if func:
+                        def handler(o, *args):
+                            o.data = func(*args)
+                        controller._outputs = [ctrl.Output(handler=handler)]
+                    outputs = controller.apply(views)
+                execution["status"] = "FINISHED"
                 encoder = AutoHandler()
-                frame_data = encoder.encode(result, None, None)
-                output['application'] = frame_data.application
-                output['content_type'] = frame_data.content_type
-                output['data'] = frame_data.data.base64value()
-                execution['output'] = output
+                execution_outputs = []
+                for o in outputs:
+                    frame_data = encoder.encode(o.data, None, None)
+                    output = {"id": o._id,
+                              "application": frame_data.application,
+                              "content_type": frame_data.content_type,
+                              "data": frame_data.data.base64value()}
+                    if o.label:
+                        output["label"] = o.label
+                    execution_outputs.append(output)
+                if len(execution_outputs) > 0:
+                    execution["output"] = execution_outputs[0]
+                execution["outputs"] = execution_outputs
         except Exception:
-            execution['status'] = 'FAILED'
+            execution["status"] = 'FAILED'
             print(str(traceback.format_exc()))
 
     if apply:
@@ -93,7 +120,7 @@ def parse_command(command):
     command_json = json.loads(command)
     id = command_json.get("id")
     _views = command_json.get("views")
-    views = [unpack_view(v) for v in _views] if _views is not None else None
+    views = [ctrl.unpack_view(v) for v in _views] if _views is not None else None
     apply = command_json.get("apply")
     return id, views, apply
 

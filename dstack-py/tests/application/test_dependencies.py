@@ -4,8 +4,8 @@ from pathlib import Path
 from tempfile import gettempdir
 from unittest import TestCase
 
-from dstack.application.handlers import _get_deps, _stage_deps
-from dstack.controls import TextField
+from dstack.application.handlers import _stage_deps
+from dstack.controls import TextField, Output
 from dstack import app
 from tests.application.test_package.mymodule import test_app
 
@@ -27,10 +27,11 @@ class TestDependencies(TestCase):
         c1 = TextField("10", id="c1")
         c2 = TextField(id="c2", depends=c1, handler=update)
 
-        my_app = app(test_app, x=c1, y=c2, requirements="tests/application/test_requirements.txt",
+        o1 = Output(test_app)
+        my_app = app(controls=[c1, c2], outputs=[o1], requirements="tests/application/test_requirements.txt",
                      depends=["deprecation", "PyYAML==5.3.1", "tests.application.test_package"])
 
-        deps = _get_deps(my_app.handler)
+        deps = my_app.deps()
         print(deps)
         stage_dir = self._get_temp_dir("stage1")
         print(stage_dir)
