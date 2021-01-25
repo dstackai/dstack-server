@@ -200,16 +200,42 @@
     grid-column: 1 / -1;
 }
 .description + .filters,
-.description + .attachment,
-.filters + .attachment {
+.description + .attachmentsGrid,
+.filters + .attachmentsGrid {
     margin-top: 20px;
 }
 .description {
     grid-area: description;
 }
-.attachment {
+.attachmentsGrid {
     grid-area: content;
     min-width: 0;
+    @media (--desktop) {
+        display: flex;
+        margin-left: -22px;
+        margin-right: -22px;
+    }
+}
+.attachmentItem {
+    @media (--mobile) {
+        &:nth-child(n+2) {
+            margin-top: 40px;
+        }
+    }
+    @media (--desktop) {
+        flex-grow: 1;
+        min-width: 50%;
+        padding: 22px;
+        box-sizing: border-box;
+        @media (--mobile) {
+            &:nth-child(n+3) {
+                margin-top: 40px;
+            }
+        }
+    }
+}
+.attachment {
+
 }
 .progress {
     grid-area: content;

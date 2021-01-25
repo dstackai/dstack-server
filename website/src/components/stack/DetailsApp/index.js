@@ -82,7 +82,7 @@ const Details = ({
     const [executing, setExecuting] = useState(false);
     const [calculating, setCalculating] = useState(false);
     const [error, setError] = useState(null);
-    const [appAttachment, setAppAttachment] = useState(null);
+    const [appAttachments, setAppAttachment] = useState(null);
     const [isScheduled, setIsScheduled] = useState(false);
     const [activeTab, setActiveTab] = useState();
     const [tabs, setTabs] = useState([]);
@@ -210,7 +210,7 @@ const Details = ({
 
     useDebounce(() => {
         if (!isEqual(form, getFormFromViews(executeData?.views)) && !executing) {
-            submit(form, !!(!hasApplyButton() && appAttachment));
+            submit(form, !!(!hasApplyButton() && appAttachments));
         }
     }, 300, [form]);
 
@@ -219,7 +219,7 @@ const Details = ({
     const onReset = () => startExecute();
 
     useEffect(() => {
-        if (executeData && executeData.status === STATUSES.READY && !appAttachment && !executing) {
+        if (executeData && executeData.status === STATUSES.READY && !appAttachments && !executing) {
             if (!hasApplyButton())
                 submit(form, true);
         }
@@ -382,8 +382,8 @@ const Details = ({
                 }
 
                 if ([STATUSES.FINISHED, STATUSES.READY].indexOf(data.status) >= 0) {
-                    if (data.output)
-                        setAppAttachment(data.output);
+                    if (data.outputs)
+                        setAppAttachment(data.outputs);
 
                     if (isUpdateData) {
                         setExecuting(false);
@@ -511,12 +511,20 @@ const Details = ({
                         disabled={executing || calculating}
                     />
 
-                    {appAttachment && !calculating && (
-                        <StackAttachment
-                            className={css.attachment}
-                            stack={`${user}/${stack}`}
-                            customData={appAttachment}
-                        />
+                    {appAttachments && appAttachments.length && !calculating && (
+                        <div className={css.attachmentsGrid}>
+                            {
+                                appAttachments.map(attach => (
+                                    <div className={css.attachmentItem}>
+                                        <StackAttachment
+                                            className={css.attachment}
+                                            stack={`${user}/${stack}`}
+                                            customData={attach}
+                                        />
+                                    </div>
+                                ))
+                            }
+                        </div>
                     )}
 
                     {calculating && !isScheduled && (
@@ -526,14 +534,14 @@ const Details = ({
                         />
                     )}
 
-                    {!appAttachment && !error && isScheduled && (
+                    {!appAttachments && !error && isScheduled && (
                         <Progress
                             className={css.progress}
                             message={t('initializingTheApplication')}
                         />
                     )}
 
-                    {!calculating && !executing && !appAttachment && !error && !isScheduled && (
+                    {!calculating && !executing && !appAttachments && !error && !isScheduled && (
                         <div className={css.emptyMessage}>
                             {t('clickApplyToSeeTheResult')}
                         </div>
