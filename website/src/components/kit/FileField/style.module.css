@@ -1,0 +1,98 @@
+@import "styles/variables.css";
+
+:root {
+    --field-normal-height: 50px;
+    --field-middle-height: 40px;
+    --field-small-height: 30px;
+}
+
+.field {
+    position: relative;
+    padding-bottom: 16px;
+    &:global(.normal) {
+        & .input {
+            height: var(--field-normal-height);
+        }
+    }
+    &:global(.middle) {
+        & .input {
+            height: var(--field-middle-height);
+        }
+    }
+    &:global(.small) {
+        .label {
+            margin-bottom: 4px;
+        }
+        & .input {
+            height: var(--field-small-height);
+        }
+    }
+    &:global(.disabled) {
+        opacity: .5;
+        & .input {
+            pointer-events: none;
+        }
+    }
+    &:global(.active) {
+        & .input:not(:global(.error)) {
+            border-color: var(--color-blue);
+        }
+    }
+    & .input {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--color-white);
+        padding-left: 10px;
+        padding-right: 10px;
+        border: 1px solid var(--color-light-gray);
+        border-radius: 4px;
+        transition: border .2s;
+        &:global(.error) {
+            border-color: var(--color-red);
+        }
+        &:not(:global(.error)) {
+            &:focus {
+                border-color: var(--color-blue);
+            }
+        }
+        & > input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .placeholder {
+            font-size: 14px;
+            line-height: 17px;
+            color: var(--color-light-gray);
+            text-align: center;
+        }
+        .button {
+            padding: 0 !important;
+            white-space: nowrap;
+            font-size: 14px;
+            line-height: 17px;
+            margin-left: 4px;
+            outline: none;
+        }
+    }
+}
+.label {
+    margin-bottom: 10px;
+    font-size: 12px;
+    line-height: 14px;
+    color: var(--color-dark-gray);
+    opacity: .7;
+}
+.error {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    color: var(--color-red);
+    font-size: 12px;
+    line-height: 14px;
+}

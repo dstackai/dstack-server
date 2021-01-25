@@ -6,6 +6,7 @@ import SelectField from 'components/SelectField';
 import CheckboxField from 'components/CheckboxField';
 import SliderField from 'components/SliderField';
 import TextField from 'components/TextField';
+import {FileField} from 'components/kit';
 import TextAreaField from 'components/TextAreaField';
 import Button from 'components/Button';
 import css from './styles.module.css';
@@ -38,6 +39,18 @@ const StackFilters = ({className, fields, form, onChange, onApply, onReset, isSi
                             label={fields[key].label}
                             name={key}
                             value={form[key]}
+                            disabled={disabled || fields[key].disabled}
+                        />;
+
+                    case 'file':
+                        return <FileField
+                            size="small"
+                            key={`file-${key}`}
+                            className={cx(css.field, css.file)}
+                            onChange={files => onChange(key, files)}
+                            label={fields[key].label}
+                            name={key}
+                            files={form[key]}
                             disabled={disabled || fields[key].disabled}
                         />;
 

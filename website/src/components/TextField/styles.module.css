@@ -1,8 +1,8 @@
 @import "styles/variables.css";
 :root {
-    --textarea-normal-height: 50px;
-    --textarea-middle-height: 40px;
-    --textarea-small-height: 30px;
+    --field-normal-height: 50px;
+    --field-middle-height: 40px;
+    --field-small-height: 30px;
 }
 .field {
     position: relative;
@@ -10,7 +10,7 @@
     &:global(.normal) {
         & .input {
             & > input {
-                height: var(--textarea-normal-height);
+                height: var(--field-normal-height);
                 padding: 16px 17px;
             }
         }
@@ -18,7 +18,7 @@
     &:global(.middle) {
         & .input {
             & > input {
-                height: var(--textarea-middle-height);
+                height: var(--field-middle-height);
                 padding: 11px 10px;
             }
         }
@@ -29,7 +29,7 @@
         }
         & .input {
             & > input {
-                height: var(--textarea-small-height);
+                height: var(--field-small-height);
                 padding: 6px 3px;
             }
         }

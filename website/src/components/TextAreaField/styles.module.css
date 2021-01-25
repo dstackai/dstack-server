@@ -1,7 +1,7 @@
 @import "styles/variables.css";
 :root {
-    --textarea-normal-height: 140px;
-    --textarea-small-height: 120px;
+    --field-normal-height: 140px;
+    --field-small-height: 120px;
 }
 .field {
     position: relative;
@@ -9,7 +9,7 @@
     &:global(.normal) {
         & .textarea {
             & > textarea {
-                height: var(--textarea-normal-height);
+                height: var(--field-normal-height);
                 padding: 16px 17px;
             }
         }
@@ -17,7 +17,7 @@
     &:global(.small) {
         & .textarea {
             & > textarea {
-                height: var(--textarea-small-height);
+                height: var(--field-small-height);
                 padding: 6px 3px;
             }
         }

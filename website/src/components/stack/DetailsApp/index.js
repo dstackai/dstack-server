@@ -112,6 +112,9 @@ const Details = ({
                 case 'CheckBoxView':
                     result[index] = view.selected;
                     break;
+                case 'FileUploaderView':
+                    result[index] = view.uploads;
+                    break;
                 default:
                     result[index] = view.data;
             }
@@ -178,6 +181,9 @@ const Details = ({
                         break;
                     case 'SliderView':
                         view.selected = view.data.findIndex(i => i === form[index]);
+                        break;
+                    case 'FileUploaderView':
+                        view.uploads = form[index];
                         break;
                     default:
                         view.data = form[index];
