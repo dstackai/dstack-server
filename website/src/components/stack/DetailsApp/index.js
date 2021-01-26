@@ -514,8 +514,9 @@ const Details = ({
                     {appAttachments && appAttachments.length && !calculating && (
                         <div className={css.attachmentsGrid}>
                             {
-                                appAttachments.map(attach => (
+                                appAttachments.map((attach, index) => (
                                     <StackAttachment
+                                        key={index}
                                         className={cx(css.attachment, {noOne: appAttachments.length > 1})}
                                         stack={`${user}/${stack}`}
                                         customData={attach}
