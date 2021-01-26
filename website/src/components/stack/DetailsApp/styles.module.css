@@ -189,9 +189,14 @@
             grid-column-gap: 30px;
             & .filters {
                 grid-area: filters;
-                margin-right: 30px;
                 padding: 12px 20px 20px;
                 background-color: #F8F7F9;
+            }
+        }
+        &:not(.withSidebar) {
+            .description + .filters,
+            .filters + .attachmentsGrid {
+                margin-top: 20px;
             }
         }
     }
@@ -199,9 +204,7 @@
 .filterLoader {
     grid-column: 1 / -1;
 }
-.description + .filters,
-.description + .attachmentsGrid,
-.filters + .attachmentsGrid {
+.description + .attachmentsGrid {
     margin-top: 20px;
 }
 .description {
@@ -214,9 +217,6 @@
 .attachment {
     &:nth-child(n+2) {
         margin-top: 40px;
-        @media (--desktop) {
-            margin-top: 60px;
-        }
     }
     &:global(.noOne) {
         @media (--desktop) {
