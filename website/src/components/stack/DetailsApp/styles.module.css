@@ -216,7 +216,7 @@
 }
 .attachment {
     &:nth-child(n+2) {
-        margin-top: 35px;
+        margin-top: 37px;
     }
     &:global(.noOne) {
         @media (--desktop) {
