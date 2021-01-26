@@ -22,8 +22,15 @@
         line-height: 19px;
     }
     p {
+        text-align: left;
         margin-top: 5px;
         margin-bottom: 5px;
-        text-align: left;
+
+        &:first-child {
+            margin-top: 0;
+        }
+        &:last-child {
+            margin-bottom: 0;
+        }
     }
 }
