@@ -218,11 +218,8 @@
     &:nth-child(n+2) {
         margin-top: 37px;
     }
-    &:global(.noOne) {
-        @media (--desktop) {
-            overflow: hidden;
-            max-height: calc(100vh * 0.6);
-        }
+    &:global(.noOne)&:global(.withMaxHeight) {
+        max-height: calc(100vh * 0.6);
     }
 }
 .progress {

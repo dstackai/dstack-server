@@ -517,7 +517,16 @@ const Details = ({
                                 appAttachments.map((attach, index) => (
                                     <StackAttachment
                                         key={index}
-                                        className={cx(css.attachment, {noOne: appAttachments.length > 1})}
+
+                                        className={cx(css.attachment, {
+                                            noOne: appAttachments.length > 1,
+
+                                            withMaxHeight: (
+                                                attach['content_type'] === 'text/csv'
+                                                || attachment['application'] === 'attach'
+                                            ),
+                                        })}
+
                                         stack={`${user}/${stack}`}
                                         customData={attach}
                                     />

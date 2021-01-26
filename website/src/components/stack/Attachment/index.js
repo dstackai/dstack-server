@@ -83,6 +83,7 @@ const Attachment = ({
 
             {!loading && (
                 <View
+                    className={css.view}
                     requestStatus={requestStatus}
                     fullAttachment={fullAttachment}
                     attachment={customData ? customData : attachment}

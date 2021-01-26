@@ -2,16 +2,23 @@
 @import "styles/media.css";
 .attachment {
     position: relative;
+    display: flex;
+    flex-direction: column;
     &:global(.loading) {
         background: linear-gradient(90deg, #F7F9FB -3.86%, #EEF1F3 34.95%, #FDFDFD 107.97%);
         animation: loading-pulse 1.5s infinite;
     }
 }
 .label {
+    -webkit-flex-shrink: 0;
     font-weight: 500;
     font-size: 16px;
     line-height: 19px;
     margin-bottom: 14px;
+}
+.view {
+    flex-grow: 1;
+    flex-basis: 100% !important;
 }
 @keyframes loading-pulse {
     0% {
