@@ -7,6 +7,7 @@ import ai.dstack.server.jersey.resources.SupportResources
 import ai.dstack.server.jersey.resources.apps.AppResources
 import ai.dstack.server.jersey.resources.config.ConfigResources
 import ai.dstack.server.jersey.resources.stacks.*
+import ai.dstack.server.jersey.resources.uploads.UploadResources
 import ai.dstack.server.jersey.resources.users.UserResources
 import org.glassfish.jersey.CommonProperties
 import org.glassfish.jersey.jackson.JacksonFeature
@@ -32,7 +33,8 @@ class JerseyApplication {
                     UserResources::class.java,
                     SupportResources::class.java,
                     ConfigResources::class.java,
-                    AppResources::class.java
+                    AppResources::class.java,
+                    UploadResources::class.java
                 )
                 .register(JacksonFeature::class.java)
     }
