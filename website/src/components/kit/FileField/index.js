@@ -4,6 +4,7 @@ import cn from 'classnames';
 import {useTranslation} from 'react-i18next';
 // import {formatBytes} from 'utils';
 import Button from 'components/Button';
+import actions from './actions';
 import css from './style.module.css';
 
 type Props = {
@@ -37,12 +38,16 @@ const FileField = ({
     const isDidMount = useRef(true);
     const hasErrors = Boolean(errors.length);
 
+    const {upload} = actions();
+
     // useImperativeHandle(ref, () => ({clear: () => removeFile()}));
 
     useEffect(() => {
         if (!isDidMount.current) {
-            if (onChange)
+            if (onChange && false)
                 onChange(selectedFile);
+
+            submit(selectedFile).catch(console.log);
         } else
             isDidMount.current = false;
     }, [selectedFile]);
@@ -113,7 +118,9 @@ const FileField = ({
     //     return isAvailable;
     // };
 
-    // const submit = async () => {
+    const submit = async (file: File) => {
+        await  upload({file});
+    };
     //     setProgress(null);
     //     setUploading(true);
     //
