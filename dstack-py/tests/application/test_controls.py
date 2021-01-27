@@ -329,17 +329,16 @@ class TestControls(TestCase):
         c1 = ctrl.TextField("10", id="c1")
         c2 = ctrl.TextField(id="c2", depends=c1, handler=update)
 
-        def test(self: ctrl.Output, x: ctrl.Control, y: ctrl.Control):
-            self.data = int(x.value()) + int(y.value())
+        def test():
+            return 30
 
-        o1 = ctrl.Output(handler=test)
-        my_app = app(controls=[c1, c2], outputs=[o1], project=True)
+        o1 = ctrl.Output(data=test)
 
-        controller = Controller([c1, c2], outputs=my_app.outputs)
+        controller = Controller([c1, c2], [o1])
         views = controller.list()
         # print(views)
         self.assertEqual(30, controller.apply(views)[0].data)
-        self.assertIsNone(controller._outputs[0].data)
+        self.assertIsInstance(controller._outputs[0].data, ty.Callable)
 
     def test_title_override(self):
         class Item:

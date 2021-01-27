@@ -166,7 +166,7 @@ class CheckBoxView(View):
         return {"selected": self.selected}
 
 
-# TODO: Get rid of data. Keep only handler.
+# TODO: Rename data to text
 class TextField(Control[TextFieldView], ty.Generic[T]):
     def __init__(self,
                  data: ty.Union[ty.Optional[str], ty.Callable[[], str]] = None,
@@ -550,18 +550,19 @@ class Apply(Control[ApplyView]):
 # TODO: Add position: OutputPosition[DEFAULT|ONE_COLUMN|TWO_COLUMNS)
 class Output(ABC, ty.Generic[T]):
     def __init__(self,
+                 data: ty.Union[ty.Optional[ty.Any], ty.Callable[[], ty.Any]] = None,
+                 handler: ty.Optional[ty.Callable[..., None]] = None,
                  label: ty.Optional[str] = None,
                  id: ty.Optional[str] = None,
-                 handler: ty.Optional[ty.Callable[..., None]] = None,
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None):
         self.label = label
-        self.data = None
+        self.data = data
 
         self._handler = handler
         self._id = id or str(uuid4())
-        self._parents = depends or []
+        self._parents = depends
 
-        if not isinstance(self._parents, list):
+        if self._parents is not None and not isinstance(self._parents, list):
             self._parents = [self._parents]
 
 
@@ -628,9 +629,12 @@ class Controller(object):
 
         copy_of_outputs = [copy(o) for o in self._outputs]
         for o in copy_of_outputs:
-            ids = [c._id for c in o._parents] if len(o._parents) > 0 else self._ids
+            ids = [c._id for c in o._parents] if o._parents is not None else self._ids
             values = [self.copy_of_controls_by_id[c_id] for c_id in ids]
-            o._handler(o, *values)
+            if o._handler:
+                o._handler(o, *values)
+            if isinstance(o.data, ty.Callable):
+                o.data = o.data()
 
         self.copy_of_controls_by_id = None
 
@@ -649,5 +653,6 @@ class Controller(object):
 
         if hasattr(self, '_outputs'):
             for o in self._outputs:
-                for i in range(len(o._parents)):
-                    o._parents[i] = self.controls_by_id[o._parents[i]._id]
+                if o._parents is not None:
+                    for i in range(len(o._parents)):
+                        o._parents[i] = self.controls_by_id[o._parents[i]._id]

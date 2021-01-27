@@ -9,7 +9,7 @@
 Installing and running `dstack` is very easy:
 
 ```bash
-pip install dstack
+pip install --index-url https://test.pypi.org/simple/ --upgrade --no-cache-dir --extra-index-url=https://pypi.org/simple/ dstack==0.6.1.dev2
 dstack server start
 ```
 
@@ -47,18 +47,19 @@ import plotly.graph_objects as go
 import pandas_datareader.data as web
 
 
-def get_chart(symbols: ctrl.ComboBox):
+def output_handler(self: ctrl.Output, symbols: ctrl.ComboBox):
     start = datetime.today() - timedelta(days=30)
     end = datetime.today()
     df = web.DataReader(symbols.value(), 'yahoo', start, end)
     fig = go.Figure(
         data=[go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'])])
-    return fig
+    self.data = fig
 
 
-app = ds.app(get_chart, symbols=ctrl.ComboBox(["FB", "AMZN", "AAPL", "NFLX", "GOOG"]))
+app = ds.app(controls=[ctrl.ComboBox(data=["FB", "AMZN", "AAPL", "NFLX", "GOOG"])],
+             outputs=[ctrl.Output(handler=output_handler)])
 
-result = ds.push("faang", app)
+result = ds.push("minimal_app", app)
 print(result.url)
 ```
 
