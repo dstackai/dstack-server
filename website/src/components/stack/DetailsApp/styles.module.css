@@ -189,9 +189,14 @@
             grid-column-gap: 30px;
             & .filters {
                 grid-area: filters;
-                margin-right: 30px;
                 padding: 12px 20px 20px;
                 background-color: #F8F7F9;
+            }
+        }
+        &:not(.withSidebar) {
+            .description + .filters,
+            .filters + .attachmentsGrid {
+                margin-top: 20px;
             }
         }
     }
@@ -199,17 +204,23 @@
 .filterLoader {
     grid-column: 1 / -1;
 }
-.description + .filters,
-.description + .attachment,
-.filters + .attachment {
+.description + .attachmentsGrid {
     margin-top: 20px;
 }
 .description {
     grid-area: description;
 }
-.attachment {
+.attachmentsGrid {
     grid-area: content;
     min-width: 0;
+}
+.attachment {
+    &:nth-child(n+2) {
+        margin-top: 37px;
+    }
+    &:global(.noOne)&:global(.withMaxHeight) {
+        max-height: calc(100vh * 0.6);
+    }
 }
 .progress {
     grid-area: content;

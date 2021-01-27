@@ -50,6 +50,8 @@ class View(ABC):
 V = ty.TypeVar("V", bound=View)
 
 
+# TODO: Add position: ControlPosition[DEFAULT|SIDEBAR|HEADER|ONE_COLUMN|TWO_COLUMNS)
+# TODO: Extract Input(Control[V]):
 class Control(ABC, ty.Generic[V]):
     def __init__(self,
                  label: ty.Optional[str],
@@ -131,6 +133,7 @@ class Control(ABC, ty.Generic[V]):
     def _value(self) -> ty.Optional[ty.Any]:
         pass
 
+    # TODO: Rethink after multiple outputs refactoring is done
     def _check_pickle(self):
         if hasattr(self, '_update_func'):
             self._handler = getattr(self, '_update_func')
@@ -163,6 +166,7 @@ class CheckBoxView(View):
         return {"selected": self.selected}
 
 
+# TODO: Rename data to text
 class TextField(Control[TextFieldView], ty.Generic[T]):
     def __init__(self,
                  data: ty.Union[ty.Optional[str], ty.Callable[[], str]] = None,
@@ -543,10 +547,30 @@ class Apply(Control[ApplyView]):
         return None
 
 
+# TODO: Add position: OutputPosition[DEFAULT|ONE_COLUMN|TWO_COLUMNS)
+class Output(ABC, ty.Generic[T]):
+    def __init__(self,
+                 data: ty.Union[ty.Optional[ty.Any], ty.Callable[[], ty.Any]] = None,
+                 handler: ty.Optional[ty.Callable[..., None]] = None,
+                 label: ty.Optional[str] = None,
+                 id: ty.Optional[str] = None,
+                 depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None):
+        self.label = label
+        self.data = data
+
+        self._handler = handler
+        self._id = id or str(uuid4())
+        self._parents = depends
+
+        if self._parents is not None and not isinstance(self._parents, list):
+            self._parents = [self._parents]
+
+
 class Controller(object):
-    def __init__(self, controls: ty.List[Control]):
+    def __init__(self, controls: ty.List[Control], outputs: ty.List[Output]):
         self.controls_by_id: ty.Dict[str, Control] = {}
         self.copy_of_controls_by_id = None
+        self._outputs = outputs
 
         require_apply = False
         has_apply = False
@@ -595,7 +619,7 @@ class Controller(object):
 
         return values
 
-    def apply(self, func: ty.Callable, views: ty.List[View]) -> ty.Any:
+    def apply(self, views: ty.List[View]) -> ty.Any:
         self.copy_of_controls_by_id = self.copy_controls_by_id()
 
         for view in views:
@@ -603,11 +627,18 @@ class Controller(object):
             control.apply(view)
             control._update()
 
-        values = [self.copy_of_controls_by_id[c_id] for c_id in self._ids]
+        copy_of_outputs = [copy(o) for o in self._outputs]
+        for o in copy_of_outputs:
+            ids = [c._id for c in o._parents] if o._parents is not None else self._ids
+            values = [self.copy_of_controls_by_id[c_id] for c_id in ids]
+            if o._handler:
+                o._handler(o, *values)
+            if isinstance(o.data, ty.Callable):
+                o.data = o.data()
 
         self.copy_of_controls_by_id = None
 
-        return func(*values)
+        return copy_of_outputs
 
     def _check_pickle(self):
         if hasattr(self, 'map'):
@@ -619,3 +650,9 @@ class Controller(object):
         for c in self.controls_by_id.values():
             for i in range(len(c._parents)):
                 c._parents[i] = self.controls_by_id[c._parents[i]._id]
+
+        if hasattr(self, '_outputs'):
+            for o in self._outputs:
+                if o._parents is not None:
+                    for i in range(len(o._parents)):
+                        o._parents[i] = self.controls_by_id[o._parents[i]._id]

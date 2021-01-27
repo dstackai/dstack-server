@@ -54,7 +54,7 @@ jobs:
           pip install -r requirements.txt
       - name: Test with unittest
         run: |
-          python -m unittest discover tests
+          python -m unittest discover tests -t .
 
   build-server:
     needs: build-website

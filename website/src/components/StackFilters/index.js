@@ -1,5 +1,5 @@
 // @flow
-import React from 'react';
+import React, {useMemo} from 'react';
 import cx from 'classnames';
 import {useTranslation} from 'react-i18next';
 import SelectField from 'components/SelectField';
@@ -22,6 +22,13 @@ type Props = {
 
 const StackFilters = ({className, fields, form, onChange, onApply, onReset, isSidebar, disabled}: Props) => {
     const {t} = useTranslation();
+
+    const hasApply = useMemo(() => {
+        if (!Object.keys(fields).length)
+            return false;
+
+        return Boolean(Object.keys(fields).find(key => fields[key].type === 'apply'));
+    }, [fields]);
 
     if (!Object.keys(fields).length)
         return null;
@@ -121,8 +128,22 @@ const StackFilters = ({className, fields, form, onChange, onApply, onReset, isSi
                                     variant="contained"
                                     onClick={onApply}
                                     disabled={disabled || fields[key].disabled}
+                                    className={css.button}
                                 >
                                     {t('apply')}
+                                </Button>
+                            )}
+
+                            {onReset && (
+                                <Button
+                                    size="small"
+                                    color="primary"
+                                    variant="outlined"
+                                    onClick={onReset}
+                                    disabled={disabled}
+                                    className={css.button}
+                                >
+                                    {t('reset')}
                                 </Button>
                             )}
                         </div>;
@@ -132,7 +153,7 @@ const StackFilters = ({className, fields, form, onChange, onApply, onReset, isSi
                 }
             })}
 
-            {onReset && (
+            {!hasApply && onReset && (
                 <div
                     className={cx(css.field, css.buttons)}
                 >
@@ -142,6 +163,7 @@ const StackFilters = ({className, fields, form, onChange, onApply, onReset, isSi
                         variant="outlined"
                         onClick={onReset}
                         disabled={disabled}
+                        className={css.button}
                     >
                         {t('reset')}
                     </Button>

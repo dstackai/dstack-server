@@ -4,7 +4,6 @@ import cx from 'classnames';
 import {get, isEqual} from 'lodash-es';
 import View from './View';
 import config from 'config';
-import useIntersectionObserver from 'hooks/useIntersectionObserver';
 import usePrevious from 'hooks/usePrevious';
 import actions from './actions';
 import {isImageType} from './utils';
@@ -23,7 +22,6 @@ const Attachment = ({
     id,
     className,
     frameId,
-    isList,
     withLoader,
     stack,
     customData,
@@ -56,7 +54,6 @@ const Attachment = ({
 
     useEffect(() => {
         if (!customData
-            && !isList
             && attachment
             && !isEqual(prevAttachment, attachment)
             && attachment.preview
@@ -69,7 +66,6 @@ const Attachment = ({
 
     useEffect(() => {
         if (!customData
-            && !isList
             && (typeof id === 'number' && frameId)
             && ((!attachment.data && !error) || (attachment?.index !== id))
         ) {
@@ -78,32 +74,17 @@ const Attachment = ({
         }
     }, [id, frameId]);
 
-    const [ref] = useIntersectionObserver(() => {
-        if (!customData
-            && isList
-            && !loading
-            && (
-                (!attachment.data && !error)
-                || (attachment.data && attachment.index !== id)
-            )
-        )
-            fetchAttachment(stack, frameId, id)
-                .catch(console.log);
-    }, {}, [id, frameId, data]);
-
     return (
         <div
-            ref={ref}
-            className={cx(css.attachment, className, {
-                'is-list': isList,
-                loading: loading && withLoader || loadingFullAttachment,
-            })}
+            className={cx(css.attachment, className, {loading: loading && withLoader || loadingFullAttachment})}
         >
+            {customData?.label && <div className={css.label}>{customData?.label}</div>}
+            {attachment?.label && <div className={css.label}>{attachment?.label}</div>}
+
             {!loading && (
                 <View
-                    requestStatus={requestStatus}
                     className={css.view}
-                    isList={isList}
+                    requestStatus={requestStatus}
                     fullAttachment={fullAttachment}
                     attachment={customData ? customData : attachment}
                     stack={stack}

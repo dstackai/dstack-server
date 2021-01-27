@@ -10,6 +10,7 @@ from dstack.config import Config, ConfigFactory, YamlConfigFactory, \
     from_yaml_file, ConfigurationError, get_config, Profile, _get_config_path
 from dstack.content import StreamContent, BytesContent, MediaType, FileContent
 from dstack.context import Context
+from dstack.controls import Output, Control
 from dstack.handler import Encoder, Decoder, T, DecoratedValue
 from dstack.markdown import Markdown
 from dstack.protocol import Protocol, JsonProtocol, MatchError, create_protocol
@@ -290,9 +291,10 @@ def tab(title: ty.Optional[str] = None) -> DecoratedValue:
     return Tab(title)
 
 
-def app(handler: ty.Callable, depends: ty.Optional[ty.Union[str, ty.List[str]]] = None,
-        requirements: ty.Optional[str] = None, project: bool = False, **kwargs):
-    return Application(handler, depends, requirements, project, **kwargs)
+def app(controls: ty.Optional[ty.List[Control]] = None, outputs: ty.Optional[ty.List[Output]] = None,
+        depends: ty.Optional[ty.Union[str, ty.List[str]]] = None,
+        requirements: ty.Optional[str] = None, project: bool = False):
+    return Application(controls if controls else [], outputs if outputs else [], depends, requirements, project)
 
 
 def md(text: str):

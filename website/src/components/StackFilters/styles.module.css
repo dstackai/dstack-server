@@ -43,4 +43,12 @@
 .buttons {
     display: flex;
     align-items: center;
+    &:empty {
+        display: none;
+    }
+    & .button {
+        &:nth-child(n+2) {
+            margin-left: 14px;
+        }
+    }
 }
