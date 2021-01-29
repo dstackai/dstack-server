@@ -1,3 +1,4 @@
+// @flow
 import {apiFabric} from 'utils';
 import {useAppStore} from 'AppStore';
 import config from 'config';
@@ -27,7 +28,6 @@ export default () => {
             try {
                 const request = await api.post(apiUrl + config.FILE_UPLOAD, params);
 
-                console.log(request.data);
                 resolve(request.data);
             } catch (e) {
                 reject(e);

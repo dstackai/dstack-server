@@ -11,6 +11,7 @@ import getStackCategory from './getStackCategory';
 import fileToBaseTo64 from './fileToBaseTo64';
 import dataFetcher from './dataFetcher';
 import parseStackViews from './parseStackViews';
+import checkAvailableExtension from './checkAvailableExtension';
 import config from 'config';
 
 const isSignedIn = () => {
@@ -33,5 +34,6 @@ export {
     getStackCategory,
     fileToBaseTo64,
     dataFetcher,
-    parseStackViews
+    parseStackViews,
+    checkAvailableExtension
 };

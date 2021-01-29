@@ -22,6 +22,9 @@ export default views => {
             disabled: !view.enabled,
         };
 
+        if (view.type === 'FileUploaderView')
+            fields[index].multiple = view.multiple;
+
         if (view.type === 'CheckBoxView')
             fields[index].value = view.selected;
 

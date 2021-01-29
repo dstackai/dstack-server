@@ -2,7 +2,7 @@
 import React, {useEffect, useRef, useState, forwardRef, useImperativeHandle} from 'react';
 import cx from 'classnames';
 import {useTranslation} from 'react-i18next';
-import {formatBytes} from 'utils';
+import {formatBytes, checkAvailableExtension} from 'utils';
 import Button from 'components/Button';
 import css from './style.module.css';
 
@@ -55,7 +55,7 @@ const FileDragnDrop = ({
 
         const [file] = event.dataTransfer.files;
 
-        if (file && checkAvailableExtension(file))
+        if (file && checkAvailableExtension(file, formats))
             setSelectedFile(file);
     };
 
@@ -73,30 +73,12 @@ const FileDragnDrop = ({
     const onChangeInput = event => {
         const [file] = event.target.files;
 
-        if (file && checkAvailableExtension(file))
+        if (file && checkAvailableExtension(file, formats))
             setSelectedFile(file);
     };
 
     const removeFile = () => {
         setSelectedFile(null);
-    };
-
-    const checkAvailableExtension = file => {
-        const ext = '.' + file.name.split('.').pop();
-
-        let isAvailable;
-
-        if (formats && formats.length)
-            isAvailable = formats.some(format => {
-                if (format === '.jpg' || format === '.jpeg')
-                    return ext === '.jpg' || ext === '.jpeg';
-                else
-                    return format === ext;
-            });
-        else
-            isAvailable = true;
-
-        return isAvailable;
     };
 
     if (loading)
