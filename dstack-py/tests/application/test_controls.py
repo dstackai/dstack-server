@@ -51,18 +51,18 @@ class TestControls(TestCase):
         views = controller.list()
         v1 = ty.cast(ctrl.TextFieldView, self.get_by_id(c1.get_id(), views))
         v2 = ty.cast(ctrl.CheckBoxView, self.get_by_id(c2.get_id(), views))
-        self.assertEqual("10", v1.data)
+        self.assertEqual("10", v1.text)
         self.assertEqual(True, v2.selected)
-        v1.data = "5"
+        v1.text = "5"
         views = controller.list(views)
         v1 = ty.cast(ctrl.TextFieldView, self.get_by_id(c1.get_id(), views))
         v2 = ty.cast(ctrl.CheckBoxView, self.get_by_id(c2.get_id(), views))
-        self.assertEqual("5", v1.data)
+        self.assertEqual("5", v1.text)
         self.assertEqual(False, v2.selected)
 
     def test_simple_update(self):
         def update(control: ctrl.Control, text_field: ctrl.TextField):
-            control.data = str(int(text_field.data) * 2)
+            control.text = str(int(text_field.text) * 2)
 
         c1 = ctrl.TextField("10", id="c1")
         c2 = ctrl.TextField(id="c2", depends=c1, handler=update, long=True)
@@ -77,13 +77,13 @@ class TestControls(TestCase):
         v2 = self.get_by_id(c2.get_id(), views)
 
         if isinstance(v1, ctrl.TextFieldView):
-            self.assertEqual("10", v1.data)
+            self.assertEqual("10", v1.text)
             self.assertIsNone(v1.long)
         else:
             self.fail()
 
         if isinstance(v2, ctrl.TextFieldView):
-            self.assertEqual("20", v2.data)
+            self.assertEqual("20", v2.text)
             self.assertIsNotNone(v2.long)
         else:
             self.fail()
@@ -93,13 +93,13 @@ class TestControls(TestCase):
         v2 = self.get_by_id(c2.get_id(), views)
 
         if isinstance(v1, ctrl.TextFieldView):
-            self.assertEqual("10", v1.data)
+            self.assertEqual("10", v1.text)
             self.assertIsNone(v1.long)
         else:
             self.fail()
 
         if isinstance(v2, ctrl.TextFieldView):
-            self.assertEqual("20", v2.data)
+            self.assertEqual("20", v2.text)
             self.assertIsNotNone(v2.long)
 
     def test_update_error(self):
@@ -128,10 +128,10 @@ class TestControls(TestCase):
                 print(count)
                 raise RuntimeError()
 
-            control.data = str(int(text_area.data) * 2)
+            control.text = str(int(text_area.text) * 2)
 
         def update_c3_c4(control: ctrl.Control, text_area: ctrl.TextField):
-            control.data = str(int(text_area.data) * 2)
+            control.text = str(int(text_area.text) * 2)
 
         c1 = ctrl.TextField("10", id="c1")
         c2 = ctrl.TextField(id="c2", depends=c1, handler=update_c2)
@@ -145,13 +145,13 @@ class TestControls(TestCase):
         v3 = ty.cast(ctrl.TextFieldView, self.get_by_id(c3.get_id(), views))
         v4 = ty.cast(ctrl.TextFieldView, self.get_by_id(c4.get_id(), views))
 
-        self.assertEqual("20", v2.data)
-        self.assertEqual("40", v3.data)
-        self.assertEqual("40", v4.data)
+        self.assertEqual("20", v2.text)
+        self.assertEqual("40", v3.text)
+        self.assertEqual("40", v4.text)
 
     def test_file_uploader(self):
         file_uploader = ctrl.FileUploader()
-        self.assertTrue(isinstance(file_uploader.data, list))
+        self.assertTrue(isinstance(file_uploader.uploads, list))
 
         controller = Controller([file_uploader], outputs=[])
         views = controller.list()
@@ -186,8 +186,8 @@ class TestControls(TestCase):
 
     def test_combo_box(self):
         def update(control: ctrl.ComboBox, parent: ctrl.ComboBox):
-            selected = parent.data[parent.selected]
-            control.data = [f"{selected} 1", f"{selected} 2"]
+            selected = parent.items[parent.selected]
+            control.items = [f"{selected} 1", f"{selected} 2"]
 
         cb = ctrl.ComboBox(["Hello", "World"], id="cb")
         self.assertTrue(isinstance(cb._derive_model(), ctrl.DefaultListModel))
@@ -213,7 +213,7 @@ class TestControls(TestCase):
 
     def test_multiple_combo_box(self):
         def update(control: ctrl.ComboBox, parent: ctrl.ComboBox):
-            selected = [parent.data[s] for s in parent.selected]
+            selected = [parent.items[s] for s in parent.selected]
             control.data = [f"{selected} 1", f"{selected} 2"]
 
         cb = ctrl.ComboBox(["Hello", "World"], id="cb", multiple=True)
@@ -252,12 +252,12 @@ class TestControls(TestCase):
         text_field = ctrl.TextField(data="Some initial data")
         controller = Controller([text_field], outputs=[])
         views = controller.list()
-        self.assertEqual(views[0].data, "Some initial data")
-        views[0].data = "Some other data"
+        self.assertEqual(views[0].text, "Some initial data")
+        views[0].text = "Some other data"
         updated_views = controller.list(views)
-        self.assertEqual(updated_views[0].data, "Some other data")
+        self.assertEqual(updated_views[0].text, "Some other data")
         views = controller.list()
-        self.assertEqual(views[0].data, "Some initial data")
+        self.assertEqual(views[0].text, "Some initial data")
 
     def test_combo_box_callable_model(self):
         class City:
@@ -287,7 +287,7 @@ class TestControls(TestCase):
 
         def update_cities(control: ctrl.ComboBox, parent: ctrl.ComboBox):
             country = ty.cast(Country, parent.get_model().element(parent.selected))
-            control.data = list_cities_from_db_by_code(country)
+            control.items = list_cities_from_db_by_code(country)
 
         countries = ctrl.ComboBox(list_countries_from_db, id="countries")
         self.assertTrue(isinstance(countries._derive_model(), ctrl.CallableListModel))
@@ -318,13 +318,13 @@ class TestControls(TestCase):
         self.assertIsNotNone(apply_view)
         self.assertFalse(apply_view.enabled)
 
-        c1.apply(ctrl.TextFieldView(c1.get_id(), data="10", enabled=True))
+        c1.apply(ctrl.TextFieldView(c1.get_id(), text="10", enabled=True))
         apply_view = self.get_apply(controller.list())
         self.assertTrue(apply_view.enabled)
 
     def test_controller_apply(self):
         def update(control, text_field):
-            control.data = str(int(text_field.data) * 2)
+            control.text = str(int(text_field.text) * 2)
 
         c1 = ctrl.TextField("10", id="c1")
         c2 = ctrl.TextField(id="c2", depends=c1, handler=update)
