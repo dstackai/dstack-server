@@ -20,7 +20,7 @@ class TestApp(TestCase):
         encoder = AppEncoder()
 
         def update(control: ctrl.TextField, text_field: ctrl.TextField):
-            control.text = str(int(text_field.text) * 2)
+            control.data = str(int(text_field.data) * 2)
 
         c1 = ctrl.TextField("10", id="c1")
         c2 = ctrl.TextField(id="c2", depends=c1, handler=update)
@@ -69,7 +69,7 @@ class TestApp(TestCase):
 
     def test_jupyter_like_env(self):
         def update(control, text_field):
-            control.text = str(int(text_field.text) * 2)
+            control.data = str(int(text_field.data) * 2)
 
         def baz():
             print("baz")
@@ -81,7 +81,7 @@ class TestApp(TestCase):
         def output_handler(self: ctrl.Output, x: ctrl.TextField, y: ctrl.TextField):
             foo()
             baz()
-            self.data = int(x.text) + int(y.text)
+            self.data = int(x.value()) + int(y.value())
 
         o1 = ctrl.Output(handler=output_handler, depends=[c1, c2])
         my_app = app(controls=[c0, c1, c2], outputs=[o1], depends=["tests.application.test_package"])

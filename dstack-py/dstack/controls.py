@@ -107,6 +107,7 @@ class Control(ABC, ty.Generic[V]):
         return self._require_apply
 
     def view(self) -> V:
+        self._check_pickle()
         self._update()
         return self._view()
 
@@ -142,18 +143,14 @@ class Control(ABC, ty.Generic[V]):
 
 
 class TextFieldView(View):
-    def __init__(self, id: str,
-                 text: ty.Optional[str],
-                 long: ty.Optional[bool] = None,
-                 enabled: ty.Optional[bool] = None,
-                 label: ty.Optional[str] = None,
-                 optional: ty.Optional[bool] = None):
+    def __init__(self, id: str, data: ty.Optional[str], long: ty.Optional[bool] = None,
+                 enabled: ty.Optional[bool] = None, label: ty.Optional[str] = None, optional: ty.Optional[bool] = None):
         super().__init__(id, enabled, label, optional)
-        self.text = text
+        self.data = data
         self.long = long
 
     def _pack(self) -> ty.Dict:
-        _dict = {"data": self.text}
+        _dict = {"data": self.data}
         if self.long:
             _dict["long"] = True
         return _dict
@@ -169,53 +166,44 @@ class CheckBoxView(View):
         return {"selected": self.selected}
 
 
+# TODO: Rename data to text
 class TextField(Control[TextFieldView], ty.Generic[T]):
     def __init__(self,
-                 text: ty.Union[ty.Optional[str], ty.Callable[[], str]] = None,
+                 data: ty.Union[ty.Optional[str], ty.Callable[[], str]] = None,
                  handler: ty.Optional[ty.Callable[..., None]] = None,
                  long: bool = False,
                  label: ty.Optional[str] = None,
                  id: ty.Optional[str] = None,
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
                  require_apply: bool = True,
-                 optional: ty.Optional[bool] = None,
-                 data: ty.Union[ty.Optional[str], ty.Callable[[], str]] = None,
+                 optional: ty.Optional[bool] = None
                  ):
         super().__init__(label, id, depends, handler, require_apply, optional)
-        if data is not None:
-            print("The attribute data is deprecated, use text.")
-        self.text = text if text is not None else data
+        self.data = data
         self.long = long
 
     def _view(self) -> TextFieldView:
-        if isinstance(self.text, str):
-            text = self.text
-        elif isinstance(self.text, ty.Callable):
-            text = self.text()
+        if isinstance(self.data, str):
+            data = self.data
+        elif isinstance(self.data, ty.Callable):
+            data = self.data()
         else:
-            text = None
-        return TextFieldView(self._id, text, True if self.long else None, self.enabled, self.label, self.optional)
+            data = None
+        return TextFieldView(self._id, data, True if self.long else None, self.enabled, self.label, self.optional)
 
     def _apply(self, view: TextFieldView):
         assert isinstance(view, TextFieldView)
         assert self._id == view.id
-        self.text = view.text
+        self.data = view.data
 
     def _value(self) -> ty.Optional[ty.Any]:
         # TODO: Check if data can be ty.Callable
-        return self.text
+        return self.data
 
     def _check_pickle(self):
         super()._check_pickle()
-        if not hasattr(self, 'text'):
-            self.text = getattr(self, 'data') if hasattr(self, 'data') else None
         if not hasattr(self, 'long'):
             self.long = None
-
-    def _check_after_update(self):
-        if hasattr(self, "data"):
-            print("The attribute data is deprecated, use text.")
-            self.text = getattr(self, "data")
 
 
 class CheckBox(Control[CheckBoxView], ty.Generic[T]):
@@ -274,28 +262,28 @@ class ListModel(ABC, ty.Generic[T]):
 
 class AbstractListModel(ListModel[T], ABC):
     def __init__(self, title_func: ty.Optional[ty.Callable[[ty.Any], str]] = None):
-        self.items: ty.Optional[ty.List[ty.Any]] = None
+        self.data: ty.Optional[ty.List[ty.Any]] = None
         self.title_func = title_func
 
     def size(self) -> int:
-        return len(self.items)
+        return len(self.data)
 
     def element(self, index: int) -> ty.Any:
-        return self.items[index]
+        return self.data[index]
 
     def title(self, index: int) -> str:
-        item = self.items[index]
+        item = self.data[index]
         return self.title_func(item) if self.title_func else str(item)
 
 
 class DefaultListModel(AbstractListModel[ty.List[ty.Any]]):
-    def apply(self, items: ty.List[ty.Any]):
-        self.items = items
+    def apply(self, data: ty.List[ty.Any]):
+        self.data = data
 
 
 class CallableListModel(AbstractListModel[ty.Callable[[], ty.List[ty.Any]]]):
-    def apply(self, items: ty.Callable[[], ty.List[ty.Any]]):
-        self.items = items()
+    def apply(self, data: ty.Callable[[], ty.List[ty.Any]]):
+        self.data = data()
 
 
 class ComboBoxView(View):
@@ -316,9 +304,10 @@ class ComboBoxView(View):
         return _dict
 
 
+# TODO: Rename data into items
 class ComboBox(Control[ComboBoxView], ty.Generic[T]):
     def __init__(self,
-                 items: ty.Union[ty.Optional[T], ty.Callable[[], T]] = None,
+                 data: ty.Union[ty.Optional[T], ty.Callable[[], T]] = None,
                  handler: ty.Optional[ty.Callable[..., None]] = None,
                  model: ty.Optional[ListModel[T]] = None,
                  selected: ty.Optional[ty.Union[int, list]] = None,
@@ -328,13 +317,10 @@ class ComboBox(Control[ComboBoxView], ty.Generic[T]):
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
                  title: ty.Optional[ty.Callable[[T], str]] = None,
                  require_apply: bool = False,
-                 optional: ty.Optional[bool] = None,
-                 data: ty.Union[ty.Optional[T], ty.Callable[[], T]] = None
+                 optional: ty.Optional[bool] = None
                  ):
         super().__init__(label, id, depends, handler, require_apply, optional)
-        if data is not None:
-            print("The attribute data is deprecated, use items.")
-        self.items = items if items is not None else data
+        self.data = data
         self._model = model
         self.selected = selected or ([] if multiple else 0)
         self.multiple = multiple
@@ -343,16 +329,16 @@ class ComboBox(Control[ComboBoxView], ty.Generic[T]):
             assert isinstance(self.selected, list)
 
     def _derive_model(self) -> ListModel[ty.Any]:
-        if isinstance(self.items, list):
+        if isinstance(self.data, list):
             return DefaultListModel(self.title)
-        elif isinstance(self.items, ty.Callable):
+        elif isinstance(self.data, ty.Callable):
             return CallableListModel(self.title)
         else:
-            raise ValueError(f"Unsupported items type: {type(self.items)}")
+            raise ValueError(f"Unsupported data type: {type(self.data)}")
 
     def get_model(self) -> ListModel[T]:
         model = self._model or self._derive_model()
-        model.apply(self.items)
+        model.apply(self.data)
         return model
 
     def _view(self) -> ComboBoxView:
@@ -376,9 +362,6 @@ class ComboBox(Control[ComboBoxView], ty.Generic[T]):
             return model.element(self.selected) if self.selected is not None and self.selected >= 0 else None
 
     def _check_after_update(self):
-        if hasattr(self, "data"):
-            print("The attribute data is deprecated, use items.")
-            self.items = getattr(self, "data")
         model = self.get_model()
         if self.multiple:
             assert isinstance(self.selected, list)
@@ -393,42 +376,37 @@ class ComboBox(Control[ComboBoxView], ty.Generic[T]):
 
     def _check_pickle(self):
         super()._check_pickle()
-        if not hasattr(self, 'items'):
-            self.items = getattr(self, 'data') if hasattr(self, 'data') else None
         if not hasattr(self, 'multiple'):
             self.multiple = False
 
 
 class SliderView(View):
-    def __init__(self, id: str, selected: int = 0, values: ty.Optional[ty.List[float]] = None,
+    def __init__(self, id: str, selected: int = 0, data: ty.Optional[ty.List[float]] = None,
                  enabled: ty.Optional[bool] = None, label: ty.Optional[str] = None):
         super().__init__(id, enabled, label, False)
-        self.values = values
+        self.data = data
         self.selected = selected
 
     def _pack(self) -> ty.Dict:
-        return {"data": self.values, "selected": self.selected}
+        return {"data": self.data, "selected": self.selected}
 
 
 class Slider(Control[SliderView]):
     def __init__(self,
-                 values: ty.Optional[ty.Union[ty.Iterable[float], ty.Callable]] = None,
+                 data: ty.Union[ty.Iterable[float], ty.Callable],
                  handler: ty.Optional[ty.Callable[..., None]] = None,
                  selected: int = 0,
                  label: ty.Optional[str] = None,
                  id: ty.Optional[str] = None,
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
-                 require_apply: bool = True,
-                 data: ty.Optional[ty.Union[ty.Iterable[float], ty.Callable]] = None
+                 require_apply: bool = True
                  ):
         super().__init__(label, id, depends, handler, require_apply, False)
-        if data is not None:
-            print("The attribute data is deprecated, use values.")
-        self.values = list(values) if values is not None else list(data)
+        self.data = list(data)
         self.selected = selected
 
     def _view(self) -> SliderView:
-        return SliderView(self.get_id(), self.selected, self.values, self.enabled, self.label)
+        return SliderView(self.get_id(), self.selected, self.data, self.enabled, self.label)
 
     def _apply(self, view: SliderView):
         assert isinstance(view, SliderView)
@@ -436,21 +414,13 @@ class Slider(Control[SliderView]):
         self.selected = view.selected
 
     def _value(self) -> ty.Any:
-        return self.values[self.selected]
+        return self.data[self.selected]
 
     def _check_after_update(self):
-        if hasattr(self, "data"):
-            print("The attribute data is deprecated, use values.")
-            self.values = getattr(self, "data")
-        if len(self.values) == 0:
+        if len(self.data) == 0:
             self.selected = -1
-        elif self.selected >= len(self.values):
+        elif self.selected >= len(self.data):
             self.selected = 0
-
-    def _check_pickle(self):
-        super()._check_pickle()
-        if not hasattr(self, 'values'):
-            self.values = getattr(self, 'data') if hasattr(self, 'data') else None
 
 
 class Upload:
@@ -485,7 +455,8 @@ class FileUploaderView(View):
 
 class FileUploader(Control[FileUploaderView]):
     def __init__(self,
-                 uploads: ty.Union[ty.Optional[ty.List[Upload]], ty.Callable[[], ty.List[Upload]]] = None,
+                 data: ty.Union[ty.Optional[ty.List[Upload]],
+                                ty.Callable[[], ty.List[Upload]]] = None,
                  multiple: bool = False,
                  label: ty.Optional[str] = None,
                  id: ty.Optional[str] = None,
@@ -495,29 +466,24 @@ class FileUploader(Control[FileUploaderView]):
                  optional: ty.Optional = None
                  ):
         super().__init__(label, id, depends, handler, require_apply, optional)
-        self.uploads: ty.Union[ty.List[Upload], ty.Callable[[], ty.List[Upload]]] = uploads if uploads else []
+        self.data: ty.Union[ty.List[Upload], ty.Callable[[], ty.List[Upload]]] = data if data else []
         self.multiple = multiple
 
     def _view(self) -> FileUploaderView:
-        if isinstance(self.uploads, list):
-            uploads = self.uploads
-        elif isinstance(self.uploads, ty.Callable):
-            uploads = self.uploads()
+        if isinstance(self.data, list):
+            uploads = self.data
+        elif isinstance(self.data, ty.Callable):
+            uploads = self.data()
         return FileUploaderView(self.get_id(), uploads, self.multiple, self.enabled, self.label, self.optional)
 
     def _apply(self, view: FileUploaderView):
         assert isinstance(view, FileUploaderView)
         assert self._id == view.id
-        self.uploads = view.uploads
+        self.data = view.uploads
 
     def _value(self) -> ty.List[Upload]:
-        # TODO: Check if uploads can be ty.Callable
-        return self.uploads
-
-    def _check_pickle(self):
-        super()._check_pickle()
-        if not hasattr(self, 'uploads'):
-            self.uploads = getattr(self, 'data') if hasattr(self, 'data') else None
+        # TODO: Check if data can be ty.Callable
+        return self.data
 
 
 # TODO: Decode automatically
@@ -682,7 +648,6 @@ class Controller(object):
         self._check_pickle()
 
         for c in self.controls_by_id.values():
-            c._check_pickle()
             for i in range(len(c._parents)):
                 c._parents[i] = self.controls_by_id[c._parents[i]._id]
 
