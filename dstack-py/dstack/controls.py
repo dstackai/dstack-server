@@ -1,6 +1,7 @@
 import typing as ty
 from abc import ABC, abstractmethod
 from datetime import date, datetime
+from pathlib import Path
 from uuid import uuid4
 from copy import copy
 
@@ -460,10 +461,16 @@ class Upload:
         self.length = length
         self.created_date = created_date
 
-    def stream(self) -> ty.IO:
-        # TODO: As a workaround, read the file directly from /files/uploads/{created_date}/{id}
+    def open(self, mode: str = 'r', buffering: ty.Optional[int] = None,
+             encoding: ty.Optional[str] = None, errors: ty.Optional[str] = None,
+             newline: ty.Optional[str] = None, closefd: bool = True) -> ty.IO:
         # TODO: Implement reading files by ID
-        pass
+        path = Path.home() / ".dstack" / "files" / "uploads" / str(self.created_date) / self.id
+        if buffering is not None:
+            return open(path, mode, buffering=buffering, encoding=encoding, errors=errors, newline=newline,
+                        closefd=closefd)
+        else:
+            return open(path, mode, encoding=encoding, errors=errors, newline=newline, closefd=closefd)
 
 
 class FileUploaderView(View):
