@@ -57,8 +57,7 @@ const StackFilters = ({className, fields, form, onChange, onApply, onReset, isSi
                             onChange={files => onChange(key, files)}
                             label={fields[key].label}
                             name={key}
-                            multiple={false}
-                            // multiple={fields[key].multiple}
+                            multiple={fields[key].multiple}
                             files={form[key]}
                             disabled={disabled || fields[key].disabled}
                             appearance={isSidebar ? 'normal' : 'compact'}
