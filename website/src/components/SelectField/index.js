@@ -84,8 +84,10 @@ const SelectField = ({
                 placeholder={placeholder}
                 onChange={onChangeHandle}
                 inputIcon={<span className="mdi mdi-chevron-down" />}
+                dropdownClassName={disabled ? css.dropdownDisabled : ''}
                 {...props}
             >
+                {}
                 {options.length && mode === 'multiple' && <Option key={allValue} value={allValue}>
                     <CheckboxField
                         readOnly

@@ -60,7 +60,7 @@
     "postcss-preset-env": "6.7.0",
     "postcss-safe-parser": "4.0.1",
     "prismjs": "^1.23.0",
-    "rc-select": "^12.1.0",
+    "rc-select": "11.0.5",
     "rc-slider": "^9.7.1",
     "rc-tooltip": "^5.0.2",
     "react": "16.12.0",

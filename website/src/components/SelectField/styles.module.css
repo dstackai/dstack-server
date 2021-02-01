@@ -81,6 +81,11 @@
     line-height: 14px;
 }
 
+.dropdownDisabled {
+    opacity: .3;
+    pointer-events: none;
+}
+
 body :global {
     .select-field {
         position: relative;
@@ -234,7 +239,7 @@ body :global {
                     visibility: hidden;
                 }
             }
-            .select-field-selection-search-input {
+            & .select-field-selection-search-input {
                 border: none;
                 outline: none;
                 background: transparent;
