@@ -71,29 +71,38 @@ class LocalExecutionService @Autowired constructor(
     }
 
 
-    private fun installVenvAndStartProcessIfNeeded(attachment: Attachment, pythonExecutable: String, user: User) =
-            executionRequestQueues.putIfAbsent(attachment.filePath,
-                    LinkedBlockingQueue<ExecutionRequest>().also {
-                        object : Thread() {
-                            override fun run() {
-                                val venvPythonExecutableFile = installVenvPythonExecutableIfMissing(attachment, pythonExecutable)
-                                var p: Process? = null
-                                while (true) {
-                                    val request = it.take()
-                                    if (p == null || !p.isAlive) {
-                                        p = startVenvPythonProcess(user, attachment, venvPythonExecutableFile.absolutePath)
-                                    }
-                                    synchronized(p) {
-                                        // TODO: Make sure the virtual environment is set up correctly,
-                                        //  as well as the process is started correctly.
-                                        //  Otherwise, update the finished execution status
-                                        p.outputStream.write((executionRequestsObjectMapper.writeValueAsString(request) + "\n").toByteArray())
-                                        p.outputStream.flush()
-                                    }
-                                }
-                            }
-                        }.start()
-                    })
+    private fun installVenvAndStartProcessIfNeeded(attachment: Attachment, pythonExecutable: String, user: User): BlockingQueue<ExecutionRequest>? {
+        val newQueue = LinkedBlockingQueue<ExecutionRequest>()
+        val existingQueue = executionRequestQueues.putIfAbsent(attachment.filePath, newQueue)
+        if (existingQueue == null) {
+            object : Thread() {
+                override fun run() {
+                    val destDir = destDir(attachment)
+                    val requirementsFile = File(destDir, "requirements.txt")
+                    val executable = if (requirementsFile.exists()) {
+                        installVenvPythonExecutableIfMissing(attachment, pythonExecutable).absolutePath
+                    } else {
+                        pythonExecutable
+                    }
+                    var p: Process? = null
+                    while (true) {
+                        val request = newQueue.take()
+                        if (p == null || !p.isAlive) {
+                            p = startVenvPythonProcess(user, attachment, executable)
+                        }
+                        synchronized(p) {
+                            // TODO: Make sure the virtual environment is set up correctly,
+                            //  as well as the process is started correctly.
+                            //  Otherwise, update the finished execution status
+                            p.outputStream.write((executionRequestsObjectMapper.writeValueAsString(request) + "\n").toByteArray())
+                            p.outputStream.flush()
+                        }
+                    }
+                }
+            }.start()
+        }
+        return existingQueue
+    }
 
     private data class ExecutionRequest(
             val id: String,
