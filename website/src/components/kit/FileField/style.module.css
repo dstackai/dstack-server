@@ -29,9 +29,11 @@
         }
     }
     &:global(.appearance-compact) {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
+        & .section {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
         & .label {
             width: 100%;
         }
