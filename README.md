@@ -9,7 +9,7 @@
 Installing and running `dstack` is very easy:
 
 ```bash
-pip install --index-url https://test.pypi.org/simple/ --upgrade --no-cache-dir --extra-index-url=https://pypi.org/simple/ dstack==0.6.1.dev3
+pip install --index-url https://test.pypi.org/simple/ --upgrade --no-cache-dir --extra-index-url=https://pypi.org/simple/ dstack==0.6.1.dev4
 dstack server start
 ```
 
@@ -39,25 +39,22 @@ for the FAANG companies and renders it for a selected symbol. Here's the Python 
 an application:
 
 ```python
-from datetime import datetime, timedelta
-
 import dstack.controls as ctrl
 import dstack as ds
-import plotly.graph_objects as go
-import pandas_datareader.data as web
+import plotly.express as px
 
 
-def output_handler(self: ctrl.Output, symbols: ctrl.ComboBox):
-    start = datetime.today() - timedelta(days=30)
-    end = datetime.today()
-    df = web.DataReader(symbols.value(), 'yahoo', start, end)
-    fig = go.Figure(
-        data=[go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'])])
-    self.data = fig
+@ds.cache()
+def get_data():
+    return px.data.stocks()
 
 
-app = ds.app(controls=[ctrl.ComboBox(items=["FB", "AMZN", "AAPL", "NFLX", "GOOG"])],
-             outputs=[ctrl.Output(handler=output_handler)])
+def output_handler(self, ticker):
+    self.data = px.line(get_data(), x='date', y=ticker.value())
+
+
+app = ds.app(controls=[(ctrl.ComboBox(items=get_data().columns[1:].tolist()))],
+             outputs=[(ctrl.Output(handler=output_handler))])
 
 result = ds.push("minimal_app", app)
 print(result.url)
@@ -65,7 +62,7 @@ print(result.url)
 
 If you run it and click the provided URL, you'll see the application:
 
-![](https://gblobscdn.gitbook.com/assets%2F-LyOZaAwuBdBTEPqqlZy%2F-MRGHEBnXtyh5_mlTAlZ%2F-MRGIh18UuHTjmCXfIpD%2Fds_minimal_app.png?alt=media&token=17759f21-7e99-43bd-b790-70ecbbf21c3c)
+![](https://gblobscdn.gitbook.com/assets%2F-LyOZaAwuBdBTEPqqlZy%2F-MSI_BjrbZF2tVv5JDD4%2F-MSI_M7NOj__N0y6h45A%2Fdstack_stocks.png?alt=media&token=6a5eea9b-1661-4850-8bfd-7face8e97789)
 
 To learn about how this application works and to see other examples, please check out
 the [Tutorials](https://docs.dstack.ai/tutorials) documentation page.
