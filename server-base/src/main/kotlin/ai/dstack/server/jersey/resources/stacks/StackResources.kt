@@ -60,6 +60,9 @@ class StackResources {
     private lateinit var permissionService: PermissionService
 
     @Inject
+    private lateinit var executionService: ExecutionService
+
+    @Inject
     private lateinit var config: AppConfig
 
     companion object : KLogging()
@@ -287,35 +290,31 @@ class StackResources {
                             val file = frame.path + "/" + index
                             val data = a.data?.let { Base64.getDecoder().decode(a.data) }
                             val length = data?.count()?.toLong() ?: a.length!!
+                            val attachment = Attachment(
+                                    framePath = frame.path,
+                                    filePath = file,
+                                    application = application,
+                                    contentType = contentType!!,
+                                    length = length,
+                                    description = a.description,
+                                    index = index,
+                                    params = a.params.orEmpty().mapValues { it.value }.toMap(),
+                                    settings = a.settings.orEmpty().mapValues { it.value }.toMap(),
+                                    createdDate = LocalDate.now(ZoneOffset.UTC)
+                            )
                             if (data != null) {
                                 fileService.save(file, data)
+                                if (application == "application/python") {
+                                    executionService.init(user, frame, attachment)
+                                }
                             } else {
                                 val uploadUrl = fileService.upload(file, user)
                                 if (attachmentUploadInfos == null) {
                                     attachmentUploadInfos = mutableListOf()
                                 }
-                                attachmentUploadInfos!!.add(
-                                        AttachmentUploadInfo(
-                                                index,
-                                                uploadUrl.toString()
-                                        )
-                                )
+                                attachmentUploadInfos!!.add(AttachmentUploadInfo(index, uploadUrl.toString()))
                             }
-                            attachmentService.create(
-                                    Attachment(
-                                            framePath = frame.path,
-                                            filePath = file,
-                                            application = application,
-                                            contentType = contentType!!,
-                                            length = length,
-                                            description = a.description,
-                                            index = index,
-                                            params = a.params.orEmpty().mapValues { it.value }.toMap(),
-                                            settings = a.settings.orEmpty().mapValues { it.value }.toMap(),
-                                            createdDate = LocalDate.now(ZoneOffset.UTC)
-                                    )
-                            )
-
+                            attachmentService.create(attachment)
                         } catch (e: EntityAlreadyExists) {
                             return attachmentAlreadyExists()
                         }

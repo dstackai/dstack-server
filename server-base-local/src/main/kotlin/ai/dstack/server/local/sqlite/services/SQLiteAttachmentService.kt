@@ -11,8 +11,8 @@ import com.fasterxml.jackson.core.type.TypeReference
 
 class SQLiteAttachmentService(private val repository: AttachmentRepository) :
         AttachmentService {
-    override fun get(frame: String, index: Int): Attachment? {
-        return repository.findById(mapId(frame, index)).toNullable()?.toAttachment()
+    override fun get(framePath: String, index: Int): Attachment? {
+        return repository.findById(mapId(framePath, index)).toNullable()?.toAttachment()
     }
 
     override fun deleteByStackPath(stackPath: String) {

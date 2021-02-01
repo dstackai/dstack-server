@@ -1,7 +1,6 @@
 package ai.dstack.server.jersey.services
 
 import ai.dstack.server.model.Attachment
-import ai.dstack.server.model.Frame
 import ai.dstack.server.services.AttachmentService
 import ai.dstack.server.services.EntityAlreadyExists
 
@@ -20,8 +19,8 @@ class InMemoryAttachmentService: AttachmentService {
         return attachs.filter { it.framePath == frame }
     }
 
-    override fun get(frame: String, index: Int): Attachment? {
-        return attachs.find { it.framePath == frame && it.index == index }
+    override fun get(framePath: String, index: Int): Attachment? {
+        return attachs.find { it.framePath == framePath && it.index == index }
     }
 
     override fun deleteByStackPath(stackPath: String) {
