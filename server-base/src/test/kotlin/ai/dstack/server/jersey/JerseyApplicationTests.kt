@@ -32,6 +32,7 @@ class JerseyApplicationTests : JerseyTest() {
     private lateinit var analyticsService: AnalyticsService
     private lateinit var newsletterService: NewsletterService
     private lateinit var uploadService: UploadService
+    private lateinit var executionService: ExecutionService
 
     private lateinit var stackService: InMemoryStackService
     private lateinit var frameService: InMemoryFrameService
@@ -47,6 +48,7 @@ class JerseyApplicationTests : JerseyTest() {
         analyticsService = Mockito.mock(AnalyticsService::class.java)
         newsletterService = Mockito.mock(NewsletterService::class.java)
         uploadService = Mockito.mock(UploadService::class.java)
+        executionService = Mockito.mock(ExecutionService::class.java)
 
         stackService = InMemoryStackService()
         frameService = InMemoryFrameService()
@@ -69,6 +71,7 @@ class JerseyApplicationTests : JerseyTest() {
                         bind(analyticsService).to(AnalyticsService::class.java)
                         bind(newsletterService).to(NewsletterService::class.java)
                         bind(uploadService).to(UploadService::class.java)
+                        bind(executionService).to(ExecutionService::class.java)
 
                         bind(userService).to(UserService::class.java)
                         bind(sessionService).to(SessionService::class.java)
@@ -84,7 +87,8 @@ class JerseyApplicationTests : JerseyTest() {
                 permissionService,
                 analyticsService,
                 newsletterService,
-                uploadService
+                uploadService,
+                executionService
         )
 
         stackService.reset()
