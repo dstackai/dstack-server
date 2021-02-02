@@ -67,8 +67,6 @@ const UploadStack = ({
                 >
                     {configurePythonCommand}
                 </CodeViewer>
-
-                <div className={css.description}>{t('reportPlotIntro')}</div>
             </div>}
 
             {activeCodeTab === 3 && <Upload
