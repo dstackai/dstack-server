@@ -9,7 +9,7 @@
 Installing and running `dstack` is very easy:
 
 ```bash
-pip install dstack==0.6.1
+pip install dstack
 dstack server start
 ```
 
