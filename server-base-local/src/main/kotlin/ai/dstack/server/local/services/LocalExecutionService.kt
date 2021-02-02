@@ -215,7 +215,7 @@ class LocalExecutionService @Autowired constructor(
 
     private fun executionFileIfExists(id: String, stage: String): File? {
         val executionFile = executionFile(id, stage)
-        return if (executionFile.exists()) {
+        return if (executionFile.exists() && executionFile.length() > 0) {
             executionFile
         } else {
             null

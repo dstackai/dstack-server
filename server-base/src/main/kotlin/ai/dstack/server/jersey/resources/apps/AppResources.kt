@@ -78,8 +78,6 @@ class AppResources {
                                             throw WebApplicationException(e)
                                         }
                                     }
-                                    // TODO: Temporarily logging
-                                    println("execute(): execution file length: " + status.length)
                                     Response.ok(streamingOutput)
                                             .header("content-type", "application/json;charset=UTF-8")
                                             .header("content-length", status.length).build()
