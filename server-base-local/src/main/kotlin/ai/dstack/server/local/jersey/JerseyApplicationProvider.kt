@@ -1,8 +1,7 @@
 package ai.dstack.server.local.jersey
 
 import ai.dstack.server.chainIfNotNull
-import ai.dstack.server.services.AppConfig
-import ai.dstack.server.services.UserService
+import ai.dstack.server.services.*
 import java.io.*
 import javax.inject.Inject
 import javax.ws.rs.*
@@ -20,6 +19,15 @@ class FilesResources {
     @Inject
     private lateinit var userService: UserService
 
+    @Inject
+    private lateinit var frameService: FrameService
+
+    @Inject
+    private lateinit var attachmentService: AttachmentService
+
+    @Inject
+    private lateinit var executionService: ExecutionService
+
     private val allowedPrefixForAnonymousRequests = "uploads/"
 
     @PUT
@@ -36,6 +44,17 @@ class FilesResources {
             file.parentFile.mkdirs()
             file.outputStream().use {
                 inputStream.copyTo(it)
+            }
+            val tokens = path.split("/")
+            if (tokens.size > 2) {
+                val stackUser = userService.get(tokens[0])
+                val stackPath = tokens.subList(0, tokens.lastIndex - 1).joinToString("/")
+                val frameId = tokens[tokens.lastIndex - 1]
+                val frame = frameService.get(stackPath, frameId)
+                val attachment = frame?.let { tokens.last().toIntOrNull()?.let { attachmentService.get(frame.path, it) } }
+                if (stackUser != null && attachment != null) {
+                    executionService.init(stackUser, frame, attachment)
+                }
             }
             ok().build()
         } else {

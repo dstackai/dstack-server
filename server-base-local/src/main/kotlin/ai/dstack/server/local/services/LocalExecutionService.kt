@@ -32,18 +32,15 @@ class LocalExecutionService @Autowired constructor(
 
     private val executionHome = File(config.executionDirectory).absolutePath
 
-    override fun execute(stack: Stack, user: User, frame: Frame, attachment: Attachment,
+    override fun execute(stack: Stack, stackUser: User, frame: Frame, attachment: Attachment,
                          views: List<Map<String, Any?>>?, apply: Boolean): ExecutionStatus {
         val id = UUID.randomUUID().toString()
         val minorPythonVersion = frame.minorPythonVersion
         return  if (minorPythonVersion != null) {
             val pythonExecutable = config.pythonExecutables[minorPythonVersion]
             if (pythonExecutable != null) {
-                extractApplicationIfMissing(attachment)
-                writeExecutionMetaFile(stack.path, id)
-                writeExecutionFile(EXECUTION_STAGE_ORIGINAL, id, views, "SCHEDULED", null)
-                installVenvAndStartProcessIfNeeded(attachment, pythonExecutable, user)
-                addExecutionRequestToQueue(attachment, ExecutionRequest(id, views, apply))
+                init(stackUser, frame, attachment)
+                queue(stack, attachment, ExecutionRequest(id, views, apply))
                 return poll(id)!!
             } else {
                 failed(stack, id, views, "The required Python version is not supported: $minorPythonVersion")
@@ -65,35 +62,53 @@ class LocalExecutionService @Autowired constructor(
         return executionFileObjectMapper.writeValueAsString(execution)
     }
 
-    private fun addExecutionRequestToQueue(attachment: Attachment, request: ExecutionRequest) {
+    private fun queue(stack: Stack, attachment: Attachment, request: ExecutionRequest) {
+        writeExecutionMetaFile(stack.path, request.id)
+        writeExecutionFile(EXECUTION_STAGE_ORIGINAL, request.id, request.views, "SCHEDULED", null)
         val queue = executionRequestQueues[attachment.filePath]
         queue!!.put(request)
     }
 
 
-    private fun installVenvAndStartProcessIfNeeded(attachment: Attachment, pythonExecutable: String, user: User) =
-            executionRequestQueues.putIfAbsent(attachment.filePath,
-                    LinkedBlockingQueue<ExecutionRequest>().also {
-                        object : Thread() {
-                            override fun run() {
-                                val venvPythonExecutableFile = installVenvPythonExecutableIfMissing(attachment, pythonExecutable)
-                                var p: Process? = null
-                                while (true) {
-                                    val request = it.take()
-                                    if (p == null || !p.isAlive) {
-                                        p = startVenvPythonProcess(user, attachment, venvPythonExecutableFile.absolutePath)
-                                    }
-                                    synchronized(p) {
-                                        // TODO: Make sure the virtual environment is set up correctly,
-                                        //  as well as the process is started correctly.
-                                        //  Otherwise, update the finished execution status
-                                        p.outputStream.write((executionRequestsObjectMapper.writeValueAsString(request) + "\n").toByteArray())
-                                        p.outputStream.flush()
-                                    }
-                                }
+    override fun init(stackUser: User, frame: Frame, attachment: Attachment): Boolean {
+        val minorPythonVersion = frame.minorPythonVersion
+        val pythonExecutable = config.pythonExecutables[minorPythonVersion]
+        if (pythonExecutable !== null) {
+            val newQueue = LinkedBlockingQueue<ExecutionRequest>()
+            val existingQueue = executionRequestQueues.putIfAbsent(attachment.filePath, newQueue)
+            if (existingQueue == null) {
+                object : Thread() {
+                    override fun run() {
+                        extractApplicationIfMissing(attachment)
+                        val destDir = destDir(attachment)
+                        val requirementsFile = File(destDir, "requirements.txt")
+                        val executable = if (requirementsFile.exists()) {
+                            installVenvPythonExecutableIfMissing(attachment, pythonExecutable).absolutePath
+                        } else {
+                            pythonExecutable
+                        }
+                        var p: Process? = null
+                        while (true) {
+                            val request = newQueue.take()
+                            if (p == null || !p.isAlive) {
+                                p = startVenvPythonProcess(stackUser, attachment, executable)
                             }
-                        }.start()
-                    })
+                            synchronized(p) {
+                                // TODO: Make sure the virtual environment is set up correctly,
+                                //  as well as the process is started correctly.
+                                //  Otherwise, update the finished execution status
+                                p.outputStream.write((executionRequestsObjectMapper.writeValueAsString(request) + "\n").toByteArray())
+                                p.outputStream.flush()
+                            }
+                        }
+                    }
+                }.start()
+            }
+            return true
+        } else {
+            return false
+        }
+    }
 
     private data class ExecutionRequest(
             val id: String,
@@ -200,7 +215,7 @@ class LocalExecutionService @Autowired constructor(
 
     private fun executionFileIfExists(id: String, stage: String): File? {
         val executionFile = executionFile(id, stage)
-        return if (executionFile.exists()) {
+        return if (executionFile.exists() && executionFile.length() > 0) {
             executionFile
         } else {
             null
@@ -234,7 +249,9 @@ class LocalExecutionService @Autowired constructor(
 
     private fun extractApplicationIfMissing(attachment: Attachment) {
         val destDir = destDir(attachment)
-        if (!destDir.exists()) {
+        val flagFile = File(destDir, "flag")
+        if (!flagFile.exists()) {
+            destDir.deleteRecursively()
             destDir.mkdirs()
             val zipIn = ZipInputStream(ByteArrayInputStream(fileService.get(attachment.filePath)))
             var entry = zipIn.nextEntry
@@ -249,6 +266,7 @@ class LocalExecutionService @Autowired constructor(
                 entry = zipIn.nextEntry
             }
             zipIn.close()
+            flagFile.createNewFile()
         }
         val executorFile = executorFile(attachment)
         if (!executorFile.exists()) {
