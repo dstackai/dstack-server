@@ -434,13 +434,13 @@ const Details = ({
 
     return (
         <div className={cx(css.details)}>
-            <div className={css.header}>
-                <BackButton
-                    className={css.backButton}
-                    Component={Link}
-                    to={backUrl}
-                />
+            <BackButton
+                className={css.backButton}
+                Component={Link}
+                to={backUrl}
+            >{t('backToApplications')}</BackButton>
 
+            <div className={css.header}>
                 <div className={css.title}>
                     {data.name}
                     <span className={`mdi mdi-lock${data['access_level'] === 'private' ? '' : '-open'}`} />

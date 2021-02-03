@@ -2,6 +2,7 @@
 
 import React, {useEffect, useState, useRef, useCallback} from 'react';
 import cx from 'classnames';
+import {useTranslation} from 'react-i18next';
 import {isEqual, get} from 'lodash-es';
 import usePrevious from 'hooks/usePrevious';
 import {Link} from 'react-router-dom';
@@ -53,6 +54,7 @@ const Details = ({
     changeAccessLevel,
     updatePermissions,
 }: Props) => {
+    const {t} = useTranslation();
     const didMountRef = useRef(false);
     const {form, setForm, onChange} = useForm({});
     const [activeTab, setActiveTab] = useState();
@@ -189,13 +191,13 @@ const Details = ({
 
     return (
         <div className={cx(css.details)}>
-            <div className={css.header}>
-                <BackButton
-                    className={css.backButton}
-                    Component={Link}
-                    to={backUrl}
-                />
+            <BackButton
+                className={css.backButton}
+                Component={Link}
+                to={backUrl}
+            >{t('backToModels')}</BackButton>
 
+            <div className={css.header}>
                 <div className={css.title}>
                     {data.name}
                     <span className={`mdi mdi-lock${data['access_level'] === 'private' ? '' : '-open'}`} />

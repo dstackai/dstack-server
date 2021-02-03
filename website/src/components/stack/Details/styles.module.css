@@ -20,9 +20,8 @@
     position: relative;
 }
 .backButton {
-    position: absolute;
-    top: 6px;
-    left: -20px;
+    margin-bottom: 4px;
+    max-width: fit-content;
 }
 .title {
     overflow: hidden;
