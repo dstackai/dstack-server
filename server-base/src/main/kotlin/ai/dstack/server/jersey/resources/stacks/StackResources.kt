@@ -87,6 +87,46 @@ class StackResources {
     }
 
     @GET
+    @Path("/{user}/{stack: .+}/head")
+    @Produces(JSON_UTF8)
+    fun head(
+            @PathParam("user") u: String?, @PathParam("stack") s: String?,
+            @Context headers: HttpHeaders, @Context request: HttpServletRequest
+    ): Response {
+        logger.debug { "user: $u, stack: $s" }
+        return if (u.isNullOrBlank() || s.isNullOrBlank()) {
+            malformedRequest()
+        } else {
+            val stack = stackService.get(u, s)
+            if (stack != null) {
+                val public = stack.accessLevel == AccessLevel.Public
+                val currentUser = if (!public) headers.getCurrentUser() else null
+                return if (!public && headers.bearer != null && currentUser == null) {
+                    badCredentials()
+                } else {
+                    val owner = currentUser == stack.userName
+                    val permitted = public
+                            || owner
+                            || (stack.accessLevel == AccessLevel.Internal && currentUser != null)
+                            || (currentUser != null && permissionService.get(stack.path, currentUser) != null)
+                    if (permitted) {
+                        val head = stack.head?.let { frameService.get(stack.path, it.id) }
+                        if (head != null) {
+                            ok(GetHeadStatus(HeadInfo(head.id, head.timestampMillis, null)))
+                        } else {
+                            frameNotFound()
+                        }
+                    } else {
+                        badCredentials()
+                    }
+                }
+            } else {
+                stackNotFound()
+            }
+        }
+    }
+
+    @GET
     @Path("/{user}/{stack: .+}")
     @Produces(JSON_UTF8)
     fun stack(
