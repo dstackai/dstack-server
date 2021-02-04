@@ -17,6 +17,7 @@ import StackAttachment from 'components/stack/Attachment';
 import Loader from 'components/stack/Details/components/Loader';
 import Tabs from 'components/stack/Details/components/Tabs';
 import Readme from 'components/stack/Details/components/Readme';
+import RefreshMessage from 'components/stack/Details/components/RefreshMessage';
 import Progress from './components/Progress';
 import FilterLoader from './components/Loader';
 import actions from '../actions';
@@ -54,6 +55,12 @@ type Props = {
     onChangeFrame: Function,
     changeAccessLevel: Function,
     updatePermissions: Function,
+
+    updates: {
+        has?: Boolean,
+        refreshAction?: Function,
+        cancelAction?: Function,
+    }
 }
 
 const Details = ({
@@ -70,6 +77,7 @@ const Details = ({
     stack,
     changeAccessLevel,
     updatePermissions,
+    updates,
 }: Props) => {
     const {t} = useTranslation();
     const params = useParams();
@@ -485,6 +493,14 @@ const Details = ({
                     )}
                 </div>
             </div>
+
+            {updates.has && (
+                <RefreshMessage
+                    className={css.refreshMessage}
+                    refresh={updates.refreshAction}
+                    close={updates.cancelAction}
+                />
+            )}
 
             {Boolean(tabs.length) && <Tabs
                 className={css.tabs}

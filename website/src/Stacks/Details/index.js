@@ -1,6 +1,7 @@
 // @flow
 
 import React, {useEffect, useState, useRef, Fragment} from 'react';
+import useSWR from 'swr';
 import {get} from 'lodash-es';
 import {useTranslation} from 'react-i18next';
 import {Link, useHistory, useLocation, useParams} from 'react-router-dom';
@@ -11,7 +12,7 @@ import NotFound from 'components/NotFound';
 import StackDetails from 'components/stack/Details';
 import StackDetailsApp from 'components/stack/DetailsApp';
 import StackUpload from 'components/stack/Upload';
-import {isSignedIn, parseSearch, getStackCategory} from 'utils';
+import {isSignedIn, parseSearch, getStackCategory, dataFetcher} from 'utils';
 import {deleteStack} from 'Stacks/List/actions';
 import {fetchDetails, clearDetails, fetchFrame, downloadAttachment, update, updatePermissions} from './actions';
 import routes from 'routes';
@@ -40,6 +41,8 @@ const categoryMap = {
     mlModel: 'models',
 };
 
+const dataFormat = data => data?.head;
+
 const Details = ({
     fetchDetails,
     fetchFrame,
@@ -62,6 +65,8 @@ const Details = ({
     const {push} = useHistory();
     const location = useLocation();
     const searchParams = parseSearch(location.search);
+    const [hasUpdate, setHasUpdate] = useState(false);
+    const [isCanceledUpdate, setIsCanceledUpdate] = useState(false);
 
     if (searchParams.a)
         parsedAttachmentIndex = parseInt(searchParams.a);
@@ -79,6 +84,22 @@ const Details = ({
     const downloadAttachmentHandle = () => {
         downloadAttachment(`${params.user}/${params.stack}`, selectedFrame || headId, attachmentIndex || 0);
     };
+
+    const {data: headData} = useSWR([
+        config.API_URL + config.STACK_HEAD(params.user, params.stack),
+        dataFormat,
+    ], dataFetcher, {
+        revalidateOnMount: false,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        refreshInterval: (!loading && data && !hasUpdate && !isCanceledUpdate) ? 1000 : 0,
+    });
+
+
+    useEffect(() => {
+        if (headData && headData.id !== data.head.id)
+            setHasUpdate(true);
+    }, [headData]);
 
     useEffect(() => {
         if (isFirstChangeSearch.current) {
@@ -175,6 +196,18 @@ const Details = ({
         });
     };
 
+    const refresh = () => {
+        setHasUpdate(false);
+        fetchData();
+        setAttachmentIndex();
+        setExecutionId();
+    };
+
+    const cancelUpdate = () => {
+        setIsCanceledUpdate(true);
+        setHasUpdate(false);
+    };
+
     if (!loading && requestStatus === 403)
         return <AccessForbidden>
             {t('youDontHaveAnAccessToThisStack')}.
@@ -245,6 +278,11 @@ const Details = ({
                 downloadAttachment={downloadAttachmentHandle}
                 configurePythonCommand={config.CONFIGURE_PYTHON_COMMAND(currentUserToken, currentUser)}
                 configureRCommand={config.CONFIGURE_R_COMMAND(currentUserToken, currentUser)}
+                updates={{
+                    has: hasUpdate,
+                    refreshAction: refresh,
+                    cancelAction: cancelUpdate,
+                }}
             />
 
             <StackUpload

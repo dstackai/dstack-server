@@ -1,0 +1,27 @@
+@import "styles/variables.css";
+@import "styles/media.css";
+.refreshMessage {
+    align-self: flex-start;
+    position: relative;
+    padding: 7px 28px 7px 10px;
+    background-color: rgba(137, 204, 233, 0.2);
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 16px;
+    color: #696F86;
+}
+.refreshMessageButton {
+    display: inline;
+    padding: 0 !important;
+    outline: none;
+    &:not(.close) {
+        height: 16px !important;
+        line-height: 16px;
+    }
+    &.close {
+        position: absolute;
+        right: 11px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+}

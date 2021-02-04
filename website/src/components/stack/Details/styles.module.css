@@ -129,6 +129,9 @@
     margin-top: 8px;
     flex-shrink: 0;
 }
+.refreshMessage {
+    margin-top: 10px;
+}
 .tabs {
     margin-top: 20px;
     flex-shrink: 0;

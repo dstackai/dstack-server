@@ -15,6 +15,7 @@ import StackAttachment from '../Attachment';
 import Loader from './components/Loader';
 import Tabs from './components/Tabs';
 import Readme from './components/Readme';
+import RefreshMessage from './components/RefreshMessage';
 import useForm from 'hooks/useForm';
 import {parseStackParams, parseStackTabs} from 'utils';
 import {useAppStore} from 'AppStore';
@@ -39,6 +40,12 @@ type Props = {
     onChangeFrame: Function,
     changeAccessLevel: Function,
     updatePermissions: Function,
+
+    updates: {
+        has?: Boolean,
+        refreshAction?: Function,
+        cancelAction?: Function,
+    }
 }
 
 const Details = ({
@@ -53,6 +60,7 @@ const Details = ({
     stack,
     changeAccessLevel,
     updatePermissions,
+    updates,
 }: Props) => {
     const {t} = useTranslation();
     const didMountRef = useRef(false);
@@ -241,6 +249,14 @@ const Details = ({
                     )}
                 </div>
             </div>
+
+            {updates.has && (
+                <RefreshMessage
+                    className={css.refreshMessage}
+                    refresh={updates.refreshAction}
+                    close={updates.cancelAction}
+                />
+            )}
 
             {/*<StackFrames*/}
             {/*    frames={get(data, 'frames', [])}*/}
