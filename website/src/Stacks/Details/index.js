@@ -97,7 +97,7 @@ const Details = ({
 
 
     useEffect(() => {
-        if (headData && headData.id !== data.head.id)
+        if (headData && data?.head?.id && headData.id !== data.head.id)
             setHasUpdate(true);
     }, [headData]);
 
