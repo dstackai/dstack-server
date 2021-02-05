@@ -1,5 +1,5 @@
 // @flow
-import React, {useMemo} from 'react';
+import React, {useMemo, useState, useEffect} from 'react';
 import cx from 'classnames';
 import {useTranslation} from 'react-i18next';
 import SelectField from 'components/SelectField';
@@ -22,6 +22,12 @@ type Props = {
 
 const StackFilters = ({className, fields, form, onChange, onApply, onReset, isSidebar, disabled}: Props) => {
     const {t} = useTranslation();
+    const [focusField, setFocusField] = useState(null);
+
+    useEffect(() => {
+        if (!disabled && focusField)
+            focusField.focus();
+    }, [disabled]);
 
     const hasApply = useMemo(() => {
         if (!Object.keys(fields).length)
@@ -47,6 +53,8 @@ const StackFilters = ({className, fields, form, onChange, onApply, onReset, isSi
                             name={key}
                             value={form[key]}
                             disabled={disabled || fields[key].disabled}
+                            onFocus={event => setFocusField(event.target)}
+                            onBlur={() => setFocusField(null)}
                         />;
 
                     case 'file':
@@ -73,6 +81,8 @@ const StackFilters = ({className, fields, form, onChange, onApply, onReset, isSi
                             name={key}
                             value={form[key]}
                             disabled={disabled || fields[key].disabled}
+                            onFocus={event => setFocusField(event.target)}
+                            onBlur={() => setFocusField(null)}
                         />;
 
                     case 'select':
