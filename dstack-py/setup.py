@@ -32,7 +32,8 @@ setup(
         "packaging",
         "tqdm",
         "cloudpickle",
-        "joblib"
+        "joblib",
+        "atomicwrites>=1.4.0"
     ],
     classifiers=[
         "Development Status :: 4 - Beta",

@@ -8,6 +8,8 @@ from importlib import import_module
 from io import StringIO
 from contextlib import redirect_stdout
 
+from atomicwrites import atomic_write
+
 import dstack.controls as ctrl
 from dstack import AutoHandler
 from dstack import config as dstack_config
@@ -44,8 +46,6 @@ if function_type and function_data:
         t = function_data.rsplit(".", -1)
         function_package = ".".join(t[:-1])
         function_name = t[-1]
-        print(function_package)
-        print(function_name)
         function_module = import_module(function_package)
         func = getattr(function_module, function_name)
     else:
@@ -60,15 +60,16 @@ def handle_tqdm(execution, execution_file, func):
         def close(self, tqdm: tqdm):
             execution["tqdm"] = {"desc": tqdm.desc, "n": tqdm.n, "total": tqdm.total,
                                  "elapsed": tqdm.format_dict["elapsed"]}
-            execution_file.write_text(json.dumps(execution))
+            with atomic_write(execution_file.absolute(), overwrite=True) as f:
+                f.write(json.dumps(execution))
 
         def display(self, tqdm: tqdm):
             execution["tqdm"] = {"desc": tqdm.desc, "n": tqdm.n, "total": tqdm.total,
                                  "elapsed": tqdm.format_dict["elapsed"]}
-            # TODO: Make sure it's an atomic
             # TODO: Make sure it's not very expensive operation.
             #   Otherwise: use a separate file
-            execution_file.write_text(json.dumps(execution))
+            with atomic_write(execution_file.absolute(), overwrite=True) as f:
+                f.write(json.dumps(execution))
 
     set_tqdm_handler(Handler())
 
@@ -84,10 +85,7 @@ def execute(id, views, apply):
     with redirect_stdout(logs_handler):
         executions = Path(executions_home)
         executions.mkdir(exist_ok=True)
-        running_executions = executions / "running"
-        running_executions.mkdir(exist_ok=True)
-        finished_executions = executions / "finished"
-        finished_executions.mkdir(exist_ok=True)
+        execution_file = executions / (id + '.json')
 
         execution = {
             'id': id,
@@ -95,22 +93,20 @@ def execute(id, views, apply):
         }
 
         try:
-            def list():
+            def list_func():
                 return controller.list(views)
 
-            executions = running_executions if apply else finished_executions
-            execution_file = executions / (id + '.json')
-
-            views = handle_tqdm(execution, execution_file, list)
+            views = handle_tqdm(execution, execution_file, list_func)
 
             if not apply:
                 execution["status"] = "READY"
             execution['views'] = [v.pack() for v in views]
             execution['logs'] = logs_handler.getvalue()
-            execution_file.write_text(json.dumps(execution))
+            with atomic_write(execution_file.absolute(), overwrite=True) as f:
+                f.write(json.dumps(execution))
 
             if apply:
-                def apply():
+                def apply_func():
                     if dstack_version.startswith("0.6.dev") or dstack_version.startswith("0.6.0"):
                         if func:
                             output = ctrl.Output()
@@ -127,7 +123,7 @@ def execute(id, views, apply):
                             controller._outputs = [ctrl.Output(handler=handler)]
                         return controller.apply(views)
 
-                outputs = handle_tqdm(execution, execution_file, apply)
+                outputs = handle_tqdm(execution, execution_file, apply_func)
                 execution["status"] = "FINISHED"
                 encoder = AutoHandler()
                 execution_outputs = []
@@ -149,8 +145,8 @@ def execute(id, views, apply):
         if 'views' not in execution:
             execution['views'] = [v.pack() for v in views]
         execution['logs'] = logs_handler.getvalue()
-        finished_execution_file = finished_executions / (id + '.json')
-        finished_execution_file.write_text(json.dumps(execution))
+        with atomic_write(execution_file.absolute(), overwrite=True) as f:
+            f.write(json.dumps(execution))
 
 
 def parse_command(command):
