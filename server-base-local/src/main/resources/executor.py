@@ -13,6 +13,9 @@ from dstack import AutoHandler
 from dstack import config as dstack_config
 from dstack.config import InPlaceConfig, Profile
 from dstack.version import __version__ as dstack_version
+from dstack.tqdm import tqdm, TqdmHandler, set_tqdm_handler
+
+# TODO: Refactor qnd cover this functionality with tests
 
 executions_home = sys.argv[1]
 
@@ -52,6 +55,30 @@ else:
     func = None
 
 
+def handle_tqdm(execution, execution_file, func):
+    class Handler(TqdmHandler):
+        def close(self, tqdm: tqdm):
+            execution["tqdm"] = {"desc": tqdm.desc, "n": tqdm.n, "total": tqdm.total,
+                                 "elapsed": tqdm.format_dict["elapsed"]}
+            execution_file.write_text(json.dumps(execution))
+
+        def display(self, tqdm: tqdm):
+            execution["tqdm"] = {"desc": tqdm.desc, "n": tqdm.n, "total": tqdm.total,
+                                 "elapsed": tqdm.format_dict["elapsed"]}
+            # TODO: Make sure it's an atomic
+            # TODO: Make sure it's not very expensive operation.
+            #   Otherwise: use a separate file
+            execution_file.write_text(json.dumps(execution))
+
+    set_tqdm_handler(Handler())
+
+    result = func()
+
+    set_tqdm_handler(None)
+
+    return result
+
+
 def execute(id, views, apply):
     logs_handler = StringIO()
     with redirect_stdout(logs_handler):
@@ -64,32 +91,43 @@ def execute(id, views, apply):
 
         execution = {
             'id': id,
-            'status': 'RUNNING' if apply else 'READY'
+            'status': 'RUNNING' if apply else 'SCHEDULED'
         }
 
         try:
-            views = controller.list(views)
-            execution['views'] = [v.pack() for v in views]
+            def list():
+                return controller.list(views)
+
             executions = running_executions if apply else finished_executions
-            execution['logs'] = logs_handler.getvalue()
             execution_file = executions / (id + '.json')
+
+            views = handle_tqdm(execution, execution_file, list)
+
+            if not apply:
+                execution["status"] = "READY"
+            execution['views'] = [v.pack() for v in views]
+            execution['logs'] = logs_handler.getvalue()
             execution_file.write_text(json.dumps(execution))
 
             if apply:
-                if dstack_version.startswith("0.6.dev") or dstack_version.startswith("0.6.0"):
-                    if func:
-                        output = ctrl.Output()
-                        output.data = controller.apply(func, views)
-                        outputs = [output]
+                def apply():
+                    if dstack_version.startswith("0.6.dev") or dstack_version.startswith("0.6.0"):
+                        if func:
+                            output = ctrl.Output()
+                            output.data = controller.apply(func, views)
+                            return [output]
+                        else:
+                            raise ValueError("The client doesn't support this format of the application. "
+                                             "Please make sure to update the client to 0.6.1 or higher.")
                     else:
-                        raise ValueError("The client doesn't support this format of the application. "
-                                         "Please make sure to update the client to 0.6.1 or higher.")
-                else:
-                    if func:
-                        def handler(o, *args):
-                            o.data = func(*args)
-                        controller._outputs = [ctrl.Output(handler=handler)]
-                    outputs = controller.apply(views)
+                        if func:
+                            def handler(o, *args):
+                                o.data = func(*args)
+
+                            controller._outputs = [ctrl.Output(handler=handler)]
+                        return controller.apply(views)
+
+                outputs = handle_tqdm(execution, execution_file, apply)
                 execution["status"] = "FINISHED"
                 encoder = AutoHandler()
                 execution_outputs = []
