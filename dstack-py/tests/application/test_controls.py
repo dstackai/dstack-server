@@ -1,10 +1,14 @@
+import time
 import typing as ty
 from unittest import TestCase
 from datetime import date
 
+from dstack.tqdm import tqdm, set_tqdm_handler
+
 import dstack.controls as ctrl
 from dstack.controls import Controller, ApplyView
-from dstack import app
+
+from dstack.tqdm import trange, TqdmHandler
 
 
 class TestControls(TestCase):
@@ -339,6 +343,41 @@ class TestControls(TestCase):
         # print(views)
         self.assertEqual(30, controller.apply(views)[0].data)
         self.assertIsInstance(controller._outputs[0].data, ty.Callable)
+
+    def test_tqdm(self):
+        tqdm_state = {}
+
+        class Handler(TqdmHandler):
+            def close(self, tqdm: tqdm):
+                tqdm_state[tqdm.n] = {"desc": tqdm.desc, "n": tqdm.n, "total": tqdm.total,
+                                      "elapsed": tqdm.format_dict["elapsed"]}
+
+            def display(self, tqdm: tqdm):
+                tqdm_state[tqdm.n] = {"desc": tqdm.desc, "n": tqdm.n, "total": tqdm.total,
+                                      "elapsed": tqdm.format_dict["elapsed"]}
+
+        set_tqdm_handler(Handler())
+
+        def output_handler(output):
+            for _ in trange(3, desc="Calculating data"):
+                time.sleep(0.25)
+            output.data = "success"
+
+        o1 = ctrl.Output(handler=output_handler)
+        controller = Controller([], [o1])
+        views = controller.list()
+
+        def apply():
+            controller.apply(views)
+
+        apply()
+
+        for i in range(4):
+            self.assertEqual(i, tqdm_state[i]["n"])
+            self.assertEqual(3, tqdm_state[i]["total"])
+            self.assertEqual("Calculating data", tqdm_state[i]["desc"])
+
+        set_tqdm_handler(None)
 
     def test_title_override(self):
         class Item:

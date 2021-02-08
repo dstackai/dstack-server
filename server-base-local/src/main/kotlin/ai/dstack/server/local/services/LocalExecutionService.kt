@@ -25,9 +25,6 @@ class LocalExecutionService @Autowired constructor(
         private val fileService: FileService
 ) : ExecutionService {
     companion object : KLogging() {
-        const val EXECUTION_STAGE_ORIGINAL = "staged"
-        const val EXECUTION_STAGE_UPDATED = "running"
-        const val EXECUTION_STAGE_FINAL = "finished"
     }
 
     private val executionHome = File(config.executionDirectory).absolutePath
@@ -53,7 +50,7 @@ class LocalExecutionService @Autowired constructor(
 
     private fun failed(stack: Stack, id: String, views: List<Map<String, Any?>>?, logs: String): ExecutionStatus {
         val failedExecution = failedExecution(id, logs).toByteArray()
-        writeExecutionFile(EXECUTION_STAGE_FINAL, id, views, "FAILED", logs)
+        writeExecutionFile(id, views, "FAILED", logs)
         return ExecutionStatus(stack.path, failedExecution.inputStream(), failedExecution.size.toLong())
     }
 
@@ -64,7 +61,7 @@ class LocalExecutionService @Autowired constructor(
 
     private fun queue(stack: Stack, attachment: Attachment, request: ExecutionRequest) {
         writeExecutionMetaFile(stack.path, request.id)
-        writeExecutionFile(EXECUTION_STAGE_ORIGINAL, request.id, request.views, "SCHEDULED", null)
+        writeExecutionFile(request.id, request.views, "SCHEDULED", null)
         val queue = executionRequestQueues[attachment.filePath]
         queue!!.put(request)
     }
@@ -198,9 +195,7 @@ class LocalExecutionService @Autowired constructor(
 
     override fun poll(id: String): ExecutionStatus? {
         val stackPath = getExecutionStackPath(id)
-        val executionFile = (executionFileIfExists(id, EXECUTION_STAGE_FINAL)
-                ?: executionFileIfExists(id, EXECUTION_STAGE_UPDATED)
-                ?: executionFileIfExists(id, EXECUTION_STAGE_ORIGINAL))
+        val executionFile = executionFileIfExists(id)
         return if (stackPath != null && executionFile != null) {
             ExecutionStatus(stackPath, executionFile.inputStream(), executionFile.length())
         } else {
@@ -213,8 +208,8 @@ class LocalExecutionService @Autowired constructor(
         return if (executionMetaFile.exists()) executionMetaFile.readText() else null
     }
 
-    private fun executionFileIfExists(id: String, stage: String): File? {
-        val executionFile = executionFile(id, stage)
+    private fun executionFileIfExists(id: String): File? {
+        val executionFile = executionFile(id)
         return if (executionFile.exists() && executionFile.length() > 0) {
             executionFile
         } else {
@@ -233,9 +228,9 @@ class LocalExecutionService @Autowired constructor(
     private val executionRequestsObjectMapper = ObjectMapper()
             .registerModule(KotlinModule())
 
-    private fun writeExecutionFile(stage: String, id: String,
+    private fun writeExecutionFile(id: String,
                                    views: List<Map<String, Any?>>?, status: String, logs: String?) {
-        val executionFile = executionFile(id, stage)
+        val executionFile = executionFile(id)
         executionFile.parentFile.mkdirs()
         val execution = mutableMapOf<String, Any?>("id" to id, "status" to status)
         views?.let {
@@ -289,11 +284,11 @@ class LocalExecutionService @Autowired constructor(
     private fun destDir(attachment: Attachment) =
             File(config.appDirectory + "/" + attachment.filePath)
 
-    private val executorVersion = 16
+    private val executorVersion = 18
 
     private fun executorFile(attachment: Attachment) = File(destDir(attachment), "execute_v${executorVersion}.py")
 
-    private fun executionFile(id: String, stage: String) = File(File(File(config.executionDirectory), stage), "$id.json")
+    private fun executionFile(id: String) = File(File(config.executionDirectory), "$id.json")
 
     private fun executionMetaFile(id: String) = File(File(File(config.executionDirectory), "meta"), "$id.txt")
 
