@@ -3,7 +3,7 @@ import cn from 'classnames';
 import usePrevious from 'hooks/usePrevious';
 import css from './styles.module.css';
 
-const Progress = ({isActive = true, className, message}) => {
+const Progress = ({isActive = true, className, message, progress: propsProgress}) => {
     const [progress, setProgress] = useState(0);
     const step = useRef(0.01);
     const currentProgress = useRef(0);
@@ -14,7 +14,7 @@ const Progress = ({isActive = true, className, message}) => {
     useEffect(() => {
         isActiveRef.current = isActive;
 
-        if (isActive) {
+        if (isActive && typeof propsProgress !== 'number') {
             setProgress(0);
             step.current = 0.01;
             currentProgress.current = 0;
@@ -35,6 +35,12 @@ const Progress = ({isActive = true, className, message}) => {
         }
     }, [isActive]);
 
+    useEffect(() => {
+        return () => {
+            isActiveRef.current = false;
+        };
+    }, []);
+
     const calculateProgress = () => {
         currentProgress.current += step.current;
         const progress = Math.round(Math.atan(currentProgress.current) / (Math.PI / 2) * 100 * 1000) / 1000;
@@ -52,17 +58,22 @@ const Progress = ({isActive = true, className, message}) => {
     };
 
     const startCalculateProgress = () => {
-        requestAnimationFrame(calculateProgress);
+        setTimeout(() => {
+            if (isActiveRef.current)
+                requestAnimationFrame(calculateProgress);
+        }, 1000);
     };
+
+    const showProgress = typeof propsProgress === 'number' ? propsProgress : progress;
 
     return (
         <div className={cn(css.progress, className)}>
             <div className={css.percent}>
-                {Math.floor(progress)} %
+                {Math.floor(showProgress)} %
             </div>
 
             <div className={css.bar}>
-                <div style={{width: `${progress}%`}} />
+                <div style={{width: `${showProgress}%`}} />
             </div>
 
             <div className={css.label}>{message}</div>

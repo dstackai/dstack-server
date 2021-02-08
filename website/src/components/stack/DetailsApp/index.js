@@ -283,11 +283,11 @@ const Details = ({
                 }
 
                 if (data.status === STATUSES.FAILED) {
-                    setExecuteData({
-                        ...executeData,
+                    setExecuteData(prevState => ({
+                        prevState,
                         logs: data.logs,
                         date: Date.now(),
-                    });
+                    }));
 
                     setError({status: data.status});
                 }
@@ -407,7 +407,12 @@ const Details = ({
                 setIsScheduled(data.status === STATUSES.SCHEDULED);
                 setActiveExecutionId(data.id);
 
-                if ([STATUSES.SCHEDULED, STATUSES.RUNNING].indexOf(data.status) >= 0)
+                if ([STATUSES.SCHEDULED, STATUSES.RUNNING].indexOf(data.status) >= 0) {
+                    setExecuteData(prevState => ({
+                        ...prevState,
+                        tqdm: data?.tqdm,
+                    }));
+
                     if (didMountRef.current) {
                         if (pollTimeoutRef.current)
                             clearTimeout(pollTimeoutRef.current);
@@ -416,6 +421,7 @@ const Details = ({
                             checkFinished({id: data.id, isUpdateData});
                         }, REFRESH_INTERVAL);
                     }
+                }
 
                 if (
                     [
@@ -435,11 +441,11 @@ const Details = ({
                         setExecuting(false);
                         updateExecuteData(data);
                     } else {
-                        setExecuteData({
-                            ...executeData,
+                        setExecuteData(prevState => ({
+                            ...prevState,
                             logs: data.logs,
                             date: Date.now(),
-                        });
+                        }));
                     }
                 }
 
@@ -448,11 +454,11 @@ const Details = ({
                         setExecuting(false);
                         updateExecuteData(data);
                     } else {
-                        setExecuteData({
-                            ...executeData,
+                        setExecuteData(prevState => ({
+                            ...prevState,
                             logs: data.logs,
                             date: Date.now(),
-                        });
+                        }));
                     }
 
                     setError({status: data.status});
@@ -592,7 +598,12 @@ const Details = ({
                     {calculating && !isScheduled && (
                         <Progress
                             className={css.progress}
-                            message={t('calculatingTheData')}
+                            message={executeData?.tqdm?.desc || t('calculatingTheData')}
+
+                            progress={executeData?.tqdm
+                                ? executeData.tqdm.n / executeData.tqdm.total * 100
+                                : undefined
+                            }
                         />
                     )}
 
