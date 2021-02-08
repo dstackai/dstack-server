@@ -131,6 +131,13 @@ const Details = ({
         }, {});
     };
 
+    const omitFieldsFromViews = (views, fieldNames: Array<string>) => {
+        if (!views || !Array.isArray(views))
+            return {};
+
+        return views.filter(v => fieldNames.indexOf(v.type) < 0);
+    };
+
     const setActiveExecutionId = (value?: string) => {
         if (typeof onChangeExecutionId === 'function')
             onChangeExecutionId(value);
@@ -147,10 +154,21 @@ const Details = ({
 
     const updateExecuteData = data => {
         const fields = parseStackViews(data?.views);
-        const form = getFormFromViews(data?.views);
+
+        const isEmptyForm = fields.length && data?.views && !Object.keys(form).length;
+
+        const newForm = getFormFromViews(
+            isEmptyForm
+                ? omitFieldsFromViews(data?.views, [])
+                : data?.views
+        );
 
         setFields(fields);
-        setForm(form);
+
+        setForm(prevState => ({
+            ...prevState,
+            ...newForm,
+        }));
 
         setExecuteData({
             lastUpdate: Date.now(),
@@ -230,7 +248,10 @@ const Details = ({
 
     const onApply = () => submit(form);
 
-    const onReset = () => startExecute();
+    const onReset = () => {
+        startExecute();
+        setForm({});
+    };
 
     useEffect(() => {
         if (executeData && executeData.status === STATUSES.READY && !appAttachments && !executing) {
@@ -260,8 +281,19 @@ const Details = ({
                     setIsScheduled(true);
                     checkFinished({id: data.id, isUpdateData: true});
                 }
+
+                if (data.status === STATUSES.FAILED) {
+                    setExecuteData({
+                        ...executeData,
+                        logs: data.logs,
+                        date: Date.now(),
+                    });
+
+                    setError({status: data.status});
+                }
             })
-            .catch(() => {
+            .catch(e => {
+                console.error(e);
                 setExecuting(false);
                 setError({status: null});
             });

@@ -1,5 +1,5 @@
 // @flow
-import React, {useMemo, useState, useEffect} from 'react';
+import React, {useMemo, useState} from 'react';
 import cx from 'classnames';
 import {useTranslation} from 'react-i18next';
 import SelectField from 'components/SelectField';
@@ -20,14 +20,18 @@ type Props = {
     className?: string,
 }
 
-const StackFilters = ({className, fields, form, onChange, onApply, onReset, isSidebar, disabled}: Props) => {
+const StackFilters = ({
+    className,
+    fields,
+    form,
+    onChange,
+    onApply,
+    onReset,
+    isSidebar,
+    disabled: filtersDisabled,
+}: Props) => {
     const {t} = useTranslation();
-    const [focusField, setFocusField] = useState(null);
-
-    useEffect(() => {
-        if (!disabled && focusField)
-            focusField.focus();
-    }, [disabled]);
+    const [textFieldInFocus, setTextFieldInFocus] = useState(null);
 
     const hasApply = useMemo(() => {
         if (!Object.keys(fields).length)
@@ -35,6 +39,8 @@ const StackFilters = ({className, fields, form, onChange, onApply, onReset, isSi
 
         return Boolean(Object.keys(fields).find(key => fields[key].type === 'apply'));
     }, [fields]);
+
+    const disabled = filtersDisabled && !textFieldInFocus;
 
     if (!Object.keys(fields).length)
         return null;
@@ -53,8 +59,8 @@ const StackFilters = ({className, fields, form, onChange, onApply, onReset, isSi
                             name={key}
                             value={form[key]}
                             disabled={disabled || fields[key].disabled}
-                            onFocus={event => setFocusField(event.target)}
-                            onBlur={() => setFocusField(null)}
+                            onFocus={event => setTextFieldInFocus(event.target)}
+                            onBlur={() => setTextFieldInFocus(null)}
                         />;
 
                     case 'file':
@@ -81,8 +87,8 @@ const StackFilters = ({className, fields, form, onChange, onApply, onReset, isSi
                             name={key}
                             value={form[key]}
                             disabled={disabled || fields[key].disabled}
-                            onFocus={event => setFocusField(event.target)}
-                            onBlur={() => setFocusField(null)}
+                            onFocus={event => setTextFieldInFocus(event.target)}
+                            onBlur={() => setTextFieldInFocus(null)}
                         />;
 
                     case 'select':
@@ -139,7 +145,7 @@ const StackFilters = ({className, fields, form, onChange, onApply, onReset, isSi
                                     color="primary"
                                     variant="contained"
                                     onClick={onApply}
-                                    disabled={disabled || fields[key].disabled}
+                                    disabled={filtersDisabled || fields[key].disabled}
                                     className={css.button}
                                 >
                                     {t('apply')}
@@ -152,7 +158,7 @@ const StackFilters = ({className, fields, form, onChange, onApply, onReset, isSi
                                     color="primary"
                                     variant="outlined"
                                     onClick={onReset}
-                                    disabled={disabled}
+                                    disabled={filtersDisabled}
                                     className={css.button}
                                 >
                                     {t('reset')}
@@ -174,7 +180,7 @@ const StackFilters = ({className, fields, form, onChange, onApply, onReset, isSi
                         color="primary"
                         variant="outlined"
                         onClick={onReset}
-                        disabled={disabled}
+                        disabled={filtersDisabled}
                         className={css.button}
                     >
                         {t('reset')}
