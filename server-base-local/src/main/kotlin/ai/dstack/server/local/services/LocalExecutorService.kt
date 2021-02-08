@@ -20,38 +20,40 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.io.BufferedOutputStream
 
 @Component
-class LocalExecutionService @Autowired constructor(
+class LocalExecutorService @Autowired constructor(
         private val config: AppConfig,
         private val fileService: FileService
-) : ExecutionService {
+) : ExecutorService {
     companion object : KLogging() {
+        const val EXECUTION_STAGE_ORIGINAL = "staged"
+        const val EXECUTION_STAGE_UPDATED = "running"
+        const val EXECUTION_STAGE_FINAL = "finished"
     }
 
     private val executionHome = File(config.executionDirectory).absolutePath
 
-    override fun execute(stack: Stack, stackUser: User, frame: Frame, attachment: Attachment,
-                         views: List<Map<String, Any?>>?, apply: Boolean): ExecutionStatus {
-        val id = UUID.randomUUID().toString()
+    override fun execute(id: String, stackUser: User, frame: Frame, attachment: Attachment,
+                         views: List<Map<String, Any?>>?, apply: Boolean): ExecutionResult {
         val minorPythonVersion = frame.minorPythonVersion
         return  if (minorPythonVersion != null) {
             val pythonExecutable = config.pythonExecutables[minorPythonVersion]
             if (pythonExecutable != null) {
                 init(stackUser, frame, attachment)
-                queue(stack, attachment, ExecutionRequest(id, views, apply))
+                queue(attachment, ExecutionRequest(id, views, apply))
                 return poll(id)!!
             } else {
-                failed(stack, id, views, "The required Python version is not supported: $minorPythonVersion")
+                failed(id, views, "The required Python version is not supported: $minorPythonVersion")
             }
         } else {
-            failed(stack, id, views, "The Python version is missing in the application. " +
+            failed(id, views, "The Python version is missing in the application. " +
                     "Make sure you use the latest client to push the application.")
         }
     }
 
-    private fun failed(stack: Stack, id: String, views: List<Map<String, Any?>>?, logs: String): ExecutionStatus {
+    private fun failed(id: String, views: List<Map<String, Any?>>?, logs: String): ExecutionResult {
         val failedExecution = failedExecution(id, logs).toByteArray()
-        writeExecutionFile(id, views, "FAILED", logs)
-        return ExecutionStatus(stack.path, failedExecution.inputStream(), failedExecution.size.toLong())
+        writeExecutionFile(EXECUTION_STAGE_FINAL, id, views, "FAILED", logs)
+        return executionFileObjectMapper.readValue(failedExecution, Map::class.java)
     }
 
     private fun failedExecution(id: String, logs: String): String {
@@ -59,9 +61,8 @@ class LocalExecutionService @Autowired constructor(
         return executionFileObjectMapper.writeValueAsString(execution)
     }
 
-    private fun queue(stack: Stack, attachment: Attachment, request: ExecutionRequest) {
-        writeExecutionMetaFile(stack.path, request.id)
-        writeExecutionFile(request.id, request.views, "SCHEDULED", null)
+    private fun queue(attachment: Attachment, request: ExecutionRequest) {
+        writeExecutionFile(EXECUTION_STAGE_ORIGINAL, request.id, request.views, "SCHEDULED", null)
         val queue = executionRequestQueues[attachment.filePath]
         queue!!.put(request)
     }
@@ -193,13 +194,12 @@ class LocalExecutionService @Autowired constructor(
             return python
         }
 
-    override fun poll(id: String): ExecutionStatus? {
-        val stackPath = getExecutionStackPath(id)
-        val executionFile = executionFileIfExists(id)
-        return if (stackPath != null && executionFile != null) {
-            ExecutionStatus(stackPath, executionFile.inputStream(), executionFile.length())
-        } else {
-            null
+    override fun poll(id: String): ExecutionResult? {
+        val executionFile = (executionFileIfExists(id, EXECUTION_STAGE_FINAL)
+                ?: executionFileIfExists(id, EXECUTION_STAGE_UPDATED)
+                ?: executionFileIfExists(id, EXECUTION_STAGE_ORIGINAL))
+        return executionFile?.let {
+            executionFileObjectMapper.readValue(it, Map::class.java)
         }
     }
 
@@ -208,8 +208,8 @@ class LocalExecutionService @Autowired constructor(
         return if (executionMetaFile.exists()) executionMetaFile.readText() else null
     }
 
-    private fun executionFileIfExists(id: String): File? {
-        val executionFile = executionFile(id)
+    private fun executionFileIfExists(id: String, stage: String): File? {
+        val executionFile = executionFile(id, stage)
         return if (executionFile.exists() && executionFile.length() > 0) {
             executionFile
         } else {
@@ -217,20 +217,14 @@ class LocalExecutionService @Autowired constructor(
         }
     }
 
-    private fun writeExecutionMetaFile(stackPath: String, id: String) {
-        val executionMetaFile = executionMetaFile(id)
-        executionMetaFile.parentFile.mkdirs()
-        executionMetaFile.writeText(stackPath)
-    }
-
     private val executionFileObjectMapper = ObjectMapper()
             .registerModule(KotlinModule())
     private val executionRequestsObjectMapper = ObjectMapper()
             .registerModule(KotlinModule())
 
-    private fun writeExecutionFile(id: String,
+    private fun writeExecutionFile(stage: String, id: String,
                                    views: List<Map<String, Any?>>?, status: String, logs: String?) {
-        val executionFile = executionFile(id)
+        val executionFile = executionFile(id, stage)
         executionFile.parentFile.mkdirs()
         val execution = mutableMapOf<String, Any?>("id" to id, "status" to status)
         views?.let {
@@ -284,11 +278,11 @@ class LocalExecutionService @Autowired constructor(
     private fun destDir(attachment: Attachment) =
             File(config.appDirectory + "/" + attachment.filePath)
 
-    private val executorVersion = 18
+    private val executorVersion = 20
 
     private fun executorFile(attachment: Attachment) = File(destDir(attachment), "execute_v${executorVersion}.py")
 
-    private fun executionFile(id: String) = File(File(config.executionDirectory), "$id.json")
+    private fun executionFile(id: String, stage: String) = File(File(File(config.executionDirectory), stage), "$id.json")
 
     private fun executionMetaFile(id: String) = File(File(File(config.executionDirectory), "meta"), "$id.txt")
 

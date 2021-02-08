@@ -1,10 +1,9 @@
 package ai.dstack.server.services
 
-import ai.dstack.server.model.*
+import ai.dstack.server.model.Execution
 
 interface ExecutionService {
-    fun execute(stack: Stack, stackUser: User, frame: Frame, attachment: Attachment,
-                views: List<Map<String, Any?>>?, apply: Boolean): ExecutionStatus
-    fun poll(id: String): ExecutionStatus?
-    fun init(stackUser: User, frame: Frame, attachment: Attachment): Boolean
+    fun create(execution: Execution)
+    fun update(execution: Execution)
+    fun get(id: String): Execution?
 }

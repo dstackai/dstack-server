@@ -5,17 +5,19 @@ import ai.dstack.server.jersey.resources.attachmentNotFound
 import ai.dstack.server.jersey.resources.frameNotFound
 import ai.dstack.server.jersey.resources.malformedRequest
 import ai.dstack.server.jersey.resources.payload.ExecutePayload
+import ai.dstack.server.jersey.resources.payload.UpdateExecutionPayload
 import ai.dstack.server.jersey.resources.stackNotFound
 import ai.dstack.server.jersey.resources.stacks.parseStackPath
 import ai.dstack.server.model.AccessLevel
+import ai.dstack.server.model.Execution
 import ai.dstack.server.services.*
 import mu.KLogging
+import java.util.*
 import javax.inject.Inject
 import javax.ws.rs.*
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.HttpHeaders
 import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
 
 @Path("/apps")
 class AppResources {
@@ -38,20 +40,75 @@ class AppResources {
     private lateinit var permissionService: PermissionService
 
     @Inject
+    private lateinit var executorService: ExecutorService
+
+    @Inject
     private lateinit var executionService: ExecutionService
 
-    companion object : KLogging()
+    companion object : KLogging() {
+        val cachedPermissions: MutableSet<String> = mutableSetOf()
+    }
+
+    @POST
+    @Path("/update")
+    @Produces(JSON_UTF8)
+    @Consumes(JSON_UTF8)
+    fun update(payload: UpdateExecutionPayload?, @Context headers: HttpHeaders): Response {
+        logger.debug { "payload: $payload" }
+        return if (payload.isMalformed) {
+            malformedRequest()
+        } else {
+            val execution = executionService.get(payload!!.id!!)
+            if (execution == null) {
+                executionNotFound()
+            } else {
+                val permission = payload.id + "/" + headers.bearer.orEmpty()
+                if (cachedPermissions.contains(permission)) {
+                    update(execution, payload)
+                } else {
+                    val currentUser = headers.getCurrentUser()
+                    return if (headers.bearer != null && currentUser == null) {
+                        badCredentials()
+                    } else {
+                        val (u, s) = execution.stackPath.parseStackPath()
+                        val stack = stackService.get(u, s)
+                        if (stack != null) {
+                            val owner = currentUser == stack.userName
+                            val permitted = stack.accessLevel == AccessLevel.Public
+                                    || owner
+                                    || (stack.accessLevel == AccessLevel.Internal && currentUser != null)
+                                    || (currentUser != null && permissionService.get(stack.path, currentUser) != null)
+                            if (permitted) {
+                                update(execution, payload)
+                                cachedPermissions.add(permission)
+                                ok()
+                            } else {
+                                badCredentials()
+                            }
+                        } else {
+                            stackNotFound()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun update(execution: Execution, payload: UpdateExecutionPayload): Response {
+        executionService.update(execution.copy(tqdm = payload.tqdm ?: execution.tqdm))
+        return ok()
+    }
 
     @POST
     @Path("/execute")
     @Produces(JSON_UTF8)
     @Consumes(JSON_UTF8)
-    fun execute(payload: ExecutePayload, @Context headers: HttpHeaders): Response {
+    fun execute(payload: ExecutePayload?, @Context headers: HttpHeaders): Response {
         logger.debug { "payload: $payload" }
         return if (payload.isMalformed) {
             malformedRequest()
         } else {
-            val stack = stackService.get(payload.user!!, payload.stack!!)
+            val stack = stackService.get(payload!!.user!!, payload.stack!!)
             return if (stack != null) {
                 val currentUser = headers.getCurrentUser()
                 return if (headers.bearer != null && currentUser == null) {
@@ -69,18 +126,11 @@ class AppResources {
                             if (attachment != null) {
                                 if (attachment.application == "application/python") {
                                     val stackUser = userService.get(stack.userName)!!
-                                    val status = executionService.execute(stack, stackUser, frame, attachment,
+                                    val id = UUID.randomUUID().toString()
+                                    executionService.create(Execution(id, stack.path, null))
+                                    val status = executorService.execute(id, stackUser, frame, attachment,
                                             payload.views, payload.apply == true)
-                                    val streamingOutput = StreamingOutput { output ->
-                                        try {
-                                            status.inputStream.copyTo(output)
-                                        } catch (e: Exception) {
-                                            throw WebApplicationException(e)
-                                        }
-                                    }
-                                    Response.ok(streamingOutput)
-                                            .header("content-type", "application/json;charset=UTF-8")
-                                            .header("content-length", status.length).build()
+                                    ok(status)
                                 } else {
                                     unsupportedApplication(attachment.application)
                                 }
@@ -120,46 +170,57 @@ class AppResources {
         return if (id.isNullOrBlank()) {
             malformedRequest()
         } else {
-            val status = executionService.poll(id)
-            if (status != null) {
-                val (u, s) = status.stackPath.parseStackPath()
-                val stack = stackService.get(u, s)
-                if (stack != null) {
-                    val currentUser = headers.getCurrentUser()
-                    return if (headers.bearer != null && currentUser == null) {
-                        badCredentials()
-                    } else {
-                        val owner = currentUser == stack.userName
-                        val permitted = stack.accessLevel == AccessLevel.Public
-                                || owner
-                                || (stack.accessLevel == AccessLevel.Internal && currentUser != null)
-                                || (currentUser != null && permissionService.get(stack.path, currentUser) != null)
-                        if (permitted) {
-                            val streamingOutput = StreamingOutput { output ->
-                                try {
-                                    status.inputStream.copyTo(output)
-                                } catch (e: Exception) {
-                                    throw WebApplicationException(e)
-                                }
-                            }
-                            Response.ok(streamingOutput)
-                                    .header("content-type", "application/json;charset=UTF-8")
-                                    .header("content-length", status.length).build()
-                        } else {
-                            badCredentials()
-                        }
-                    }
+            val execution = executionService.get(id)
+            if (execution != null) {
+                val permission = id + "/" + headers.bearer.orEmpty()
+                if (cachedPermissions.contains(permission)) {
+                    poll(id, execution)
                 } else {
-                    stackNotFound()
+                    val (u, s) = execution.stackPath.parseStackPath()
+                    val stack = stackService.get(u, s)
+                    if (stack != null) {
+                        val currentUser = headers.getCurrentUser()
+                        return if (headers.bearer != null && currentUser == null) {
+                            badCredentials()
+                        } else {
+                            val owner = currentUser == stack.userName
+                            val permitted = stack.accessLevel == AccessLevel.Public
+                                    || owner
+                                    || (stack.accessLevel == AccessLevel.Internal && currentUser != null)
+                                    || (currentUser != null && permissionService.get(stack.path, currentUser) != null)
+                            if (permitted) {
+                                cachedPermissions.add(permission)
+                                poll(id, execution)
+                            } else {
+                                badCredentials()
+                            }
+                        }
+                    } else {
+                        stackNotFound()
+                    }
                 }
             } else {
                 executionNotFound()
             }
         }
     }
+
+    private fun poll(id: String, execution: Execution): Response {
+        val result = executorService.poll(id)
+        return if (result != null) {
+            ok(execution.tqdm?.let { result + ("tqdm" to it) } ?: result)
+        } else {
+            executionNotFound()
+        }
+    }
 }
 
-private val ExecutePayload.isMalformed: Boolean
+private val ExecutePayload?.isMalformed: Boolean
     get() {
-        return this.user == null || this.stack == null || this.frame == null || this.attachment == null
+        return this == null || this.user == null || this.stack == null || this.frame == null || this.attachment == null
+    }
+
+private val UpdateExecutionPayload?.isMalformed: Boolean
+    get() {
+        return this == null || this.id == null || (this.tqdm == null)
     }

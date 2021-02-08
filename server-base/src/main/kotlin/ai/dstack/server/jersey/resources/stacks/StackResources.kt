@@ -60,7 +60,7 @@ class StackResources {
     private lateinit var permissionService: PermissionService
 
     @Inject
-    private lateinit var executionService: ExecutionService
+    private lateinit var executorService: ExecutorService
 
     @Inject
     private lateinit var config: AppConfig
@@ -345,7 +345,7 @@ class StackResources {
                             if (data != null) {
                                 fileService.save(file, data)
                                 if (application == "application/python") {
-                                    executionService.init(user, frame, attachment)
+                                    executorService.init(user, frame, attachment)
                                 }
                             } else {
                                 val uploadUrl = fileService.upload(file, user)

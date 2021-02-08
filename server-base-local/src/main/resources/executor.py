@@ -2,13 +2,12 @@ import cloudpickle
 import sys
 import json
 import traceback
+import requests
 
 from pathlib import Path
 from importlib import import_module
 from io import StringIO
 from contextlib import redirect_stdout
-
-from atomicwrites import atomic_write
 
 import dstack.controls as ctrl
 from dstack import AutoHandler
@@ -18,6 +17,9 @@ from dstack.version import __version__ as dstack_version
 from dstack.tqdm import tqdm, TqdmHandler, set_tqdm_handler
 
 # TODO: Refactor qnd cover this functionality with tests
+
+from queue import Queue, Empty
+from threading import Thread
 
 executions_home = sys.argv[1]
 
@@ -54,26 +56,43 @@ if function_type and function_data:
 else:
     func = None
 
+update_in_progress = False
+updates_queue = Queue()
 
-def handle_tqdm(execution, execution_file, func):
+
+def handle_tqdm(execution, func, token, server):
+    global update_in_progress
+    update_in_progress = True
+
+    def update_execution():
+        while update_in_progress:
+            try:
+                payload = updates_queue.get(timeout=1)
+                requests.post(server + "/apps/update", headers={"Authorization": "Bearer " + token}, json=payload)
+            except Empty:
+                pass
+
+    update_thread = Thread(target=update_execution, args=[])
+    update_thread.start()
+
     class Handler(TqdmHandler):
         def close(self, tqdm: tqdm):
-            execution["tqdm"] = {"desc": tqdm.desc, "n": tqdm.n, "total": tqdm.total,
-                                 "elapsed": tqdm.format_dict["elapsed"]}
-            with atomic_write(execution_file.absolute(), overwrite=True) as f:
-                f.write(json.dumps(execution))
+            with updates_queue.mutex:
+                updates_queue.queue.clear()
+            updates_queue.put({"id": execution["id"], "tqdm": {"desc": tqdm.desc, "n": tqdm.n, "total": tqdm.total,
+                                                               "elapsed": tqdm.format_dict["elapsed"]}})
 
         def display(self, tqdm: tqdm):
-            execution["tqdm"] = {"desc": tqdm.desc, "n": tqdm.n, "total": tqdm.total,
-                                 "elapsed": tqdm.format_dict["elapsed"]}
-            # TODO: Make sure it's not very expensive operation.
-            #   Otherwise: use a separate file
-            with atomic_write(execution_file.absolute(), overwrite=True) as f:
-                f.write(json.dumps(execution))
+            with updates_queue.mutex:
+                updates_queue.queue.clear()
+            updates_queue.put({"id": execution["id"], "tqdm": {"desc": tqdm.desc, "n": tqdm.n, "total": tqdm.total,
+                                                               "elapsed": tqdm.format_dict["elapsed"]}})
 
     set_tqdm_handler(Handler())
 
     result = func()
+
+    update_in_progress = False
 
     set_tqdm_handler(None)
 
@@ -85,6 +104,11 @@ def execute(id, views, apply):
     with redirect_stdout(logs_handler):
         executions = Path(executions_home)
         executions.mkdir(exist_ok=True)
+        running_executions = executions / "running"
+        running_executions.mkdir(exist_ok=True)
+        finished_executions = executions / "finished"
+        finished_executions.mkdir(exist_ok=True)
+        executions = running_executions if apply else finished_executions
         execution_file = executions / (id + '.json')
 
         execution = {
@@ -96,14 +120,13 @@ def execute(id, views, apply):
             def list_func():
                 return controller.list(views)
 
-            views = handle_tqdm(execution, execution_file, list_func)
+            views = handle_tqdm(execution, list_func, token, server)
 
             if not apply:
                 execution["status"] = "READY"
             execution['views'] = [v.pack() for v in views]
             execution['logs'] = logs_handler.getvalue()
-            with atomic_write(execution_file.absolute(), overwrite=True) as f:
-                f.write(json.dumps(execution))
+            execution_file.write_text(json.dumps(execution))
 
             if apply:
                 def apply_func():
@@ -123,7 +146,7 @@ def execute(id, views, apply):
                             controller._outputs = [ctrl.Output(handler=handler)]
                         return controller.apply(views)
 
-                outputs = handle_tqdm(execution, execution_file, apply_func)
+                outputs = handle_tqdm(execution, apply_func, token, server)
                 execution["status"] = "FINISHED"
                 encoder = AutoHandler()
                 execution_outputs = []
@@ -145,8 +168,8 @@ def execute(id, views, apply):
         if 'views' not in execution:
             execution['views'] = [v.pack() for v in views]
         execution['logs'] = logs_handler.getvalue()
-        with atomic_write(execution_file.absolute(), overwrite=True) as f:
-            f.write(json.dumps(execution))
+        finished_execution_file = finished_executions / (id + '.json')
+        finished_execution_file.write_text(json.dumps(execution))
 
 
 def parse_command(command):

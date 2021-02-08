@@ -32,9 +32,10 @@ class JerseyApplicationTests : JerseyTest() {
     private lateinit var analyticsService: AnalyticsService
     private lateinit var newsletterService: NewsletterService
     private lateinit var uploadService: UploadService
-    private lateinit var executionService: ExecutionService
+    private lateinit var executorService: ExecutorService
 
     private lateinit var stackService: InMemoryStackService
+    private lateinit var executionService: InMemoryExecutionService
     private lateinit var frameService: InMemoryFrameService
     private lateinit var attachmentService: InMemoryAttachmentService
     private lateinit var fileService: InMemoryFileService
@@ -48,9 +49,10 @@ class JerseyApplicationTests : JerseyTest() {
         analyticsService = Mockito.mock(AnalyticsService::class.java)
         newsletterService = Mockito.mock(NewsletterService::class.java)
         uploadService = Mockito.mock(UploadService::class.java)
-        executionService = Mockito.mock(ExecutionService::class.java)
+        executorService = Mockito.mock(ExecutorService::class.java)
 
         stackService = InMemoryStackService()
+        executionService = InMemoryExecutionService()
         frameService = InMemoryFrameService()
         attachmentService = InMemoryAttachmentService()
         fileService = InMemoryFileService()
@@ -62,6 +64,7 @@ class JerseyApplicationTests : JerseyTest() {
                     override fun configure() {
                         bind(appConfig).to(AppConfig::class.java)
                         bind(stackService).to(StackService::class.java)
+                        bind(executionService).to(ExecutionService::class.java)
                         bind(sessionService).to(SessionService::class.java)
                         bind(frameService).to(FrameService::class.java)
                         bind(attachmentService).to(AttachmentService::class.java)
@@ -71,7 +74,7 @@ class JerseyApplicationTests : JerseyTest() {
                         bind(analyticsService).to(AnalyticsService::class.java)
                         bind(newsletterService).to(NewsletterService::class.java)
                         bind(uploadService).to(UploadService::class.java)
-                        bind(executionService).to(ExecutionService::class.java)
+                        bind(executorService).to(ExecutorService::class.java)
 
                         bind(userService).to(UserService::class.java)
                         bind(sessionService).to(SessionService::class.java)
@@ -88,10 +91,11 @@ class JerseyApplicationTests : JerseyTest() {
                 analyticsService,
                 newsletterService,
                 uploadService,
-                executionService
+                executorService
         )
 
         stackService.reset()
+        executionService.reset()
         frameService.reset()
         attachmentService.reset()
         fileService.reset()
