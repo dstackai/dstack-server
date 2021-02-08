@@ -65,7 +65,9 @@ class StackResources {
     @Inject
     private lateinit var config: AppConfig
 
-    companion object : KLogging()
+    companion object : KLogging() {
+        val cachedPermissions: MutableSet<String> = mutableSetOf()
+    }
 
     @POST
     @Path("/access")
@@ -99,30 +101,39 @@ class StackResources {
         } else {
             val stack = stackService.get(u, s)
             if (stack != null) {
-                val public = stack.accessLevel == AccessLevel.Public
-                val currentUser = if (!public) headers.getCurrentUser() else null
-                return if (!public && headers.bearer != null && currentUser == null) {
-                    badCredentials()
+                val permission = u + "/" + s + "/" + headers.bearer.orEmpty()
+                if (cachedPermissions.contains(permission)) {
+                    head(stack)
                 } else {
-                    val owner = currentUser == stack.userName
-                    val permitted = public
-                            || owner
-                            || (stack.accessLevel == AccessLevel.Internal && currentUser != null)
-                            || (currentUser != null && permissionService.get(stack.path, currentUser) != null)
-                    if (permitted) {
-                        val head = stack.head?.let { frameService.get(stack.path, it.id) }
-                        if (head != null) {
-                            ok(GetHeadStatus(HeadInfo(head.id, head.timestampMillis, null)))
-                        } else {
-                            frameNotFound()
-                        }
-                    } else {
+                    val currentUser = headers.getCurrentUser()
+                    return if (headers.bearer != null && currentUser == null) {
                         badCredentials()
+                    } else {
+                        val owner = currentUser == stack.userName
+                        val permitted = stack.accessLevel == AccessLevel.Public
+                                || owner
+                                || (stack.accessLevel == AccessLevel.Internal && currentUser != null)
+                                || (currentUser != null && permissionService.get(stack.path, currentUser) != null)
+                        if (permitted) {
+                            cachedPermissions.add(permission)
+                            head(stack)
+                        } else {
+                            badCredentials()
+                        }
                     }
                 }
             } else {
                 stackNotFound()
             }
+        }
+    }
+
+    private fun head(stack: Stack): Response {
+        val head = stack.head
+        return if (head != null) {
+            ok(GetHeadStatus(HeadInfo(head.id, head.timestampMillis, null)))
+        } else {
+            frameNotFound()
         }
     }
 
