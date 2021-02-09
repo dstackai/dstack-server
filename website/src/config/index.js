@@ -28,6 +28,7 @@ export default {
     DELETE_STACK: () => '/stacks/delete',
     STACK_DETAILS: (userName, stack) => `/stacks/${userName}/${stack}`,
     STACK_FRAME: (userName, stack, frameId) => `/frames/${userName}/${stack}/${frameId}`,
+    STACK_ATTACHMENT: (stack, frameId, id) => `/attachs/${stack}/${frameId}/${id}`,
     STACK_HEAD: (user, stack) => `/stacks/${user}/${stack}/head`,
     STACK_UPDATE: '/stacks/update',
     STACK_PUSH: '/stacks/push',

@@ -70,7 +70,7 @@ const Attachment = ({
             && ((!attachment.data && !error) || (attachment?.index !== id))
         ) {
             fetchAttachment(stack, frameId, id)
-                .catch(console.log);;
+                .catch(console.log);
         }
     }, [id, frameId]);
 
