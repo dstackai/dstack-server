@@ -12,4 +12,3 @@ tqdm
 twine
 torch
 numpy
-atomicwrites

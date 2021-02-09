@@ -26,7 +26,7 @@ class FilesResources {
     private lateinit var attachmentService: AttachmentService
 
     @Inject
-    private lateinit var executionService: ExecutionService
+    private lateinit var executorService: ExecutorService
 
     private val allowedPrefixForAnonymousRequests = "uploads/"
 
@@ -53,7 +53,7 @@ class FilesResources {
                 val frame = frameService.get(stackPath, frameId)
                 val attachment = frame?.let { tokens.last().toIntOrNull()?.let { attachmentService.get(frame.path, it) } }
                 if (stackUser != null && attachment != null) {
-                    executionService.init(stackUser, frame, attachment)
+                    executorService.init(stackUser, frame, attachment)
                 }
             }
             ok().build()

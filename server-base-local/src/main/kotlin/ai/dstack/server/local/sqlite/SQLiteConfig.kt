@@ -70,6 +70,11 @@ open class SQLiteConfig {
     }
 
     @Bean
+    open fun executionService(@Autowired repository: ExecutionRepository): ExecutionService {
+        return SQLiteExecutionService(repository)
+    }
+
+    @Bean
     open fun userService(@Autowired repository: UserRepository): UserService {
         return SQLiteUserService(repository)
     }
