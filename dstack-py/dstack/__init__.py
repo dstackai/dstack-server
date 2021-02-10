@@ -291,10 +291,10 @@ def tab(title: ty.Optional[str] = None) -> DecoratedValue:
     return Tab(title)
 
 
-def app(controls: ty.Optional[ty.List[Control]] = None, outputs: ty.Optional[ty.List[Output]] = None,
+def app(controls: ty.Optional[ty.List[Control]] = None,
         depends: ty.Optional[ty.Union[str, ty.List[str]]] = None,
         requirements: ty.Optional[str] = None, project: bool = False):
-    return Application(controls if controls else [], outputs if outputs else [], depends, requirements, project)
+    return Application(controls if controls else [], depends, requirements, project)
 
 
 def md(text: str):

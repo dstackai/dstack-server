@@ -27,8 +27,8 @@ class TestDependencies(TestCase):
         c1 = TextField("10", id="c1")
         c2 = TextField(id="c2", depends=c1, handler=update)
 
-        o1 = Output(test_app)
-        my_app = app(controls=[c1, c2], outputs=[o1], requirements="tests/application/test_requirements.txt",
+        o1 = Output(test_app, depends=[c1, c2])
+        my_app = app(controls=[c1, c2, o1], requirements="tests/application/test_requirements.txt",
                      depends=["deprecation", "PyYAML==5.3.1", "tests.application.test_package"])
 
         deps = my_app.deps()

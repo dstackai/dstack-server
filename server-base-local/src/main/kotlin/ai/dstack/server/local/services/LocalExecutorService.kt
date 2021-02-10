@@ -35,14 +35,20 @@ class LocalExecutorService @Autowired constructor(
     override fun execute(id: String, stackUser: User, frame: Frame, attachment: Attachment,
                          views: List<Map<String, Any?>>?, apply: Boolean): ExecutionResult {
         val minorPythonVersion = frame.minorPythonVersion
-        return  if (minorPythonVersion != null) {
-            val pythonExecutable = config.pythonExecutables[minorPythonVersion]
-            if (pythonExecutable != null) {
-                init(stackUser, frame, attachment)
-                queue(attachment, ExecutionRequest(id, views, apply))
-                return poll(id)!!
+        val clientVersion = frame.clientVersion
+        return if (minorPythonVersion != null) {
+            if (clientVersion != null) {
+                val pythonExecutable = config.pythonExecutables[minorPythonVersion]
+                if (pythonExecutable != null) {
+                    init(stackUser, frame, attachment)
+                    queue(attachment, ExecutionRequest(id, views, apply))
+                    return poll(id)!!
+                } else {
+                    failed(id, views, "The required Python version is not supported: $minorPythonVersion")
+                }
             } else {
-                failed(id, views, "The required Python version is not supported: $minorPythonVersion")
+                failed(id, views, "Please update the client version of dstack and re-deploy " +
+                        "the application: pip install dstack>=0.6.3")
             }
         } else {
             failed(id, views, "The Python version is missing in the application. " +
@@ -184,14 +190,18 @@ class LocalExecutorService @Autowired constructor(
 
     private val Frame.minorPythonVersion: String?
         get() {
-            val python = pythonSettings
-            return python?.let { "${it["major"]}.${it["minor"]}" }
+            val python = settings["python"] as? Map<*, *>
+            val majorVersion = python?.get("major")
+            val minorVersion = python?.get("minor")
+            return if (majorVersion != null && minorVersion != null)
+                "$majorVersion.$minorVersion"
+            else null
         }
 
-    private val Frame.pythonSettings: Map<*, *>?
+    private val Frame.clientVersion: String?
         get() {
-            val python = settings["python"]?.let { if (it is Map<*, *>) it else null }
-            return python
+            val python = settings["client"] as? Map<*, *>
+            return python?.let { it["version"] as? String }
         }
 
     override fun poll(id: String): ExecutionResult? {
@@ -278,7 +288,7 @@ class LocalExecutorService @Autowired constructor(
     private fun destDir(attachment: Attachment) =
             File(config.appDirectory + "/" + attachment.filePath)
 
-    private val executorVersion = 20
+    private val executorVersion = 21
 
     private fun executorFile(attachment: Attachment) = File(destDir(attachment), "execute_v${executorVersion}.py")
 

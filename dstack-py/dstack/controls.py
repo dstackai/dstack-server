@@ -107,8 +107,9 @@ class Control(ABC, ty.Generic[V]):
         # return self.is_dependent() or self._require_apply
         return self._require_apply
 
-    def view(self) -> V:
-        self._update()
+    def view(self, apply: bool = False) -> V:
+        if not isinstance(self, Output) or apply:
+            self._update()
         return self._view()
 
     def apply(self, view: V):
@@ -135,8 +136,7 @@ class Control(ABC, ty.Generic[V]):
 
     # TODO: Rethink after multiple outputs refactoring is done
     def _check_pickle(self):
-        if hasattr(self, '_update_func'):
-            self._handler = getattr(self, '_update_func')
+        pass
 
     def __hash__(self):
         return hash(self.value())
@@ -157,6 +157,20 @@ class TextFieldView(View):
         _dict = {"data": self.text}
         if self.long:
             _dict["long"] = True
+        return _dict
+
+
+class OutputView(View):
+    def __init__(self, id: str,
+                 data: ty.Optional[str],
+                 enabled: ty.Optional[bool] = None,
+                 label: ty.Optional[str] = None,
+                 optional: ty.Optional[bool] = None):
+        super().__init__(id, enabled, label, optional)
+        self.data = data
+
+    def _pack(self) -> ty.Dict:
+        _dict = {"data": self.data}
         return _dict
 
 
@@ -208,10 +222,6 @@ class TextField(Control[TextFieldView], ty.Generic[T]):
 
     def _check_pickle(self):
         super()._check_pickle()
-        if not hasattr(self, 'text'):
-            self.text = getattr(self, 'data') if hasattr(self, 'data') else None
-        if not hasattr(self, 'long'):
-            self.long = None
 
     def _check_after_update(self):
         if hasattr(self, "data"):
@@ -394,10 +404,6 @@ class ComboBox(Control[ComboBoxView], ty.Generic[T]):
 
     def _check_pickle(self):
         super()._check_pickle()
-        if not hasattr(self, 'items'):
-            self.items = getattr(self, 'data') if hasattr(self, 'data') else None
-        if not hasattr(self, 'multiple'):
-            self.multiple = False
 
 
 class SliderView(View):
@@ -450,8 +456,6 @@ class Slider(Control[SliderView]):
 
     def _check_pickle(self):
         super()._check_pickle()
-        if not hasattr(self, 'values'):
-            self.values = getattr(self, 'data') if hasattr(self, 'data') else None
 
 
 class Upload:
@@ -523,8 +527,6 @@ class FileUploader(Control[FileUploaderView]):
 
     def _check_pickle(self):
         super()._check_pickle()
-        if not hasattr(self, 'uploads'):
-            self.uploads = getattr(self, 'data') if hasattr(self, 'data') else None
 
 
 # TODO: Decode automatically
@@ -556,6 +558,9 @@ def unpack_view(source: ty.Dict) -> View:
                           datetime.strptime(u["created_date"], "%Y-%m-%d").date()) for u in source["uploads"]]
         return FileUploaderView(source["id"], uploads, source.get("multiple"), source.get("enabled"),
                                 source.get("label"), source.get("optional"))
+    elif type == "OutputView":
+        return OutputView(source["id"], source["data"], source.get("enabled"), source.get("label"),
+                          source.get("optional"))
     else:
         raise AttributeError("Unsupported view: " + str(source))
 
@@ -589,29 +594,40 @@ class Apply(Control[ApplyView]):
 
 
 # TODO: Add position: OutputPosition[DEFAULT|ONE_COLUMN|TWO_COLUMNS)
-class Output(ABC, ty.Generic[T]):
+class Output(Control[OutputView], ty.Generic[T]):
     def __init__(self,
                  data: ty.Union[ty.Optional[ty.Any], ty.Callable[[], ty.Any]] = None,
                  handler: ty.Optional[ty.Callable[..., None]] = None,
                  label: ty.Optional[str] = None,
                  id: ty.Optional[str] = None,
-                 depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None):
-        self.label = label
+                 depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
+                 require_apply: bool = False,
+                 optional: ty.Optional[bool] = None):
+        super().__init__(label, id, depends, handler, require_apply, optional)
         self.data = data
 
-        self._handler = handler
-        self._id = id or str(uuid4())
-        self._parents = depends
+    def _view(self) -> V:
+        if isinstance(self.data, ty.Callable):
+            data = self.data()
+        else:
+            data = self.data
+        return OutputView(self._id, data, self.enabled, self.label, self.optional)
 
-        if self._parents is not None and not isinstance(self._parents, list):
-            self._parents = [self._parents]
+    def _apply(self, view: V):
+        pass
+
+    def _value(self) -> ty.Optional[ty.Any]:
+        if isinstance(self.data, ty.Callable):
+            data = self.data()
+        else:
+            data = self.data
+        return data
 
 
 class Controller(object):
-    def __init__(self, controls: ty.List[Control], outputs: ty.List[Output]):
+    def __init__(self, controls: ty.List[Control]):
         self.controls_by_id: ty.Dict[str, Control] = {}
         self.copy_of_controls_by_id = None
-        self._outputs = outputs
 
         require_apply = False
         has_apply = False
@@ -647,43 +663,21 @@ class Controller(object):
 
         return map_copy
 
-    def list(self, views: ty.Optional[ty.List[View]] = None) -> ty.List[View]:
+    def list(self, views: ty.Optional[ty.List[View]] = None, apply: bool = False) -> ty.List[View]:
         views = views or []
 
         self.copy_of_controls_by_id = self.copy_controls_by_id()
 
         for view in views:
             self.copy_of_controls_by_id[view.id].apply(view)
-        values = [c.view() for c in self.copy_of_controls_by_id.values()]
+        values = [c.view(apply) for c in self.copy_of_controls_by_id.values()]
 
         self.copy_of_controls_by_id = None
 
         return values
 
-    def apply(self, views: ty.List[View]) -> ty.Any:
-        self.copy_of_controls_by_id = self.copy_controls_by_id()
-
-        for view in views:
-            control = self.copy_of_controls_by_id[view.id]
-            control.apply(view)
-            control._update()
-
-        copy_of_outputs = [copy(o) for o in self._outputs]
-        for o in copy_of_outputs:
-            ids = [c._id for c in o._parents] if o._parents is not None else self._ids
-            values = [self.copy_of_controls_by_id[c_id] for c_id in ids]
-            if o._handler:
-                o._handler(o, *values)
-            if isinstance(o.data, ty.Callable):
-                o.data = o.data()
-
-        self.copy_of_controls_by_id = None
-
-        return copy_of_outputs
-
     def _check_pickle(self):
-        if hasattr(self, 'map'):
-            self.controls_by_id = getattr(self, 'map')
+        pass
 
     def init(self):
         self._check_pickle()
@@ -692,9 +686,3 @@ class Controller(object):
             c._check_pickle()
             for i in range(len(c._parents)):
                 c._parents[i] = self.controls_by_id[c._parents[i]._id]
-
-        if hasattr(self, '_outputs'):
-            for o in self._outputs:
-                if o._parents is not None:
-                    for i in range(len(o._parents)):
-                        o._parents[i] = self.controls_by_id[o._parents[i]._id]

@@ -8,14 +8,13 @@ from dstack.application.dependencies import Dependency, RequirementsDependency, 
 
 
 class Application:
-    def __init__(self, controls: ty.List['Control'], outputs: ty.List['Output'],
+    def __init__(self, controls: ty.List['Control'],
                  depends: ty.Optional[ty.Union[str, ModuleType, ty.List[ty.Union[str, ModuleType]]]] = None,
                  requirements: ty.Optional[str] = None, project: bool = False):
         self.controls = controls
         self.depends = depends
         self.requirements = requirements
         self.project = project
-        self.outputs = outputs
 
     def deps(self) -> ty.List[Dependency]:
         result = []

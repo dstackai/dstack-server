@@ -24,13 +24,13 @@ class TestApp(TestCase):
 
         c1 = ctrl.TextField("10", id="c1")
         c2 = ctrl.TextField(id="c2", depends=c1, handler=update)
-        o1 = ctrl.Output(handler=test_app)
+        o1 = ctrl.Output(handler=test_app, depends=[c1, c2])
 
         # def my_test_app(x: ctrl.TextField, y: ctrl.TextField):
         #     foo()
         #     print(f"My local app: x={x.value()} y={y.value()}")
 
-        my_app = app(controls=[c1, c2], outputs=[o1],
+        my_app = app(controls=[c1, c2, o1],
                      requirements="tests/application/test_requirements.txt",
                      depends=["deprecation", "PyYAML==5.3.1", "tests.application.test_package"])
 
@@ -55,9 +55,8 @@ class TestApp(TestCase):
         with open("controller.pickle", "rb") as f:
             controller = cloudpickle.load(f)
 
-        views = controller.list()
-        outputs = controller.apply(views)
-        print(outputs[0].data)
+        views = controller.list(apply=True)
+        print(views[2].data)
         """
         test_file = Path(app_dir) / "test_script.py"
         test_file.write_text(dedent(test_script).lstrip())
@@ -84,7 +83,7 @@ class TestApp(TestCase):
             self.data = int(x.text) + int(y.text)
 
         o1 = ctrl.Output(handler=output_handler, depends=[c1, c2])
-        my_app = app(controls=[c0, c1, c2], outputs=[o1], depends=["tests.application.test_package"])
+        my_app = app(controls=[c0, c1, c2, o1], depends=["tests.application.test_package"])
 
         encoder = AppEncoder()
         frame_data = encoder.encode(my_app, None, None)
@@ -102,9 +101,8 @@ class TestApp(TestCase):
         with open("controller.pickle", "rb") as f:
             controller = cloudpickle.load(f)
 
-        views = controller.list()
-        outputs = controller.apply(views)
-        print(outputs[0].data)
+        views = controller.list(apply = True)
+        print(views[3].data)
         """
         test_file = Path(app_dir) / "test_script.py"
         test_file.write_text(dedent(test_script).lstrip())

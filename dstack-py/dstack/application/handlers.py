@@ -30,7 +30,7 @@ class AppEncoder(Encoder[Application]):
         self._archive = archive
 
     def encode(self, app: Application, description: ty.Optional[str], params: ty.Optional[ty.Dict]) -> FrameData:
-        controller = Controller(app.controls, app.outputs)
+        controller = Controller(app.controls)
 
         stage_dir = util.create_path(self._temp_dir)
 

@@ -30,7 +30,7 @@ class TestControls(TestCase):
 
     def test_simple_check_box(self):
         c1 = ctrl.CheckBox()
-        controller = Controller([c1], outputs=[])
+        controller = Controller([c1])
         views = controller.list()
         v1 = ty.cast(ctrl.CheckBoxView, self.get_by_id(c1.get_id(), views))
         self.assertEqual(False, v1.selected)
@@ -40,7 +40,7 @@ class TestControls(TestCase):
             return True
 
         c1 = ctrl.CheckBox(selected=get_selected)
-        controller = Controller([c1], outputs=[])
+        controller = Controller([c1])
         views = controller.list()
         v1 = ty.cast(ctrl.CheckBoxView, self.get_by_id(c1.get_id(), views))
         self.assertEqual(True, v1.selected)
@@ -51,7 +51,7 @@ class TestControls(TestCase):
 
         c1 = ctrl.TextField("10")
         c2 = ctrl.CheckBox(handler=get_selected, depends=[c1])
-        controller = Controller([c1, c2], outputs=[])
+        controller = Controller([c1, c2])
         views = controller.list()
         v1 = ty.cast(ctrl.TextFieldView, self.get_by_id(c1.get_id(), views))
         v2 = ty.cast(ctrl.CheckBoxView, self.get_by_id(c2.get_id(), views))
@@ -70,7 +70,7 @@ class TestControls(TestCase):
 
         c1 = ctrl.TextField("10", id="c1")
         c2 = ctrl.TextField(id="c2", depends=c1, handler=update, long=True)
-        controller = Controller([c1, c2], outputs=[])
+        controller = Controller([c1, c2])
         views = controller.list()
         self.assertEqual(3, len(views))  # Apply will appear here
         ids = [v.id for v in views]
@@ -113,7 +113,7 @@ class TestControls(TestCase):
         c1 = ctrl.TextField("10", id="c1")
         c2 = ctrl.TextField(id="c2", depends=c1, handler=update)
 
-        controller = Controller([c1, c2], outputs=[])
+        controller = Controller([c1, c2])
 
         try:
             controller.list(controller.list())
@@ -142,7 +142,7 @@ class TestControls(TestCase):
         c3 = ctrl.TextField(id="c3", depends=c2, handler=update_c3_c4)
         c4 = ctrl.TextField(id="c4", depends=c2, handler=update_c3_c4)
 
-        controller = Controller([c1, c2, c3, c4], outputs=[])
+        controller = Controller([c1, c2, c3, c4])
         views = controller.list()
         self.assertEqual(1, count)
         v2 = ty.cast(ctrl.TextFieldView, self.get_by_id(c2.get_id(), views))
@@ -157,7 +157,7 @@ class TestControls(TestCase):
         file_uploader = ctrl.FileUploader()
         self.assertTrue(isinstance(file_uploader.uploads, list))
 
-        controller = Controller([file_uploader], outputs=[])
+        controller = Controller([file_uploader])
         views = controller.list()
         file_uploader_view = ty.cast(ctrl.FileUploaderView, self.get_by_id(file_uploader.get_id(), views))
         self.assertTrue(isinstance(file_uploader_view.uploads, list))
@@ -197,7 +197,7 @@ class TestControls(TestCase):
         self.assertTrue(isinstance(cb._derive_model(), ctrl.DefaultListModel))
 
         c1 = ctrl.ComboBox(handler=update, depends=cb, id="c1")
-        controller = Controller([c1, cb], outputs=[])
+        controller = Controller([c1, cb])
         views = controller.list()
         v = ty.cast(ctrl.ComboBoxView, self.get_by_id(cb.get_id(), views))
         v1 = ty.cast(ctrl.ComboBoxView, self.get_by_id(c1.get_id(), views))
@@ -224,7 +224,7 @@ class TestControls(TestCase):
         self.assertTrue(isinstance(cb._derive_model(), ctrl.DefaultListModel))
 
         c1 = ctrl.ComboBox(handler=update, depends=cb, id="c1")
-        controller = Controller([c1, cb], outputs=[])
+        controller = Controller([c1, cb])
         views = controller.list()
         v = ty.cast(ctrl.ComboBoxView, self.get_by_id(cb.get_id(), views))
         v1 = ty.cast(ctrl.ComboBoxView, self.get_by_id(c1.get_id(), views))
@@ -254,7 +254,7 @@ class TestControls(TestCase):
 
     def test_immutability_of_controller(self):
         text_field = ctrl.TextField(data="Some initial data")
-        controller = Controller([text_field], outputs=[])
+        controller = Controller([text_field])
         views = controller.list()
         self.assertEqual(views[0].text, "Some initial data")
         views[0].text = "Some other data"
@@ -297,7 +297,7 @@ class TestControls(TestCase):
         self.assertTrue(isinstance(countries._derive_model(), ctrl.CallableListModel))
 
         cities = ctrl.ComboBox(handler=update_cities, id="cities", depends=countries)
-        controller = Controller([countries, cities], outputs=[])
+        controller = Controller([countries, cities])
         views = controller.list()
         v1 = ty.cast(ctrl.ComboBoxView, self.get_by_id(countries.get_id(), views))
         v2 = ty.cast(ctrl.ComboBoxView, self.get_by_id(cities.get_id(), views))
@@ -316,7 +316,7 @@ class TestControls(TestCase):
 
     def test_apply_button_enabled(self):
         c1 = ctrl.TextField(None, id="c1")
-        controller = Controller([c1], outputs=[])
+        controller = Controller([c1])
         self.assertEqual(2, len(controller.list()))
         apply_view = self.get_apply(controller.list())
         self.assertIsNotNone(apply_view)
@@ -338,11 +338,9 @@ class TestControls(TestCase):
 
         o1 = ctrl.Output(data=test)
 
-        controller = Controller([c1, c2], [o1])
+        controller = Controller([c1, c2, o1])
         views = controller.list()
-        # print(views)
-        self.assertEqual(30, controller.apply(views)[0].data)
-        self.assertIsInstance(controller._outputs[0].data, ty.Callable)
+        self.assertEqual(30, views[2].data)
 
     def test_tqdm(self):
         tqdm_state = {}
@@ -364,11 +362,11 @@ class TestControls(TestCase):
             output.data = "success"
 
         o1 = ctrl.Output(handler=output_handler)
-        controller = Controller([], [o1])
+        controller = Controller([o1])
         views = controller.list()
 
         def apply():
-            controller.apply(views)
+            controller.list(views, True)
 
         apply()
 
@@ -389,14 +387,14 @@ class TestControls(TestCase):
                 return self.title
 
         items = ctrl.ComboBox([Item(1, "hello"), Item(2, "world")], title=lambda x: x.title.upper())
-        controller = Controller([items], outputs=[])
+        controller = Controller([items])
         views = controller.list()
         items_view = ty.cast(ctrl.ComboBoxView, views[0])
         self.assertEqual(["HELLO", "WORLD"], items_view.titles)
 
     def test_optional(self):
         c1 = ctrl.TextField(None, id="c1", optional=True)
-        controller = Controller([c1], outputs=[])
+        controller = Controller([c1])
         self.assertEqual(2, len(controller.list()))
         apply_view = self.get_apply(controller.list())
         c1_view = self.get_by_id("c1", controller.list())

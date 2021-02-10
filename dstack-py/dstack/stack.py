@@ -162,8 +162,6 @@ class StackFrame(object):
     def new_frame(self) -> Dict:
         data = {"id": self.id,
                 "timestamp": self.timestamp,
-                "client": "dstack-py",
-                "version": dstack_version,
                 "settings": self.settings()}
 
         if not isinstance(self.encryption_method, NoEncryption):
@@ -198,6 +196,10 @@ class StackFrame(object):
                 "release": info[2],
                 "version": info[3],
                 "machine": info[4]
+            },
+            "client": {
+                "client": "dstack-py",
+                "version": dstack_version,
             }}
 
 
