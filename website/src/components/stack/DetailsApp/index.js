@@ -132,8 +132,8 @@ const Details = ({
     };
 
     const omitFieldsFromViews = (views, fieldNames: Array<string>) => {
-        if (!views || !Array.isArray(views))
-            return {};
+        if (!views || !Array.isArray(views) || !fieldNames.length)
+            return views;
 
         return views.filter(v => fieldNames.indexOf(v.type) < 0);
     };
@@ -195,7 +195,7 @@ const Details = ({
             frame: frameId,
             attachment: attachmentIndex || 0,
             apply,
-            views: executeData.views && executeData.views.map((view, index) => {
+            views: executeData?.views && executeData.views.map((view, index) => {
                 switch (view.type) {
                     case 'ApplyView':
                         return view;
@@ -394,6 +394,7 @@ const Details = ({
                     onChangeExecutionId(tab.executionId);
 
                 setExecuteData(null);
+                setForm({});
                 onChangeAttachmentIndex(index);
 
                 return true;
