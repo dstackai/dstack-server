@@ -11,8 +11,8 @@ class Markdown:
 class MarkdownEncoderFactory(EncoderFactory):
 
     def accept(self, obj: Any) -> bool:
-        return self.is_type(obj, "dstack.markdown.Markdown")
+        return self.is_type(obj, "dstack.md.Markdown")
 
     def create(self) -> Encoder[Any]:
-        from dstack.markdown.handlers import MarkdownEncoder
+        from dstack.md.handlers import MarkdownEncoder
         return MarkdownEncoder()

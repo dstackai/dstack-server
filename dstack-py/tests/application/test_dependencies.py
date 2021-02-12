@@ -5,7 +5,7 @@ from tempfile import gettempdir
 from unittest import TestCase
 
 from dstack.application.handlers import _stage_deps
-from dstack.controls import TextField, Output
+from dstack.controls import Input
 from dstack import app
 from tests.application.test_package.mymodule import test_app
 
@@ -21,15 +21,16 @@ class TestDependencies(TestCase):
             shutil.rmtree(temp_base)
 
     def test_simple(self):
-        def update(control: TextField, text_field: TextField):
+        def update(control: Input, text_field: Input):
             control.data = str(int(text_field.data) * 2)
 
-        c1 = TextField("10", id="c1")
-        c2 = TextField(id="c2", depends=c1, handler=update)
-
-        o1 = Output(test_app, depends=[c1, c2])
-        my_app = app(controls=[c1, c2, o1], requirements="tests/application/test_requirements.txt",
+        my_app = app(requirements="tests/application/test_requirements.txt",
                      depends=["deprecation", "PyYAML==5.3.1", "tests.application.test_package"])
+
+        c1 = my_app.input("10")
+        c2 = my_app.input(handler=update, depends=c1)
+
+        _ = my_app.output(handler=test_app, depends=[c1, c2])
 
         deps = my_app.deps()
         print(deps)

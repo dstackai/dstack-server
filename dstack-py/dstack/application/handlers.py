@@ -6,7 +6,6 @@ from tempfile import gettempdir
 import cloudpickle
 
 import dstack.util as util
-from dstack.application import Application
 from dstack.handler import EncoderFactory, Encoder, FrameData
 from dstack.controls import Controller
 from dstack.application.dependencies import Dependency
@@ -17,19 +16,19 @@ from typing import Any
 
 class AppEncoderFactory(EncoderFactory):
     def accept(self, obj: Any) -> bool:
-        return self.is_type(obj, "dstack.application.Application")
+        return self.is_type(obj, "dstack.Application")
 
     def create(self) -> Encoder[Any]:
         return AppEncoder()
 
 
-class AppEncoder(Encoder[Application]):
+class AppEncoder(Encoder['Application']):
     def __init__(self, temp_dir: ty.Optional[str] = None, archive: str = "zip"):
         super().__init__()
         self._temp_dir = Path(temp_dir or gettempdir())
         self._archive = archive
 
-    def encode(self, app: Application, description: ty.Optional[str], params: ty.Optional[ty.Dict]) -> FrameData:
+    def encode(self, app: 'Application', description: ty.Optional[str], params: ty.Optional[ty.Dict]) -> FrameData:
         controller = Controller(app.controls)
 
         stage_dir = util.create_path(self._temp_dir)

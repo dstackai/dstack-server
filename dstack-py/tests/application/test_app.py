@@ -19,20 +19,19 @@ class TestApp(TestCase):
     def test_first_example(self):
         encoder = AppEncoder()
 
-        def update(control: ctrl.TextField, text_field: ctrl.TextField):
+        def update(control: ctrl.Input, text_field: ctrl.Input):
             control.text = str(int(text_field.text) * 2)
 
-        c1 = ctrl.TextField("10", id="c1")
-        c2 = ctrl.TextField(id="c2", depends=c1, handler=update)
-        o1 = ctrl.Output(handler=test_app, depends=[c1, c2])
+        my_app = app(requirements="tests/application/test_requirements.txt",
+                     depends=["deprecation", "PyYAML==5.3.1", "tests.application.test_package"])
+
+        c1 = my_app.input(text="10")
+        c2 = my_app.input(handler=update, depends=c1)
+        _ = my_app.output(handler=test_app, depends=[c1, c2])
 
         # def my_test_app(x: ctrl.TextField, y: ctrl.TextField):
         #     foo()
         #     print(f"My local app: x={x.value()} y={y.value()}")
-
-        my_app = app(controls=[c1, c2, o1],
-                     requirements="tests/application/test_requirements.txt",
-                     depends=["deprecation", "PyYAML==5.3.1", "tests.application.test_package"])
 
         frame_data = encoder.encode(my_app, None, None)
 
@@ -62,7 +61,8 @@ class TestApp(TestCase):
         test_file.write_text(dedent(test_script).lstrip())
         output, error = env.run_script(["test_script.py"], app_dir)
         self.assertEqual("", error)
-        self.assertEqual(f"Here is bar!{os.linesep}Here is foo!{os.linesep}My app: x=10 y=20{os.linesep}30{os.linesep}", output)
+        self.assertEqual(f"Here is bar!{os.linesep}Here is foo!{os.linesep}My app: x=10 y=20{os.linesep}30{os.linesep}",
+                         output)
         env.dispose()
         shutil.rmtree(base_dir)
 
@@ -73,17 +73,18 @@ class TestApp(TestCase):
         def baz():
             print("baz")
 
-        c0 = ctrl.TextField("0", id="c0")
-        c1 = ctrl.TextField("10", id="c1")
-        c2 = ctrl.TextField(id="c2", depends=c1, handler=update)
+        my_app = app(depends=["tests.application.test_package"])
 
-        def output_handler(self: ctrl.Output, x: ctrl.TextField, y: ctrl.TextField):
+        _ = my_app.input(text="0")
+        c1 = my_app.input(text="10")
+        c2 = my_app.input(handler=update, depends=c1)
+
+        def output_handler(self: ctrl.Output, x: ctrl.Input, y: ctrl.Input):
             foo()
             baz()
             self.data = int(x.text) + int(y.text)
 
-        o1 = ctrl.Output(handler=output_handler, depends=[c1, c2])
-        my_app = app(controls=[c0, c1, c2, o1], depends=["tests.application.test_package"])
+        _ = my_app.output(handler=output_handler, depends=[c1, c2])
 
         encoder = AppEncoder()
         frame_data = encoder.encode(my_app, None, None)

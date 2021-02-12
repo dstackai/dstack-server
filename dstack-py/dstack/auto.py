@@ -4,7 +4,7 @@ from dstack.bokeh import BokehEncoderFactory
 from dstack.files import FileEncoderFactory
 from dstack.geopandas import GeoDataFrameEncoderFactory, GeoDataFrameDecoderFactory
 from dstack.handler import FrameData, Encoder, Decoder, AbstractFactory
-from dstack.markdown import MarkdownEncoderFactory
+from dstack.md import MarkdownEncoderFactory
 from dstack.matplotlib import MatplotlibEncoderFactory
 from dstack.pandas import DataFrameEncoderFactory, DataFrameDecoderFactory, SeriesDecoderFactory, \
     GeneralCsvDecoderFactory, SeriesEncoderFactory

@@ -3,19 +3,30 @@ import json
 import os
 import typing as ty
 from functools import wraps
+
 from deprecation import deprecated
 
+from dstack import md
 from dstack.auto import AutoHandler
 from dstack.config import Config, ConfigFactory, YamlConfigFactory, \
     from_yaml_file, ConfigurationError, get_config, Profile, _get_config_path
 from dstack.content import StreamContent, BytesContent, MediaType, FileContent
 from dstack.context import Context
-from dstack.controls import Output, Control
+from dstack.controls import Control, Select, Input, Output, Markdown, Slider, Uploader, Upload, Checkbox
 from dstack.handler import Encoder, Decoder, T, DecoratedValue
-from dstack.markdown import Markdown
 from dstack.protocol import Protocol, JsonProtocol, MatchError, create_protocol
 from dstack.stack import EncryptionMethod, NoEncryption, StackFrame, merge_or_none, FrameData, PushResult, FrameMeta
-from dstack.application import Application
+
+import inspect
+from pathlib import Path
+from types import ModuleType
+from dstack.tqdm import tqdm, trange
+
+from dstack.application.dependencies import Dependency, RequirementsDependency, ProjectDependency, ModuleDependency, \
+    PackageDependency
+
+__all__ = ['Control', 'Output', 'Input', 'Select', 'Slider', 'Markdown', 'Uploader', 'Checkbox', 'Upload', 'tqdm',
+           'trange']
 
 
 def push(stack: str, obj, description: ty.Optional[str] = None,
@@ -291,14 +302,15 @@ def tab(title: ty.Optional[str] = None) -> DecoratedValue:
     return Tab(title)
 
 
-def app(controls: ty.Optional[ty.List[Control]] = None,
+def markdown(text: str):
+    return md.Markdown(text)
+
+
+def app(description: ty.Optional[str] = None,
+        controls: ty.Optional[ty.List[Control]] = None,
         depends: ty.Optional[ty.Union[str, ty.List[str]]] = None,
         requirements: ty.Optional[str] = None, project: bool = False):
-    return Application(controls if controls else [], depends, requirements, project)
-
-
-def md(text: str):
-    return Markdown(text)
+    return Application(description, controls, depends, requirements, project)
 
 
 def default_hash_func(*args, **kwargs):
@@ -334,3 +346,151 @@ def cache(hash_func=default_hash_func):
         return wrapper
 
     return decorator
+
+
+T = ty.TypeVar('T')
+
+
+class Layout:
+    def __init__(self, controls: ty.Optional[ty.List[Control]] = None):
+        self.controls = controls or []
+
+    def select(self,
+               items: ty.Union[ty.Optional[T], ty.Callable[[], T]] = None,
+               handler: ty.Optional[ty.Callable[..., None]] = None,
+               selected: ty.Optional[ty.Union[int, list]] = None,
+               multiple: bool = False,
+               label: ty.Optional[str] = None,
+               depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
+               title: ty.Optional[ty.Callable[[T], str]] = None) -> Select:
+        select = Select(items, handler, None, selected, multiple, label, depends, title)
+        self.controls.append(select)
+        return select
+
+    def input(self,
+              text: ty.Union[ty.Optional[str], ty.Callable[[], str]] = None,
+              handler: ty.Optional[ty.Callable[..., None]] = None,
+              long: bool = False,
+              label: ty.Optional[str] = None,
+              depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
+              require_apply: bool = True,
+              optional: ty.Optional[bool] = None) -> Input:
+        text = Input(text, handler, long, label, depends, require_apply, optional)
+        self.controls.append(text)
+        return text
+
+    def output(self,
+               data: ty.Union[ty.Optional[ty.Any], ty.Callable[[], ty.Any]] = None,
+               handler: ty.Optional[ty.Callable[..., None]] = None,
+               label: ty.Optional[str] = None,
+               depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None) -> Output:
+        output = Output(data, handler, label, depends)
+        self.controls.append(output)
+        return output
+
+    def markdown(self, text: ty.Union[ty.Optional[str], ty.Callable[[], str]] = None,
+                 handler: ty.Optional[ty.Callable[..., None]] = None,
+                 label: ty.Optional[str] = None,
+                 depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None) -> Markdown:
+        markdown = Markdown(text, handler, label, depends)
+        self.controls.append(markdown)
+        return markdown
+
+    def slider(self,
+               values: ty.Optional[ty.Union[ty.Iterable[float], ty.Callable]] = None,
+               handler: ty.Optional[ty.Callable[..., None]] = None,
+               selected: int = 0,
+               label: ty.Optional[str] = None,
+               depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None) -> Slider:
+        slider = Slider(values, handler, selected, label, depends)
+        self.controls.append(slider)
+        return slider
+
+    def uploader(self,
+                 uploads: ty.Union[ty.Optional[ty.List[Upload]], ty.Callable[[], ty.List[Upload]]] = None,
+                 multiple: bool = False,
+                 label: ty.Optional[str] = None,
+                 depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
+                 handler: ty.Optional[ty.Callable[..., None]] = None,
+                 optional: ty.Optional = None) -> Uploader:
+        uploader = Uploader(uploads, multiple, label, depends, handler, optional)
+        self.controls.append(uploader)
+        return uploader
+
+    def checkbox(self,
+                 selected: ty.Union[bool, ty.Callable[[], bool]] = False,
+                 handler: ty.Optional[ty.Callable[..., None]] = None,
+                 label: ty.Optional[str] = None,
+                 depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None) -> Checkbox:
+        checkbox = Checkbox(selected, handler, label, depends)
+        self.controls.append(checkbox)
+        return checkbox
+
+
+class ApplicationBase(Layout):
+    def __init__(self,
+                 description: ty.Optional[str] = None,
+                 controls: ty.Optional[ty.List[Control]] = None,
+                 depends: ty.Optional[ty.Union[str, ModuleType, ty.List[ty.Union[str, ModuleType]]]] = None,
+                 requirements: ty.Optional[str] = None, project: bool = False):
+        super().__init__(controls)
+        self.description = description
+        self.depends = depends
+        self.requirements = requirements
+        self.project = project
+
+    # TODO: Move it to controller and make private
+    def deps(self) -> ty.List[Dependency]:
+        result = []
+
+        if self.requirements:
+            result.append(RequirementsDependency(Path(self.requirements)))
+
+        if self.project:
+            result.append(ProjectDependency())
+
+        if self.depends:
+            for d in self.depends:
+                if inspect.ismodule(d):
+                    result.append(ModuleDependency(d))
+                else:
+                    result.append(PackageDependency(d))
+
+        return result
+
+
+class Application(ApplicationBase):
+    def __init__(self, description: ty.Optional[str] = None,
+                 controls: ty.Optional[ty.List[Control]] = None,
+                 depends: ty.Optional[ty.Union[str, ModuleType, ty.List[ty.Union[str, ModuleType]]]] = None,
+                 requirements: ty.Optional[str] = None, project: bool = False):
+        super().__init__(description, controls, depends, requirements)
+        self.description = description
+        self.depends = depends
+        self.requirements = requirements
+        self.project = project
+        self.tabs = []
+
+    def tab(self, title: str, description: ty.Optional[str] = None,
+            controls: ty.Optional[ty.List[Control]] = None,
+            depends: ty.Optional[ty.Union[str, ModuleType, ty.List[ty.Union[str, ModuleType]]]] = None,
+            requirements: ty.Optional[str] = None, project: bool = False):
+        tab = ApplicationBase(description, controls, depends, requirements, project)
+        self.tabs.append((title, tab))
+        return tab
+
+    def deploy(self, id: str, profile: str = "default", access: ty.Optional[str] = None):
+        if len(self.tabs) > 0:
+            _frame = frame(id, profile, access)
+            counter = 0
+            for title, _tab in self.tabs:
+                _id = "a" + str(hash(title)) + str(counter)
+                app = Application(_tab.description, _tab.controls or self.controls,
+                                  _tab.depends or self.depends,
+                                  _tab.requirements or self.requirements,
+                                  _tab.project or self.project)
+                _frame.add(app, _tab.description, params={_id: tab(title)})
+                counter = counter + 1
+            return _frame.push()
+        else:
+            return push(id, self, self.description, access, profile=profile)

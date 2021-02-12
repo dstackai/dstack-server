@@ -14,7 +14,7 @@ setup(
     author="swordhands",
     author_email="team@dstack.ai",
     packages=["dstack", "dstack.application", "dstack.cli", "dstack.files", "dstack.bokeh", "dstack.matplotlib",
-              "dstack.markdown", "dstack.pandas", "dstack.geopandas", "dstack.plotly", "dstack.sklearn",
+              "dstack.md", "dstack.pandas", "dstack.geopandas", "dstack.plotly", "dstack.sklearn",
               "dstack.tensorflow", "dstack.torch"],
     scripts=[],
     entry_points={

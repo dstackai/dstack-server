@@ -3,7 +3,7 @@ from typing import Dict, Optional
 from dstack import BytesContent, Encoder
 from dstack.content import MediaType
 from dstack.stack import FrameData
-from dstack.markdown import Markdown
+from dstack.md import Markdown
 
 
 class MarkdownEncoder(Encoder[Markdown]):
