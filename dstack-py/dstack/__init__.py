@@ -352,8 +352,10 @@ T = ty.TypeVar('T')
 
 
 class Layout:
-    def __init__(self, controls: ty.Optional[ty.List[Control]] = None):
+    def __init__(self, controls: ty.Optional[ty.List[Control]] = None,
+                 container: ty.Optional[str] = None):
         self.controls = controls or []
+        self.container = container
 
     def select(self,
                items: ty.Union[ty.Optional[T], ty.Callable[[], T]] = None,
@@ -362,8 +364,11 @@ class Layout:
                multiple: bool = False,
                label: ty.Optional[str] = None,
                depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
-               title: ty.Optional[ty.Callable[[T], str]] = None) -> Select:
-        select = Select(items, handler, None, selected, multiple, label, depends, title)
+               title: ty.Optional[ty.Callable[[T], str]] = None,
+               columns: ty.Optional[int] = None,
+               rows: ty.Optional[int] = None) -> Select:
+        select = Select(items, handler, None, selected, multiple, label, depends, title, self.container, columns,
+                        rows)
         self.controls.append(select)
         return select
 
@@ -374,8 +379,10 @@ class Layout:
               label: ty.Optional[str] = None,
               depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
               require_apply: bool = True,
-              optional: ty.Optional[bool] = None) -> Input:
-        text = Input(text, handler, long, label, depends, require_apply, optional)
+              optional: ty.Optional[bool] = None,
+              columns: ty.Optional[int] = None,
+              rows: ty.Optional[int] = None) -> Input:
+        text = Input(text, handler, long, label, depends, require_apply, optional, self.container, columns, rows)
         self.controls.append(text)
         return text
 
@@ -383,16 +390,20 @@ class Layout:
                data: ty.Union[ty.Optional[ty.Any], ty.Callable[[], ty.Any]] = None,
                handler: ty.Optional[ty.Callable[..., None]] = None,
                label: ty.Optional[str] = None,
-               depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None) -> Output:
-        output = Output(data, handler, label, depends)
+               depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
+               columns: ty.Optional[int] = None,
+               rows: ty.Optional[int] = None) -> Output:
+        output = Output(data, handler, label, depends, self.container, columns, rows)
         self.controls.append(output)
         return output
 
     def markdown(self, text: ty.Union[ty.Optional[str], ty.Callable[[], str]] = None,
                  handler: ty.Optional[ty.Callable[..., None]] = None,
                  label: ty.Optional[str] = None,
-                 depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None) -> Markdown:
-        markdown = Markdown(text, handler, label, depends)
+                 depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
+                 columns: ty.Optional[int] = None,
+                 rows: ty.Optional[int] = None) -> Markdown:
+        markdown = Markdown(text, handler, label, depends, self.container, columns, rows)
         self.controls.append(markdown)
         return markdown
 
@@ -401,8 +412,10 @@ class Layout:
                handler: ty.Optional[ty.Callable[..., None]] = None,
                selected: int = 0,
                label: ty.Optional[str] = None,
-               depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None) -> Slider:
-        slider = Slider(values, handler, selected, label, depends)
+               depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
+               columns: ty.Optional[int] = None,
+               rows: ty.Optional[int] = None) -> Slider:
+        slider = Slider(values, handler, selected, label, depends, self.container, columns, rows)
         self.controls.append(slider)
         return slider
 
@@ -412,8 +425,10 @@ class Layout:
                  label: ty.Optional[str] = None,
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
                  handler: ty.Optional[ty.Callable[..., None]] = None,
-                 optional: ty.Optional = None) -> Uploader:
-        uploader = Uploader(uploads, multiple, label, depends, handler, optional)
+                 optional: ty.Optional = None,
+                 columns: ty.Optional[int] = None,
+                 rows: ty.Optional[int] = None) -> Uploader:
+        uploader = Uploader(uploads, multiple, label, depends, handler, optional, self.container, columns, rows)
         self.controls.append(uploader)
         return uploader
 
@@ -421,10 +436,17 @@ class Layout:
                  selected: ty.Union[bool, ty.Callable[[], bool]] = False,
                  handler: ty.Optional[ty.Callable[..., None]] = None,
                  label: ty.Optional[str] = None,
-                 depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None) -> Checkbox:
-        checkbox = Checkbox(selected, handler, label, depends)
+                 depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
+                 columns: ty.Optional[int] = None,
+                 rows: ty.Optional[int] = None) -> Checkbox:
+        checkbox = Checkbox(selected, handler, label, depends, self.container, columns, rows)
         self.controls.append(checkbox)
         return checkbox
+
+
+class Sidebar(Layout):
+    def __init__(self, controls: ty.Optional[ty.List[Control]] = None):
+        super().__init__(controls, container="sidebar")
 
 
 class ApplicationBase(Layout):
@@ -432,12 +454,23 @@ class ApplicationBase(Layout):
                  description: ty.Optional[str] = None,
                  controls: ty.Optional[ty.List[Control]] = None,
                  depends: ty.Optional[ty.Union[str, ModuleType, ty.List[ty.Union[str, ModuleType]]]] = None,
-                 requirements: ty.Optional[str] = None, project: bool = False):
+                 requirements: ty.Optional[str] = None,
+                 project: bool = False,
+                 sidebar: ty.Optional[Sidebar] = None):
         super().__init__(controls)
         self.description = description
         self.depends = depends
         self.requirements = requirements
         self.project = project
+        self._sidebar = sidebar
+
+    def sidebar(self) -> Sidebar:
+        if self._sidebar:
+            return self._sidebar
+        else:
+            sidebar = Sidebar()
+            self._sidebar = sidebar
+            return sidebar
 
     # TODO: Move it to controller and make private
     def deps(self) -> ty.List[Dependency]:
@@ -463,12 +496,13 @@ class Application(ApplicationBase):
     def __init__(self, description: ty.Optional[str] = None,
                  controls: ty.Optional[ty.List[Control]] = None,
                  depends: ty.Optional[ty.Union[str, ModuleType, ty.List[ty.Union[str, ModuleType]]]] = None,
-                 requirements: ty.Optional[str] = None, project: bool = False):
-        super().__init__(description, controls, depends, requirements)
+                 requirements: ty.Optional[str] = None,
+                 project: bool = False,
+                 sidebar: ty.Optional[Sidebar] = None):
+        super().__init__(description, controls, depends, requirements, project, sidebar)
         self.description = description
         self.depends = depends
         self.requirements = requirements
-        self.project = project
         self.tabs = []
 
     def tab(self, title: str, description: ty.Optional[str] = None,
@@ -485,12 +519,24 @@ class Application(ApplicationBase):
             counter = 0
             for title, _tab in self.tabs:
                 _id = "a" + str(hash(title)) + str(counter)
-                app = Application(_tab.description, _tab.controls or self.controls,
-                                  _tab.depends or self.depends,
-                                  _tab.requirements or self.requirements,
-                                  _tab.project or self.project)
-                _frame.add(app, _tab.description, params={_id: tab(title)})
+                _app = Application(_tab.description, _tab.controls or self.controls,
+                                   _tab.depends or self.depends,
+                                   _tab.requirements or self.requirements,
+                                   _tab.project or self.project,
+                                   _tab._sidebar or self._sidebar)
+                _app.merge_sidebar()
+                _frame.add(_app, _app.description, params={_id: tab(title)})
                 counter = counter + 1
             return _frame.push()
         else:
-            return push(id, self, self.description, access, profile=profile)
+            _app = Application(self.description, self.controls, self.depends, self.requirements, self.project,
+                               self._sidebar)
+            _app.merge_sidebar()
+            return push(id, _app, _app.description, access, profile=profile)
+
+    def merge_sidebar(self):
+        _controls = []
+        if self._sidebar:
+            _controls.extend(self._sidebar.controls)
+        _controls.extend(self.controls)
+        self.controls = _controls
