@@ -7,7 +7,7 @@ import cloudpickle
 
 import dstack.util as util
 from dstack.handler import EncoderFactory, Encoder, FrameData
-from dstack.controls import Controller
+from dstack.controls import Controller, Container
 from dstack.application.dependencies import Dependency
 from dstack.content import FileContent, MediaType
 
@@ -29,7 +29,11 @@ class AppEncoder(Encoder['Application']):
         self._archive = archive
 
     def encode(self, app: 'Application', description: ty.Optional[str], params: ty.Optional[ty.Dict]) -> FrameData:
-        controller = Controller(app.controls)
+        containers = []
+        if app._sidebar:
+            containers.append(Container(app._sidebar.id, app._sidebar.layout, app._sidebar.columns))
+        containers.append(Container(app.id, app.layout, app.columns))
+        controller = Controller(app.controls, containers)
 
         stage_dir = util.create_path(self._temp_dir)
 

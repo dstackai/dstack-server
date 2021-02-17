@@ -35,15 +35,15 @@ class View(ABC):
                  label: ty.Optional[str],
                  optional: ty.Optional[bool],
                  container: ty.Optional[str],
-                 columns: ty.Optional[int],
-                 rows: ty.Optional[int]):
+                 colspan: ty.Optional[int],
+                 rowspan: ty.Optional[int]):
         self.id = id
         self.enabled = enabled
         self.label = label
         self.optional = optional or False
         self.container = container
-        self.columns = columns
-        self.rows = rows
+        self.colspan = colspan
+        self.rowspan = rowspan
 
     def pack(self) -> ty.Dict:
         result = {"id": self.id, "enabled": self.enabled, "label": self.label,
@@ -51,10 +51,10 @@ class View(ABC):
                   "type": self.__class__.__name__}
         if self.container is not None:
             result["container"] = self.container
-        if self.columns is not None:
-            result["columns"] = self.columns
-        if self.rows is not None:
-            result["rows"] = self.rows
+        if self.colspan is not None:
+            result["colspan"] = self.colspan
+        if self.rowspan is not None:
+            result["rowspan"] = self.rowspan
         result.update(self._pack())
         return result
 
@@ -78,14 +78,14 @@ class Control(ABC, ty.Generic[V]):
                  require_apply: bool,
                  optional: ty.Optional[bool],
                  container: ty.Optional[str],
-                 columns: ty.Optional[int],
-                 rows: ty.Optional[int]
+                 colspan: ty.Optional[int],
+                 rowspan: ty.Optional[int]
                  ):
         self.label = label
         self.enabled = True
         self.container = container
-        self.columns = columns
-        self.rows = rows
+        self.colspan = colspan
+        self.rowspan = rowspan
 
         self._id = id or str(uuid4())
         self._parents = depends or []
@@ -173,9 +173,9 @@ class InputView(View):
                  label: ty.Optional[str] = None,
                  optional: ty.Optional[bool] = None,
                  container: ty.Optional[str] = None,
-                 columns: ty.Optional[int] = None,
-                 rows: ty.Optional[int] = None):
-        super().__init__(id, enabled, label, optional, container, columns, rows)
+                 colspan: ty.Optional[int] = None,
+                 rowspan: ty.Optional[int] = None):
+        super().__init__(id, enabled, label, optional, container, colspan, rowspan)
         self.text = text
         self.long = long
 
@@ -193,9 +193,9 @@ class OutputView(View):
                  label: ty.Optional[str] = None,
                  optional: ty.Optional[bool] = None,
                  container: ty.Optional[str] = None,
-                 columns: ty.Optional[int] = None,
-                 rows: ty.Optional[int] = None):
-        super().__init__(id, enabled, label, optional, container, columns, rows)
+                 colspan: ty.Optional[int] = None,
+                 rowspan: ty.Optional[int] = None):
+        super().__init__(id, enabled, label, optional, container, colspan, rowspan)
         self.data = data
 
     def _pack(self) -> ty.Dict:
@@ -210,9 +210,9 @@ class CheckboxView(View):
                  label: ty.Optional[str] = None,
                  optional: ty.Optional[bool] = None,
                  container: ty.Optional[str] = None,
-                 columns: ty.Optional[int] = None,
-                 rows: ty.Optional[int] = None):
-        super().__init__(id, enabled, label, optional, container, columns, rows)
+                 colspan: ty.Optional[int] = None,
+                 rowspan: ty.Optional[int] = None):
+        super().__init__(id, enabled, label, optional, container, colspan, rowspan)
         self.selected = selected
 
     def _pack(self) -> ty.Dict:
@@ -229,10 +229,10 @@ class Input(Control[InputView], ty.Generic[T]):
                  require_apply: bool = True,
                  optional: ty.Optional[bool] = None,
                  container: ty.Optional[str] = None,
-                 columns: ty.Optional[int] = None,
-                 rows: ty.Optional[int] = None
+                 colspan: ty.Optional[int] = None,
+                 rowspan: ty.Optional[int] = None
                  ):
-        super().__init__(label, None, depends, handler, require_apply, optional, container, columns, rows)
+        super().__init__(label, None, depends, handler, require_apply, optional, container, colspan, rowspan)
         self.text = text
         self.long = long
 
@@ -244,7 +244,7 @@ class Input(Control[InputView], ty.Generic[T]):
         else:
             text = None
         return InputView(self._id, text, True if self.long else None, self.enabled, self.label, self.optional,
-                         self.container, self.columns, self.rows)
+                         self.container, self.colspan, self.rowspan)
 
     def _apply(self, view: InputView):
         assert isinstance(view, InputView)
@@ -269,10 +269,10 @@ class Checkbox(Control[CheckboxView], ty.Generic[T]):
                  label: ty.Optional[str] = None,
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
                  container: ty.Optional[str] = None,
-                 columns: ty.Optional[int] = None,
-                 rows: ty.Optional[int] = None
+                 colspan: ty.Optional[int] = None,
+                 rowspan: ty.Optional[int] = None
                  ):
-        super().__init__(label, None, depends, handler, False, False, container, columns, rows)
+        super().__init__(label, None, depends, handler, False, False, container, colspan, rowspan)
         self.selected = selected
 
     def _view(self) -> CheckboxView:
@@ -280,8 +280,8 @@ class Checkbox(Control[CheckboxView], ty.Generic[T]):
             selected = self.selected
         elif isinstance(self.selected, ty.Callable):
             selected = self.selected()
-        return CheckboxView(self._id, selected, self.enabled, self.label, self.optional, self.container, self.columns,
-                            self.rows)
+        return CheckboxView(self._id, selected, self.enabled, self.label, self.optional, self.container, self.colspan,
+                            self.rowspan)
 
     def _apply(self, view: CheckboxView):
         assert isinstance(view, CheckboxView)
@@ -353,9 +353,9 @@ class SelectView(View):
                  label: ty.Optional[str] = None,
                  optional: ty.Optional[bool] = None,
                  container: ty.Optional[str] = None,
-                 columns: ty.Optional[int] = None,
-                 rows: ty.Optional[int] = None):
-        super().__init__(id, enabled, label, optional, container, columns, rows)
+                 colspan: ty.Optional[int] = None,
+                 rowspan: ty.Optional[int] = None):
+        super().__init__(id, enabled, label, optional, container, colspan, rowspan)
         self.titles = titles
         self.selected = selected
         self.multiple = multiple
@@ -380,10 +380,10 @@ class Select(Control[SelectView], ty.Generic[T]):
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
                  title: ty.Optional[ty.Callable[[T], str]] = None,
                  container: ty.Optional[str] = None,
-                 columns: ty.Optional[int] = None,
-                 rows: ty.Optional[int] = None
+                 colspan: ty.Optional[int] = None,
+                 rowspan: ty.Optional[int] = None
                  ):
-        super().__init__(label, None, depends, handler, False, False, container, columns, rows)
+        super().__init__(label, None, depends, handler, False, False, container, colspan, rowspan)
         self.items = items
         self._model = model
         self.selected = selected or ([] if multiple else 0)
@@ -408,7 +408,7 @@ class Select(Control[SelectView], ty.Generic[T]):
     def _view(self) -> SelectView:
         model = self.get_model()
         return SelectView(self._id, self.selected, model.titles(), True if self.multiple else None, self.enabled,
-                          self.label, self.optional, self.container, self.columns, self.rows)
+                          self.label, self.optional, self.container, self.colspan, self.rowspan)
 
     def _apply(self, view: SelectView):
         assert isinstance(view, SelectView)
@@ -448,9 +448,9 @@ class SliderView(View):
                  enabled: ty.Optional[bool] = None,
                  label: ty.Optional[str] = None,
                  container: ty.Optional[str] = None,
-                 columns: ty.Optional[int] = None,
-                 rows: ty.Optional[int] = None):
-        super().__init__(id, enabled, label, False, container, columns, rows)
+                 colspan: ty.Optional[int] = None,
+                 rowspan: ty.Optional[int] = None):
+        super().__init__(id, enabled, label, False, container, colspan, rowspan)
         self.values = values
         self.selected = selected
 
@@ -466,16 +466,16 @@ class Slider(Control[SliderView]):
                  label: ty.Optional[str] = None,
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
                  container: ty.Optional[str] = None,
-                 columns: ty.Optional[int] = None,
-                 rows: ty.Optional[int] = None
+                 colspan: ty.Optional[int] = None,
+                 rowspan: ty.Optional[int] = None
                  ):
-        super().__init__(label, None, depends, handler, False, False, container, columns, rows)
+        super().__init__(label, None, depends, handler, False, False, container, colspan, rowspan)
         self.values = list(values) if values is not None else None
         self.selected = selected
 
     def _view(self) -> SliderView:
         return SliderView(self.get_id(), self.selected, self.values, self.enabled, self.label, self.container,
-                          self.columns, self.rows)
+                          self.colspan, self.rowspan)
 
     def _apply(self, view: SliderView):
         assert isinstance(view, SliderView)
@@ -522,9 +522,9 @@ class UploaderView(View):
                  label: ty.Optional[str] = None,
                  optional: ty.Optional[bool] = None,
                  container: ty.Optional[str] = None,
-                 columns: ty.Optional[int] = None,
-                 rows: ty.Optional[int] = None):
-        super().__init__(id, enabled, label, optional, container, columns, rows)
+                 colspan: ty.Optional[int] = None,
+                 rowspan: ty.Optional[int] = None):
+        super().__init__(id, enabled, label, optional, container, colspan, rowspan)
         self.uploads = uploads
         self.multiple = multiple
 
@@ -547,10 +547,10 @@ class Uploader(Control[UploaderView]):
                  handler: ty.Optional[ty.Callable[..., None]] = None,
                  optional: ty.Optional = None,
                  container: ty.Optional[str] = None,
-                 columns: ty.Optional[int] = None,
-                 rows: ty.Optional[int] = None
+                 colspan: ty.Optional[int] = None,
+                 rowspan: ty.Optional[int] = None
                  ):
-        super().__init__(label, None, depends, handler, False, optional, container, columns, rows)
+        super().__init__(label, None, depends, handler, False, optional, container, colspan, rowspan)
         self.uploads: ty.Union[ty.List[Upload], ty.Callable[[], ty.List[Upload]]] = uploads if uploads else []
         self.multiple = multiple
 
@@ -581,14 +581,14 @@ def unpack_view(source: ty.Dict) -> View:
     if type == "InputView":
         return InputView(source["id"], source.get("data"), source.get("long"), source.get("enabled"),
                          source.get("label"), source.get("optional"), source.get("container"),
-                         source.get("columns"), source.get("rows"))
+                         source.get("colspan"), source.get("rowspan"))
     if type == "CheckboxView":
         return CheckboxView(source["id"], source.get("selected"), source.get("enabled"), source.get("label"),
                             source.get("optional"), source.get("container"),
-                            source.get("columns"), source.get("rows"))
+                            source.get("colspan"), source.get("rowspan"))
     elif type == "ApplyView":
         return ApplyView(source["id"], source.get("enabled"), source.get("label"), source.get("optional"),
-                         source.get("container"), source.get("columns"), source.get("rows"))
+                         source.get("container"), source.get("colspan"), source.get("rowspan"))
     elif type == "SelectView":
         selected = source.get("selected")
         multiple = source.get("multiple")
@@ -599,21 +599,21 @@ def unpack_view(source: ty.Dict) -> View:
                 selected = [selected]
         return SelectView(source["id"], selected, source.get("titles"), multiple,
                           source.get("enabled"), source.get("label"), source.get("optional"), source.get("container"),
-                          source.get("columns"), source.get("rows"))
+                          source.get("colspan"), source.get("rowspan"))
     elif type == "SliderView":
         return SliderView(source["id"], source.get("selected"), source.get("data"), source.get("enabled"),
                           source.get("label"), source.get("container"),
-                          source.get("columns"), source.get("rows"))
+                          source.get("colspan"), source.get("rowspan"))
     elif type == "UploaderView":
         uploads = [Upload(u["id"], u["file_name"], u["length"],
                           datetime.strptime(u["created_date"], "%Y-%m-%d").date()) for u in source["uploads"]]
         return UploaderView(source["id"], uploads, source.get("multiple"), source.get("enabled"),
                             source.get("label"), source.get("optional"), source.get("container"),
-                            source.get("columns"), source.get("rows"))
+                            source.get("colspan"), source.get("rowspan"))
     elif type == "OutputView":
         return OutputView(source["id"], source["data"], source.get("enabled"), source.get("label"),
                           source.get("optional"), source.get("container"),
-                          source.get("columns"), source.get("rows"))
+                          source.get("colspan"), source.get("rowspan"))
     else:
         raise AttributeError("Unsupported view: " + str(source))
 
@@ -628,9 +628,9 @@ class Apply(Control[ApplyView]):
     def __init__(self, label: ty.Optional[str] = None,
                  id: ty.Optional[str] = None,
                  container: ty.Optional[str] = None,
-                 columns: ty.Optional[int] = None,
-                 rows: ty.Optional[int] = None):
-        super().__init__(label, id, None, None, False, False, container, columns, rows)
+                 colspan: ty.Optional[int] = None,
+                 rowspan: ty.Optional[int] = None):
+        super().__init__(label, id, None, None, False, False, container, colspan, rowspan)
         self.controller: ty.Optional[Controller] = None
 
     def _view(self) -> ApplyView:
@@ -641,7 +641,7 @@ class Apply(Control[ApplyView]):
                 enabled = False
                 break
 
-        return ApplyView(self.get_id(), enabled, self.label, False, self.container, self.columns, self.rows)
+        return ApplyView(self.get_id(), enabled, self.label, False, self.container, self.colspan, self.rowspan)
 
     def _apply(self, view: ApplyView):
         assert isinstance(view, ApplyView)
@@ -658,9 +658,9 @@ class Output(Control[OutputView], ty.Generic[T]):
                  label: ty.Optional[str] = None,
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
                  container: ty.Optional[str] = None,
-                 columns: ty.Optional[int] = None,
-                 rows: ty.Optional[int] = None):
-        super().__init__(label, None, depends, handler, False, False, container, columns, rows)
+                 colspan: ty.Optional[int] = None,
+                 rowspan: ty.Optional[int] = None):
+        super().__init__(label, None, depends, handler, False, False, container, colspan, rowspan)
         self.data = data
 
     def _view(self) -> V:
@@ -668,8 +668,8 @@ class Output(Control[OutputView], ty.Generic[T]):
             data = self.data()
         else:
             data = self.data
-        return OutputView(self._id, data, self.enabled, self.label, self.optional, self.container, self.columns,
-                          self.rows)
+        return OutputView(self._id, data, self.enabled, self.label, self.optional, self.container, self.colspan,
+                          self.rowspan)
 
     def _apply(self, view: V):
         pass
@@ -689,11 +689,11 @@ class Markdown(Output, ty.Generic[T]):
                  label: ty.Optional[str] = None,
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
                  container: ty.Optional[str] = None,
-                 columns: ty.Optional[int] = None,
-                 rows: ty.Optional[int] = None):
+                 colspan: ty.Optional[int] = None,
+                 rowspan: ty.Optional[int] = None):
         super().__init__(
             (md.Markdown(text) if isinstance(text, str) else lambda: md.Markdown(
-                text())) if text is not None else None, handler, label, depends, container, columns, rows)
+                text())) if text is not None else None, handler, label, depends, container, colspan, rowspan)
         self.text = text
 
     def _check_after_update(self):
@@ -701,11 +701,29 @@ class Markdown(Output, ty.Generic[T]):
             self.data = md.Markdown(self.text)
 
 
+class Container(object):
+    def __init__(self, id: ty.Optional[str],
+                 layout: ty.Optional[str],
+                 columns: ty.Optional[int]):
+        self.id = id
+        self.layout = layout
+        self.columns = columns
+
+    def pack(self) -> dict:
+        _dict = {"id": self.id, "layout": self.layout}
+        if self.columns:
+            _dict["columns"] = self.columns
+        return _dict
+
+
 # TODO: Merge Application and Controller
 class Controller(object):
-    def __init__(self, controls: ty.List[Control]):
+    def __init__(self, controls: ty.List[Control], containers: ty.List[Container]):
         self.controls_by_id: ty.Dict[str, Control] = {}
         self.copy_of_controls_by_id = None
+        # TODO: Validate controls and container (container IDs are valid and that there are no containers
+        #  without controls)
+        self.containers = containers
 
         require_apply = False
         has_apply = False

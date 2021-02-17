@@ -131,7 +131,8 @@ def execute(id, views, apply):
         status = 'FAILED'
         logs = "Please update the client version of dstack and re-deploy the application: pip install dstack>=0.6.3"
 
-    execution = {"id": id, "status": status}
+    _containers = [_c.pack() for _c in controller.containers]
+    execution = {"id": id, "status": status, "containers": _containers}
     if len(logs) > 0:
         execution["logs"] = logs
     if views is not None:
