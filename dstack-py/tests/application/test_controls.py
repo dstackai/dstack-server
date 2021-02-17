@@ -31,7 +31,7 @@ class TestControls(TestCase):
 
     def test_simple_check_box(self):
         c1 = ctrl.Checkbox()
-        controller = Controller([c1])
+        controller = Controller([c1], [])
         views = controller.list()
         v1 = ty.cast(ctrl.CheckboxView, self.get_by_id(c1.get_id(), views))
         self.assertEqual(False, v1.selected)
@@ -41,7 +41,7 @@ class TestControls(TestCase):
             return True
 
         c1 = ctrl.Checkbox(selected=get_selected)
-        controller = Controller([c1])
+        controller = Controller([c1], [])
         views = controller.list()
         v1 = ty.cast(ctrl.CheckboxView, self.get_by_id(c1.get_id(), views))
         self.assertEqual(True, v1.selected)
@@ -52,7 +52,7 @@ class TestControls(TestCase):
 
         c1 = ctrl.Input("10")
         c2 = ctrl.Checkbox(handler=get_selected, depends=[c1])
-        controller = Controller([c1, c2])
+        controller = Controller([c1, c2], [])
         views = controller.list()
         v1 = ty.cast(ctrl.InputView, self.get_by_id(c1.get_id(), views))
         v2 = ty.cast(ctrl.CheckboxView, self.get_by_id(c2.get_id(), views))
@@ -71,7 +71,7 @@ class TestControls(TestCase):
 
         c1 = ctrl.Input("10")
         c2 = ctrl.Input(depends=c1, handler=update, long=True)
-        controller = Controller([c1, c2])
+        controller = Controller([c1, c2], [])
         views = controller.list()
         self.assertEqual(3, len(views))  # Apply will appear here
         ids = [v.id for v in views]
@@ -114,7 +114,7 @@ class TestControls(TestCase):
         c1 = ctrl.Input("10")
         c2 = ctrl.Input(depends=c1, handler=update)
 
-        controller = Controller([c1, c2])
+        controller = Controller([c1, c2], [])
 
         try:
             controller.list(controller.list())
@@ -143,7 +143,7 @@ class TestControls(TestCase):
         c3 = ctrl.Input(depends=c2, handler=update_c3_c4)
         c4 = ctrl.Input(depends=c2, handler=update_c3_c4)
 
-        controller = Controller([c1, c2, c3, c4])
+        controller = Controller([c1, c2, c3, c4], [])
         views = controller.list()
         self.assertEqual(1, count)
         v2 = ty.cast(ctrl.InputView, self.get_by_id(c2.get_id(), views))
@@ -158,7 +158,7 @@ class TestControls(TestCase):
         file_uploader = ctrl.Uploader()
         self.assertTrue(isinstance(file_uploader.uploads, list))
 
-        controller = Controller([file_uploader])
+        controller = Controller([file_uploader], [])
         views = controller.list()
         file_uploader_view = ty.cast(ctrl.UploaderView, self.get_by_id(file_uploader.get_id(), views))
         self.assertTrue(isinstance(file_uploader_view.uploads, list))
@@ -198,7 +198,7 @@ class TestControls(TestCase):
         self.assertTrue(isinstance(cb._derive_model(), ctrl.DefaultListModel))
 
         c1 = ctrl.Select(handler=update, depends=cb)
-        controller = Controller([c1, cb])
+        controller = Controller([c1, cb], [])
         views = controller.list()
         v = ty.cast(ctrl.SelectView, self.get_by_id(cb.get_id(), views))
         v1 = ty.cast(ctrl.SelectView, self.get_by_id(c1.get_id(), views))
@@ -218,13 +218,13 @@ class TestControls(TestCase):
 
     def test_markdown(self):
         m1 = ctrl.Markdown(text="Hello, **this** is Markdown")
-        controller = Controller([m1])
+        controller = Controller([m1], [])
         views = controller.list()
         self.assertTrue(isinstance(views[0].data, md.Markdown))
         self.assertEquals("Hello, **this** is Markdown", views[0].data.text)
 
         m2 = ctrl.Markdown(text=lambda: "Hello, **this** is Markdown")
-        controller = Controller([m2])
+        controller = Controller([m2], [])
         views = controller.list()
         self.assertTrue(isinstance(views[0].data, md.Markdown))
         self.assertEquals("Hello, **this** is Markdown", views[0].data.text)
@@ -235,7 +235,7 @@ class TestControls(TestCase):
             self.text = "Hello, **this** is " + t1.text
 
         m3 = ctrl.Markdown(handler=m_handler, depends=[t1])
-        controller = Controller([t1, m3])
+        controller = Controller([t1, m3], [])
         views = controller.list(apply=True)
         self.assertTrue(isinstance(views[1].data, md.Markdown))
         self.assertEquals("Hello, **this** is Markdown", views[1].data.text)
@@ -249,7 +249,7 @@ class TestControls(TestCase):
         self.assertTrue(isinstance(cb._derive_model(), ctrl.DefaultListModel))
 
         c1 = ctrl.Select(handler=update, depends=cb)
-        controller = Controller([c1, cb])
+        controller = Controller([c1, cb], [])
         views = controller.list()
         v = ty.cast(ctrl.SelectView, self.get_by_id(cb.get_id(), views))
         v1 = ty.cast(ctrl.SelectView, self.get_by_id(c1.get_id(), views))
@@ -279,7 +279,7 @@ class TestControls(TestCase):
 
     def test_immutability_of_controller(self):
         text_field = ctrl.Input(text="Some initial data")
-        controller = Controller([text_field])
+        controller = Controller([text_field], [])
         views = controller.list()
         self.assertEqual(views[0].text, "Some initial data")
         views[0].text = "Some other data"
@@ -322,7 +322,7 @@ class TestControls(TestCase):
         self.assertTrue(isinstance(countries._derive_model(), ctrl.CallableListModel))
 
         cities = ctrl.Select(handler=update_cities, depends=countries)
-        controller = Controller([countries, cities])
+        controller = Controller([countries, cities], [])
         views = controller.list()
         v1 = ty.cast(ctrl.SelectView, self.get_by_id(countries.get_id(), views))
         v2 = ty.cast(ctrl.SelectView, self.get_by_id(cities.get_id(), views))
@@ -341,7 +341,7 @@ class TestControls(TestCase):
 
     def test_apply_button_enabled(self):
         c1 = ctrl.Input(None)
-        controller = Controller([c1])
+        controller = Controller([c1], [])
         self.assertEqual(2, len(controller.list()))
         apply_view = self.get_apply(controller.list())
         self.assertIsNotNone(apply_view)
@@ -363,7 +363,7 @@ class TestControls(TestCase):
 
         o1 = ctrl.Output(data=test)
 
-        controller = Controller([c1, c2, o1])
+        controller = Controller([c1, c2, o1], [])
         views = controller.list()
         self.assertEqual(30, views[2].data)
 
@@ -387,7 +387,7 @@ class TestControls(TestCase):
             output.data = "success"
 
         o1 = ctrl.Output(handler=output_handler)
-        controller = Controller([o1])
+        controller = Controller([o1], [])
         views = controller.list()
 
         def apply():
@@ -412,14 +412,14 @@ class TestControls(TestCase):
                 return self.title
 
         items = ctrl.Select([Item(1, "hello"), Item(2, "world")], title=lambda x: x.title.upper())
-        controller = Controller([items])
+        controller = Controller([items], [])
         views = controller.list()
         items_view = ty.cast(ctrl.SelectView, views[0])
         self.assertEqual(["HELLO", "WORLD"], items_view.titles)
 
     def test_optional(self):
         c1 = ctrl.Input(None, optional=True)
-        controller = Controller([c1])
+        controller = Controller([c1], [])
         self.assertEqual(2, len(controller.list()))
         apply_view = self.get_apply(controller.list())
         c1_view = self.get_by_id(c1.get_id(), controller.list())
