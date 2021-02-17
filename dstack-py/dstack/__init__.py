@@ -385,7 +385,7 @@ class ApplicationContainer:
 
     def validate_rowspan(self, rowspan, minimum, default, maximum=None):
         _m = max((rowspan or default), minimum)
-        return min(_m, self.columns) if maximum is not None else _m
+        return min(_m, maximum) if maximum is not None else _m
 
     def input(self,
               text: ty.Union[ty.Optional[str], ty.Callable[[], str]] = None,
@@ -399,7 +399,7 @@ class ApplicationContainer:
               rowspan: ty.Optional[int] = None) -> Input:
         text = Input(text, handler, long, label, depends, require_apply, optional, self.id,
                      self.validate_colspan(colspan, minimum=2, default=2),
-                     self.validate_rowspan(rowspan, minimum=1, default=1))
+                     self.validate_rowspan(rowspan, minimum=2, default=2))
         self.controls.append(text)
         return text
 
@@ -412,7 +412,7 @@ class ApplicationContainer:
                rowspan: ty.Optional[int] = None) -> Output:
         output = Output(data, handler, label, depends, self.id,
                         self.validate_colspan(colspan, 6, default=6),
-                        self.validate_rowspan(rowspan, minimum=1, default=1))
+                        self.validate_rowspan(rowspan, minimum=6, default=6))
         self.controls.append(output)
         return output
 
