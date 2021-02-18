@@ -183,46 +183,30 @@
         &.withSidebar {
             display: grid;
             grid-template-areas:
-                "filters description"
-                "filters content"
-                "filters logs"
+                "sidebar description"
+                "sidebar content"
+                "sidebar logs"
             ;
             grid-template-columns: var(--sidebar-width) 1fr;
             grid-column-gap: 30px;
-            & .filters {
-                grid-area: filters;
-                padding: 12px 20px 20px;
-                background-color: #F8F7F9;
-            }
-        }
-        &:not(.withSidebar) {
-            .description + .filters,
-            .filters + .attachmentsGrid {
-                margin-top: 20px;
-            }
         }
     }
 }
-.filterLoader {
-    grid-column: 1 / -1;
-}
-.description + .attachmentsGrid {
-    margin-top: 20px;
+.sidebar {
+    grid-area: sidebar;
+    padding: 12px 20px 20px;
+    background-color: #F8F7F9;
 }
 .description {
     grid-area: description;
 }
-.attachmentsGrid {
+.description + .views {
+    margin-top: 20px;
+}
+.views {
     grid-area: content;
     min-width: 0;
-}
-.attachment {
-    &:nth-child(n+2) {
-        margin-top: 37px;
-    }
-    &:global(.noOne)&:global(.withMaxHeight) {
-        max-height: calc(100vh * 0.6);
-    }
+    margin-top: 20px;
 }
 .progress {
     grid-area: content;
@@ -255,40 +239,6 @@
 .logs {
     margin-top: 16px;
     grid-area: logs;
-    & .logsButton {
-        padding: 0 !important;
-        outline: none;
-        & :global(.mdi) {
-            font-size: 14px;
-            padding-left: 4px;
-        }
-    }
-    & .logsExpand {
-        overflow: hidden;
-        transition: max-height .5s ease-out;
-        &:not(:global(.open)) {
-            max-height: 0;
-        }
-        &:global(.open) {
-            max-height: 440px;
-        }
-    }
-    & .fromAgo {
-        padding-top: 16px;
-        font-size: 13px;
-        line-height: 16px;
-        color: rgba(48, 52, 64, 0.5);
-    }
-    & .log {
-        font-family: "Roboto Mono", monospace;
-        margin-top: 6px;
-        font-size: 13px;
-        line-height: 18px;
-        color: #303440;
-        white-space: pre-wrap;
-        overflow-y: auto;
-        max-height: 412px;
-    }
 }
 .readme {
     margin-top: 20px;

@@ -7,7 +7,7 @@ import {unicodeBase64Decode} from 'utils';
 import Table from './Table';
 import CodeViewer from 'components/CodeViewer';
 import Markdown from 'components/stack/Markdown';
-import {isImageType, base64ToJSON} from '../utils';
+import {base64ToJSON} from '../utils';
 import * as CSV from 'csv-string';
 import css from './styles.module.css';
 import config from 'config';
@@ -18,38 +18,20 @@ const base64ImagePrefixes = {
     'image/jpeg': 'data:image/jpeg;charset=utf-8;',
 };
 
+type Props = {
+    className?: string,
+    frameId: string,
+    fullAttachment?: {},
+    attachment: {},
+    requestStatus?: ?number,
+    stack: string,
+}
 
-const View = ({frameId, attachment, fullAttachment, isList, className, requestStatus, stack}) => {
+
+const View = ({frameId, attachment, fullAttachment, className, requestStatus, stack}: Props) => {
     const {t} = useTranslation();
     const viewRef = useRef();
-    const [tableScale, setTableScale] = useState(1);
-    const [viewWidth, setVieWidth] = useState(0);
     const [noRender, setNoRender] = useState(false);
-
-    const onResizeCard = () => {
-        if (viewRef.current) {
-            const containerWidth = viewRef.current.parentElement.offsetWidth;
-            const viewWidth = viewRef.current.offsetWidth / tableScale;
-
-            let newScale = containerWidth / viewWidth;
-
-            if (newScale > 1)
-                newScale = 1;
-
-            setTableScale(newScale);
-            setVieWidth(containerWidth);
-        }
-    };
-
-    useEffect(() => {
-        if (window && isList)
-            window.addEventListener('resize', onResizeCard);
-
-        return () => {
-            if (window && isList)
-                window.removeEventListener('resize', onResizeCard);
-        };
-    }, []);
 
     useEffect(() => {
         if (noRender) {
@@ -75,10 +57,6 @@ const View = ({frameId, attachment, fullAttachment, isList, className, requestSt
             if (json && document.querySelector(`#bokeh-${frameId}`))
                 Bokeh.embed.embed_item(json, `bokeh-${frameId}`);
         }
-
-        if (isList)
-            setTimeout(() => onResizeCard(), 10);
-
     }, [attachment]);
 
     const renderImage = () => {
@@ -131,7 +109,7 @@ const View = ({frameId, attachment, fullAttachment, isList, className, requestSt
         if (!json)
             return null;
 
-        json.layout.width = viewWidth;
+        json.layout.width = 0;
         json.layout.margin = 0;
         json.layout.autosize = true;
 
@@ -212,14 +190,8 @@ model = ds.pull(${a.join(', ')})`;
         if (noRender)
             return null;
 
-        if (requestStatus === 404 && isList)
-            return <div className={css.message}>{t('notFound')}</div>;
-
-        if (requestStatus === 404 && !isList)
+        if (requestStatus === 404)
             return <div className={css.text}>{t('noPreview')}</div>;
-
-        if (attachment.preview && isList && isImageType(attachment['content_type']))
-            return <div className={css.message}>{t('noPreview')}</div>;
 
         switch (true) {
             case (attachment['content_type'] === 'image/svg+xml'):
@@ -249,7 +221,7 @@ model = ds.pull(${a.join(', ')})`;
                 return null;
 
             default:
-                return <div className={isList ? css.message : css.text}>{t('notSupportedAttachment')}</div>;
+                return <div className={css.text}>{t('notSupportedAttachment')}</div>;
         }
     };
 
@@ -260,12 +232,6 @@ model = ds.pull(${a.join(', ')})`;
                 'table': (attachment && attachment.data && attachment['content_type'] === 'text/csv'),
                 'bokeh': (attachment && attachment.data && attachment['application'] === 'bokeh'),
             })}
-
-            style={
-                (attachment && attachment['content_type'] === 'text/csv')
-                    ? {transform: `scale(${tableScale})`}
-                    : {}
-            }
         >
             {renderAttachment()}
         </div>
