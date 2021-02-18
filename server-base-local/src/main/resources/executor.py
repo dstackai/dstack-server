@@ -137,6 +137,8 @@ def execute(id, views, apply):
         execution["logs"] = logs
     if views is not None:
         execution["views"] = _views
+    if hasattr(controller, "require_apply") and controller.require_apply:
+        execution["require_apply"] = True
     execution_file.write_text(json.dumps(execution))
 
 

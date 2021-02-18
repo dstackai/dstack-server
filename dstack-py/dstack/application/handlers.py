@@ -33,7 +33,7 @@ class AppEncoder(Encoder['Application']):
         if app._sidebar:
             containers.append(Container(app._sidebar.id, app._sidebar.layout, app._sidebar.columns))
         containers.append(Container(app.id, app.layout, app.columns))
-        controller = Controller(app.controls, containers)
+        controller = Controller(app.controls, containers, app.require_apply)
 
         stage_dir = util.create_path(self._temp_dir)
 
