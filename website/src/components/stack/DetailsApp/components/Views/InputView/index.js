@@ -1,5 +1,6 @@
 // @flow
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
+import {useDebounce} from 'react-use';
 import TextField from 'components/TextField';
 import TextAreaField from 'components/TextAreaField';
 
@@ -14,21 +15,28 @@ type Props = {
     view: TInputView,
     disabled?: boolean,
     onChange?: Function,
+    debounce?: number,
 }
 
 
-const InputView = ({className, view, disabled, onChange: onChangeProp}: Props) => {
+const InputView = ({className, view, disabled, debounce = 300, onChange: onChangeProp}: Props) => {
     const [value, setValue] = useState(view.data);
+    const [isFocus, setIsFocus] = useState(false);
+
+    const onChangePropDebounce = useDebounce(view => onChangeProp(view), debounce, [debounce, onChangeProp]);
 
     const onChange = (event: Event<HTMLInputElement | HTMLTextAreaElement>) => {
         setValue(event.target.value);
 
         if (onChangeProp)
-            onChangeProp({
+            onChangePropDebounce({
                 ...view,
                 data: value,
             });
     };
+
+    const onFocus = () => setIsFocus(true);
+    const onBlur = () => setIsFocus(false);
 
     if (!view.rowspan || view.rowspan < 2)
         return (
@@ -39,9 +47,9 @@ const InputView = ({className, view, disabled, onChange: onChangeProp}: Props) =
                 label={view.label}
                 name={view.id}
                 value={value}
-                disabled={disabled || !view.enabled}
-                // onFocus={event => setTextFieldInFocus(event.target)}
-                // onBlur={() => setTextFieldInFocus(null)}
+                disabled={(disabled && !isFocus) || !view.enabled}
+                onFocus={onFocus}
+                onBlur={onBlur}
             />
         );
     else
@@ -53,9 +61,9 @@ const InputView = ({className, view, disabled, onChange: onChangeProp}: Props) =
                 label={view.label}
                 name={view.id}
                 value={value}
-                disabled={disabled || !view.enabled}
-                // onFocus={event => setTextFieldInFocus(event.target)}
-                // onBlur={() => setTextFieldInFocus(null)}
+                disabled={(disabled && !isFocus) || !view.enabled}
+                onFocus={onFocus}
+                onBlur={onBlur}
             />
         );
 };

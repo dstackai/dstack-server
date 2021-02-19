@@ -15,7 +15,7 @@ type Props = {
     fields: {},
     form: {},
     onChange: Function,
-    onApply?: Function,
+    onApplyClick?: Function,
     onReset?: Function,
     className?: string,
 }
@@ -25,7 +25,7 @@ const StackFilters = ({
     fields,
     form,
     onChange,
-    onApply,
+    onApplyClick,
     onReset,
     isSidebar,
     disabled: filtersDisabled,
@@ -139,12 +139,12 @@ const StackFilters = ({
                             key={`apply-${key}`}
                             className={cx(css.field, css.buttons)}
                         >
-                            {onApply && (
+                            {onApplyClick && (
                                 <Button
                                     size="small"
                                     color="primary"
                                     variant="contained"
-                                    onClick={onApply}
+                                    onClick={onApplyClick}
                                     disabled={filtersDisabled || fields[key].disabled}
                                     className={css.button}
                                 >

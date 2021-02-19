@@ -8,10 +8,10 @@ type Props = {
     className?: string,
     view: TView,
     disabled?: boolean,
-    onApply?: Function,
+    onApplyClick?: Function,
 }
 
-const ApplyView = ({className, view, disabled, onApply}: Props) => {
+const ApplyView = ({className, view, disabled, onApplyClick}: Props) => {
     const {t} = useTranslation();
 
     return (
@@ -19,7 +19,7 @@ const ApplyView = ({className, view, disabled, onApply}: Props) => {
             size="small"
             color="primary"
             variant="contained"
-            onClick={onApply}
+            onClick={onApplyClick}
             disabled={disabled || !view.enabled}
             className={className}
         >

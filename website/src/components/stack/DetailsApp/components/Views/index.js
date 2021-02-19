@@ -19,9 +19,13 @@ type Props = {
     className?: string,
     views?: Array<TView>,
     disabled?: boolean,
+    onApplyClick: Function,
+    onChange: (TView) => void,
 }
 
-const Views = ({className, views, container = 'main', disabled}: Props) => {
+const debounce = 300;
+
+const Views = ({className, views, container = 'main', disabled, onApplyClick, onChange}: Props) => {
     const containerViews = useMemo(() => {
         return views.filter(v => (v.container === container || (!v.container && container === 'main')));
     }, [views]);
@@ -32,7 +36,7 @@ const Views = ({className, views, container = 'main', disabled}: Props) => {
         return View
             ? <View
                 view={view}
-                {...{disabled}}
+                {...{disabled, debounce, onApplyClick, onChange}}
             />
             : null;
     };

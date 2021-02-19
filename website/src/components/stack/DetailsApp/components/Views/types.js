@@ -1,6 +1,7 @@
 // @flow
 
 export interface TView {
+    id: string,
     container: 'sidebar' | 'main',
     type: string | 'OutputView',
     enabled?: boolean,

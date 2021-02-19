@@ -1,5 +1,6 @@
 // @flow
 import React, {useEffect, useMemo} from 'react';
+import {useDebounce} from 'react-use';
 import SliderField from 'components/SliderField';
 
 import type {TView} from '../types';
@@ -14,12 +15,15 @@ type Props = {
     view: TSliderView,
     disabled?: boolean,
     onChange?: Function,
+    debounce?: number,
 }
 
-const SliderView = ({className, view, disabled, onChange: onChangeProp}: Props) => {
+const SliderView = ({className, view, disabled, debounce, onChange: onChangeProp}: Props) => {
     const [value, setValue] = useEffect(view.selected);
 
     useEffect(() => setValue(view.selected), [view]);
+
+    const onChangePropDebounce = useDebounce(view => onChangeProp(view), debounce, [debounce, onChangeProp]);
 
     const {min, max, options} = useMemo(() => {
         return {
@@ -37,7 +41,7 @@ const SliderView = ({className, view, disabled, onChange: onChangeProp}: Props) 
         setValue(value);
 
         if (onChangeProp)
-            onChangeProp({
+            onChangePropDebounce({
                 ...view,
                 selected: value,
             });

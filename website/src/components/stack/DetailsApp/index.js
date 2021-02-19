@@ -3,7 +3,7 @@
 import React, {useEffect, useState, useRef, useMemo} from 'react';
 import cx from 'classnames';
 import {isEqual, get} from 'lodash-es';
-import {useDebounce} from 'react-use';
+import {usePrevious} from 'react-use';
 import {useTranslation} from 'react-i18next';
 import {Link, useParams} from 'react-router-dom';
 import BackButton from 'components/BackButton';
@@ -14,16 +14,17 @@ import Loader from 'components/stack/Details/components/Loader';
 import Tabs from 'components/stack/Details/components/Tabs';
 import Readme from 'components/stack/Details/components/Readme';
 import RefreshMessage from 'components/stack/Details/components/RefreshMessage';
-import Progress from './components/Progress';
+// import Progress from './components/Progress';
 import FilterLoader from './components/Loader';
 import Logs from './components/Logs';
 import Views, {VIEWS} from './components/Views';
 import actions from '../actions';
-import useForm from 'hooks/useForm';
 import {parseStackTabs} from 'utils';
 import {useAppStore} from 'AppStore';
 import Avatar from 'components/Avatar';
 import css from './styles.module.css';
+
+import type {TView} from './components/Views/types';
 
 const REFRESH_INTERVAL = 1000;
 
@@ -77,7 +78,6 @@ const Details = ({
     const params = useParams();
     const didMountRef = useRef(false);
     const pollTimeoutRef = useRef(null);
-    const {form, setForm} = useForm({});
     const [executeData, setExecuteData] = useState(null);
     const [executing, setExecuting] = useState(false);
     const [calculating, setCalculating] = useState(false);
@@ -86,6 +86,8 @@ const Details = ({
     const [activeTab, setActiveTab] = useState();
     const [tabs, setTabs] = useState([]);
     const {executeStack, pollStack} = actions();
+
+    const prevExecuteData = usePrevious(executeData);
 
     const [{currentUser}] = useAppStore();
     const currentUserName = currentUser.data?.user;
@@ -98,33 +100,12 @@ const Details = ({
         return (executeData?.views || []).some(v => v.container === 'sidebar');
     }, [executeData]);
 
-    const getFormFromViews = views => {
-        if (!views || !Array.isArray(views))
-            return {};
+    const hasApplyButton = useMemo(() => {
+        if (!executeData?.views || !Array.isArray(executeData.views))
+            return false;
 
-        return views.reduce((result, view, index) => {
-            switch (view.type) {
-                case VIEWS.APPLY:
-                    return result;
-                case VIEWS.SLIDER:
-                    result[index] = view.data[view.selected];
-                    break;
-                case VIEWS.SELECT:
-                    result[index] = view.selected;
-                    break;
-                case VIEWS.CHECKBOX:
-                    result[index] = view.selected;
-                    break;
-                case VIEWS.UPLOADER:
-                    result[index] = view.uploads;
-                    break;
-                default:
-                    result[index] = view.data;
-            }
-
-            return result;
-        }, {});
-    };
+        return executeData.views.some(view => view.type === VIEWS.APPLY);
+    }, [executeData]);
 
     const setActiveExecutionId = (value?: string) => {
         if (typeof onChangeExecutionId === 'function')
@@ -141,24 +122,13 @@ const Details = ({
     };
 
     const updateExecuteData = data => {
-        const newForm = getFormFromViews(data?.views);
-
-        setForm(newForm);
-
         setExecuteData({
             lastUpdate: Date.now(),
             ...data,
         });
     };
 
-    const hasApplyButton = () => {
-        if (!executeData?.views || !Array.isArray(executeData.views))
-            return false;
-
-        return executeData.views.some(view => view.type === VIEWS.APPLY);
-    };
-
-    const submit = (form, apply = true) => {
+    const submit = (views = [], apply = true) => {
         setExecuting(true);
 
         if (apply)
@@ -170,27 +140,11 @@ const Details = ({
             frame: frameId,
             attachment: attachmentIndex || 0,
             apply,
-            views: executeData?.views && executeData.views.map((view, index) => {
-                switch (view.type) {
-                    case VIEWS.APPLY:
-                        return view;
-                    case VIEWS.CHECKBOX:
-                        view.selected = form[index];
-                        break;
-                    case VIEWS.SELECT:
-                        view.selected = form[index];
-                        break;
-                    case VIEWS.SLIDER:
-                        view.selected = view.data.findIndex(i => i === form[index]);
-                        break;
-                    case VIEWS.UPLOADER:
-                        view.uploads = form[index];
-                        break;
-                    default:
-                        view.data = form[index];
-                }
+            views: views.map(v => {
+                if (v.type === VIEWS.OUTPUT)
+                    delete v.data;
 
-                return view;
+                return v;
             }),
         })
             .then(data => {
@@ -215,23 +169,33 @@ const Details = ({
             });
     };
 
-    useDebounce(() => {
-        if (!isEqual(form, getFormFromViews(executeData?.views)) && !executing) {
-            // submit(form, !!(!hasApplyButton()));
-        }
-    }, 300, [form]);
+    const onChangeView = (view: TView) => {
+        setExecuteData(prevState => {
+            const newState = {
+                ...prevState,
+                lastUpdate: Date.now(),
+                views: prevState.views.map(v => v.id !== view.id ? v : view),
+            };
 
-    // const onApply = () => submit(form);
+            if (!hasApplyButton && !isEqual(prevState.views, newState.views))
+                submit(newState.views);
+
+            return newState;
+        });
+    };
+
+    const onApply = () => submit(executeData?.views);
     //
     // const onReset = () => {
     //     startExecute();
     // };
 
     useEffect(() => {
-        if (executeData && executeData.status === STATUSES.READY && !executing) {
-            if (!hasApplyButton())
-                submit(form, true);
-        }
+        if (executing)
+            return;
+
+        if (executeData?.status === STATUSES.READY && !prevExecuteData)
+            submit(executeData?.views, !hasApplyButton);
     }, [executeData]);
 
     const startExecute = () => {
@@ -524,37 +488,43 @@ const Details = ({
 
                     {Boolean(executeData?.views?.length) && (
                         <Views
-                            container="sidebar"
                             className={css.sidebar}
+                            container="sidebar"
+                            onApplyClick={onApply}
+                            onChange={onChangeView}
                             views={executeData?.views}
+                            disabled={calculating || executing}
                         />
                     )}
 
                     {Boolean(executeData?.views?.length) && (
                         <Views
                             className={css.views}
+                            onApplyClick={onApply}
+                            onChange={onChangeView}
                             views={executeData?.views}
+                            disabled={calculating || executing}
                         />
                     )}
 
-                    {calculating && !isScheduled && (
-                        <Progress
-                            className={css.progress}
-                            message={executeData?.tqdm?.desc || t('calculatingTheData')}
+                    {/*{calculating && !isScheduled && (*/}
+                    {/*    <Progress*/}
+                    {/*        className={css.progress}*/}
+                    {/*        message={executeData?.tqdm?.desc || t('calculatingTheData')}*/}
 
-                            progress={executeData?.tqdm
-                                ? executeData.tqdm.n / executeData.tqdm.total * 100
-                                : undefined
-                            }
-                        />
-                    )}
+                    {/*        progress={executeData?.tqdm*/}
+                    {/*            ? executeData.tqdm.n / executeData.tqdm.total * 100*/}
+                    {/*            : undefined*/}
+                    {/*        }*/}
+                    {/*    />*/}
+                    {/*)}*/}
 
-                    {!error && isScheduled && (
-                        <Progress
-                            className={css.progress}
-                            message={t('initializingTheApplication')}
-                        />
-                    )}
+                    {/*{!error && isScheduled && (*/}
+                    {/*    <Progress*/}
+                    {/*        className={css.progress}*/}
+                    {/*        message={t('initializingTheApplication')}*/}
+                    {/*    />*/}
+                    {/*)}*/}
 
                     {!calculating && !executing && !error && !isScheduled && (
                         <div className={css.emptyMessage}>
