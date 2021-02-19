@@ -14,7 +14,7 @@ import Loader from 'components/stack/Details/components/Loader';
 import Tabs from 'components/stack/Details/components/Tabs';
 import Readme from 'components/stack/Details/components/Readme';
 import RefreshMessage from 'components/stack/Details/components/RefreshMessage';
-// import Progress from './components/Progress';
+import Progress from './components/Progress';
 import FilterLoader from './components/Loader';
 import Logs from './components/Logs';
 import Views, {VIEWS} from './components/Views';
@@ -170,6 +170,8 @@ const Details = ({
     };
 
     const onChangeView = (view: TView) => {
+        console.log(view);
+
         setExecuteData(prevState => {
             const newState = {
                 ...prevState,
@@ -507,30 +509,30 @@ const Details = ({
                         />
                     )}
 
-                    {/*{calculating && !isScheduled && (*/}
-                    {/*    <Progress*/}
-                    {/*        className={css.progress}*/}
-                    {/*        message={executeData?.tqdm?.desc || t('calculatingTheData')}*/}
+                    {calculating && !isScheduled && (
+                        <Progress
+                            className={css.progress}
+                            message={executeData?.tqdm?.desc || t('calculatingTheData')}
 
-                    {/*        progress={executeData?.tqdm*/}
-                    {/*            ? executeData.tqdm.n / executeData.tqdm.total * 100*/}
-                    {/*            : undefined*/}
-                    {/*        }*/}
-                    {/*    />*/}
-                    {/*)}*/}
-
-                    {/*{!error && isScheduled && (*/}
-                    {/*    <Progress*/}
-                    {/*        className={css.progress}*/}
-                    {/*        message={t('initializingTheApplication')}*/}
-                    {/*    />*/}
-                    {/*)}*/}
-
-                    {!calculating && !executing && !error && !isScheduled && (
-                        <div className={css.emptyMessage}>
-                            {t('clickApplyToSeeTheResult')}
-                        </div>
+                            progress={executeData?.tqdm
+                                ? executeData.tqdm.n / executeData.tqdm.total * 100
+                                : undefined
+                            }
+                        />
                     )}
+
+                    {!error && isScheduled && (
+                        <Progress
+                            className={css.progress}
+                            message={t('initializingTheApplication')}
+                        />
+                    )}
+
+                    {/*{!calculating && !executing && !error && !isScheduled && (*/}
+                    {/*    <div className={css.emptyMessage}>*/}
+                    {/*        {t('clickApplyToSeeTheResult')}*/}
+                    {/*    </div>*/}
+                    {/*)}*/}
 
                     {!calculating && !executing && error && (
                         <div className={css.error}>

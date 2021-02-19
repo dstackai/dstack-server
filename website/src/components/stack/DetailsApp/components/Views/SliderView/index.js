@@ -1,5 +1,5 @@
 // @flow
-import React, {useEffect, useMemo} from 'react';
+import React, {useEffect, useState, useMemo} from 'react';
 import {useDebounce} from 'react-use';
 import SliderField from 'components/SliderField';
 
@@ -19,7 +19,7 @@ type Props = {
 }
 
 const SliderView = ({className, view, disabled, debounce, onChange: onChangeProp}: Props) => {
-    const [value, setValue] = useEffect(view.selected);
+    const [value, setValue] = useState(view.selected);
 
     useEffect(() => setValue(view.selected), [view]);
 

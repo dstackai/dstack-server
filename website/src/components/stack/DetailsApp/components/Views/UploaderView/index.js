@@ -1,5 +1,5 @@
 // @flow
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {FileField} from 'components/kit';
 
 import type {TView} from '../types';
@@ -16,7 +16,7 @@ type Props = {
 }
 
 const UploaderView = ({className, view, disabled, onChange: onChangeProp}: Props) => {
-    const [files, setFiles] = useEffect(view.uploads);
+    const [files, setFiles] = useState(view.uploads);
 
     useEffect(() => setFiles(view.data), [view]);
 
