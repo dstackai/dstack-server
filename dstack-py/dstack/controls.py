@@ -597,13 +597,13 @@ def unpack_view(source: ty.Dict) -> View:
                           source.get("label"), source.get("container"),
                           source.get("colspan"), source.get("rowspan"))
     elif type == "UploaderView":
-        uploads = [Upload(u["id"], u["file_name"], u["length"],
+        uploads = [Upload(u["id"], u.get("file_name"), u.get("length"),
                           datetime.strptime(u["created_date"], "%Y-%m-%d").date()) for u in source["uploads"]]
         return UploaderView(source["id"], uploads, source.get("multiple"), source.get("enabled"),
                             source.get("label"), source.get("optional"), source.get("container"),
                             source.get("colspan"), source.get("rowspan"))
     elif type == "OutputView":
-        return OutputView(source["id"], source["data"], source.get("enabled"), source.get("label"),
+        return OutputView(source["id"], source.get("data"), source.get("enabled"), source.get("label"),
                           source.get("optional"), source.get("container"),
                           source.get("colspan"), source.get("rowspan"))
     else:
