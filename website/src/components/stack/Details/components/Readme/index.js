@@ -1,6 +1,6 @@
 import React, {useEffect, useState, useRef} from 'react';
 import {useTranslation, Trans} from 'react-i18next';
-import {get} from 'lodash-es';
+import get from 'lodash/get';
 import ReactMarkdown from 'react-markdown';
 import cn from 'classnames';
 import Button from 'components/Button';

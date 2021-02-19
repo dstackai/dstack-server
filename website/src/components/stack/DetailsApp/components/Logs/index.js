@@ -1,5 +1,6 @@
 // @flow
 import React, {useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import moment from 'moment';
 import cx from 'classnames';
 import Button from 'components/Button';
@@ -12,6 +13,7 @@ type Props = {
 }
 
 const Logs = ({date, logs, className}: Props) => {
+    const {t} = useTranslation();
     const [logsExpand, setExpandLogs] = useState(false);
 
     const toggle = () => setExpandLogs(value => !value);

@@ -1,6 +1,6 @@
 // @flow
 import React, {useState} from 'react';
-import {useDebounce} from 'react-use';
+import {useDebounce} from 'hooks';
 import TextField from 'components/TextField';
 import TextAreaField from 'components/TextAreaField';
 
@@ -20,10 +20,10 @@ type Props = {
 
 
 const InputView = ({className, view, disabled, debounce = 300, onChange: onChangeProp}: Props) => {
-    const [value, setValue] = useState(view.data);
+    const [value, setValue] = useState(view.data || '');
     const [isFocus, setIsFocus] = useState(false);
 
-    const onChangePropDebounce = useDebounce(view => onChangeProp(view), debounce, [debounce, onChangeProp]);
+    const onChangePropDebounce = useDebounce(onChangeProp, debounce, [debounce, onChangeProp]);
 
     const onChange = (event: Event<HTMLInputElement | HTMLTextAreaElement>) => {
         setValue(event.target.value);
@@ -31,7 +31,7 @@ const InputView = ({className, view, disabled, debounce = 300, onChange: onChang
         if (onChangeProp)
             onChangePropDebounce({
                 ...view,
-                data: value,
+                data: event.target.value,
             });
     };
 

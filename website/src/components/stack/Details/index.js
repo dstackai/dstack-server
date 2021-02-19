@@ -3,10 +3,11 @@
 import React, {useEffect, useState, useRef, useCallback} from 'react';
 import cx from 'classnames';
 import {useTranslation} from 'react-i18next';
-import {isEqual, get} from 'lodash-es';
+import get from 'lodash/get';
+import isEqual from 'lodash/isEqual';
+import _debounce from 'lodash/debounce';
 import usePrevious from 'hooks/usePrevious';
 import {Link} from 'react-router-dom';
-import {debounce as _debounce} from 'lodash-es';
 import BackButton from 'components/BackButton';
 import Share from 'components/Share';
 import PermissionUsers from 'components/PermissionUsers';

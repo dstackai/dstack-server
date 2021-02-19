@@ -2,7 +2,7 @@
 
 import React, {useEffect, useState, useRef, Fragment} from 'react';
 import useSWR from 'swr';
-import {get} from 'lodash-es';
+import get from 'lodash/get';
 import {useTranslation} from 'react-i18next';
 import {Link, useHistory, useLocation, useParams} from 'react-router-dom';
 import {connect} from 'react-redux';

@@ -2,7 +2,8 @@
 
 import React, {useEffect, useState, useRef, useMemo} from 'react';
 import cx from 'classnames';
-import {isEqual, get} from 'lodash-es';
+import get from 'lodash/get';
+import isEqual from 'lodash/isEqual';
 import {usePrevious} from 'react-use';
 import {useTranslation} from 'react-i18next';
 import {Link, useParams} from 'react-router-dom';
@@ -170,14 +171,14 @@ const Details = ({
     };
 
     const onChangeView = (view: TView) => {
-        console.log(view);
-
         setExecuteData(prevState => {
             const newState = {
                 ...prevState,
                 lastUpdate: Date.now(),
                 views: prevState.views.map(v => v.id !== view.id ? v : view),
             };
+
+            console.log('onChangeView', view.selected, view.data);
 
             if (!hasApplyButton && !isEqual(prevState.views, newState.views))
                 submit(newState.views);

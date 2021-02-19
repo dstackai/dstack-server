@@ -23,7 +23,7 @@ type Props = {
     onChange: (TView) => void,
 }
 
-const debounce = 300;
+const debounce = 1000;
 
 const Views = ({className, views, container = 'main', disabled, onApplyClick, onChange}: Props) => {
     const containerViews = useMemo(() => {
@@ -43,8 +43,6 @@ const Views = ({className, views, container = 'main', disabled, onApplyClick, on
 
     if (!containerViews?.length)
         return null;
-
-    console.log(container, containerViews);
 
     return (
         <div className={cn(css.views, css[container], className)}>

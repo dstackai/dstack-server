@@ -1,6 +1,6 @@
 // @flow
 import React, {useEffect, useState, useMemo} from 'react';
-import {useDebounce} from 'react-use';
+import {useDebounce} from 'hooks';
 import SliderField from 'components/SliderField';
 
 import type {TView} from '../types';
@@ -18,12 +18,19 @@ type Props = {
     debounce?: number,
 }
 
-const SliderView = ({className, view, disabled, debounce, onChange: onChangeProp}: Props) => {
-    const [value, setValue] = useState(view.selected);
+const selectedToValue = (selected: TSliderView.selected, data: TSliderView.data): ?number => {
+    if (!Array.isArray(data))
+        return null;
 
-    useEffect(() => setValue(view.selected), [view]);
+    return data[selected];
+};
 
-    const onChangePropDebounce = useDebounce(view => onChangeProp(view), debounce, [debounce, onChangeProp]);
+const SliderView = ({className, view, disabled, debounce = 300, onChange: onChangeProp}: Props) => {
+    const [value, setValue] = useState(selectedToValue(view.selected, view.data));
+
+    useEffect(() => setValue(selectedToValue(view.selected, view.data)), [view]);
+
+    const onChangePropDebounce = useDebounce(onChangeProp, debounce, [debounce, onChangeProp]);
 
     const {min, max, options} = useMemo(() => {
         return {
@@ -37,13 +44,14 @@ const SliderView = ({className, view, disabled, debounce, onChange: onChangeProp
         };
     }, [view.titles]);
 
-    const onChange = value => {
-        setValue(value);
+
+    const onChange = (event: {target: {value: number}}) => {
+        setValue(event.target.value);
 
         if (onChangeProp)
             onChangePropDebounce({
                 ...view,
-                selected: value,
+                selected: view.data.indexOf(event.target.value),
             });
     };
 
@@ -59,7 +67,7 @@ const SliderView = ({className, view, disabled, debounce, onChange: onChangeProp
             min={min}
             max={max}
             marks={options}
-            disabled={disabled || !view.disabled}
+            disabled={disabled || !view.enabled}
         />
     );
 };

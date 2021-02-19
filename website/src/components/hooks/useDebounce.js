@@ -1,6 +1,6 @@
 // @flow
 import {useCallback} from 'react';
-import {debounce as _debounce} from 'lodash-es';
+import _debounce from 'lodash/debounce';
 
 export default (callback: Function, depsOrDelay: Array<any> | number, deps: Array<any>) => {
     let delay = 300;

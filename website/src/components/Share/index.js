@@ -1,6 +1,7 @@
 // @flow
 import React, {useState, useEffect, Fragment, useMemo} from 'react';
-import {isEqual, get} from 'lodash-es';
+import get from 'lodash/get';
+import isEqual from 'lodash/isEqual';
 import {useTranslation} from 'react-i18next';
 import cx from 'classnames';
 import useDebounce from 'hooks/useDebounce';

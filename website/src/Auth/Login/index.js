@@ -2,7 +2,7 @@
 import React, {useState} from 'react';
 import {connect} from 'react-redux';
 import {Link} from 'react-router-dom';
-import {get} from 'lodash-es';
+import get from 'lodash/get';
 import {useTranslation} from 'react-i18next';
 import Auth from 'Auth';
 import TextField from 'components/TextField';
