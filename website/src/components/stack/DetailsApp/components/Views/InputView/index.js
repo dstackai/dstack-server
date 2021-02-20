@@ -25,6 +25,8 @@ const InputView = ({className, view, disabled, debounce = 300, onChange: onChang
 
     const onChangePropDebounce = useDebounce(onChangeProp, debounce, [debounce, onChangeProp]);
 
+    const testDebounce = useDebounce(console.log, debounce, [debounce, onChangeProp]);
+
     const onChange = (event: Event<HTMLInputElement | HTMLTextAreaElement>) => {
         setValue(event.target.value);
 
@@ -33,6 +35,8 @@ const InputView = ({className, view, disabled, debounce = 300, onChange: onChang
                 ...view,
                 data: event.target.value,
             });
+
+        testDebounce('test--------------', event.target.value);
     };
 
     const onFocus = () => setIsFocus(true);

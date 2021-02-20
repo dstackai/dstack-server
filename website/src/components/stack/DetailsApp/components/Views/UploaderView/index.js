@@ -18,7 +18,7 @@ type Props = {
 const UploaderView = ({className, view, disabled, onChange: onChangeProp}: Props) => {
     const [files, setFiles] = useState(view.uploads);
 
-    useEffect(() => setFiles(view.data), [view]);
+    useEffect(() => setFiles(view.uploads), [view]);
 
     const onChange = files => {
         setFiles(files);
@@ -26,7 +26,7 @@ const UploaderView = ({className, view, disabled, onChange: onChangeProp}: Props
         if (onChangeProp)
             onChangeProp({
                 ...view,
-                data: files,
+                uploads: files,
             });
     };
 
@@ -39,7 +39,7 @@ const UploaderView = ({className, view, disabled, onChange: onChangeProp}: Props
             name={view.id}
             multiple={view.multiple}
             files={files}
-            disabled={disabled || view?.enabled}
+            disabled={disabled || !view?.enabled}
             appearance={view.colspan > 2 ? 'normal' : 'compact'}
         />
     );
