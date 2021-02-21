@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {get as _get} from 'lodash-es';
+import _get from 'lodash/get';
 import actionsTypes from './actionsTypes';
 import config from 'config';
 import {useStateValue} from './store';

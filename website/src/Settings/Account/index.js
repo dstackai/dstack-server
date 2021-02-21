@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef, useCallback} from 'react';
-import {debounce as _debounce} from 'lodash-es';
+import _debounce from 'lodash/debounce';
 import {useTranslation} from 'react-i18next';
 import {connect} from 'react-redux';
 import Button from 'components/Button';

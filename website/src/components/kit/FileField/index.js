@@ -1,7 +1,8 @@
 // @flow
 import React, {useEffect, useRef, useState, Fragment} from 'react';
 import cn from 'classnames';
-import {pick, isEqual} from 'lodash-es';
+import pick from 'lodash/pick';
+import isEqual from 'lodash/isEqual';
 import axios from 'axios';
 import {useTranslation} from 'react-i18next';
 import {formatBytes, checkAvailableExtension} from 'utils';

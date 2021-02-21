@@ -1,7 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import axios from 'axios';
 import cx from 'classnames';
-import {get, isEqual} from 'lodash-es';
+import get from 'lodash/get';
+import isEqual from 'lodash/isEqual';
 import View from './View';
 import config from 'config';
 import usePrevious from 'hooks/usePrevious';

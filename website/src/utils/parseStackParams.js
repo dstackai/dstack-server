@@ -1,4 +1,4 @@
-import {uniq} from 'lodash-es';
+import uniq from 'lodash/uniq';
 
 export default (attachments, tab) => {
     const fields = {};

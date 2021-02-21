@@ -1,5 +1,5 @@
 import actionsTypes from './actionsTypes';
-import {get as _get} from 'lodash-es';
+import _get from 'lodash/get';
 
 const initial = {
     loading: false,

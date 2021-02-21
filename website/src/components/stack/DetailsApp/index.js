@@ -1,31 +1,31 @@
 // @flow
 
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef, useMemo} from 'react';
 import cx from 'classnames';
-import {isEqual, get} from 'lodash-es';
-import {useDebounce} from 'react-use';
-import moment from 'moment';
+import get from 'lodash/get';
+import isEqual from 'lodash/isEqual';
+import {usePrevious} from 'react-use';
 import {useTranslation} from 'react-i18next';
 import {Link, useParams} from 'react-router-dom';
-import Button from 'components/Button';
 import BackButton from 'components/BackButton';
 import Share from 'components/Share';
 import PermissionUsers from 'components/PermissionUsers';
-import StackFilters from 'components/StackFilters';
 import Markdown from 'components/stack/Markdown';
-import StackAttachment from 'components/stack/Attachment';
 import Loader from 'components/stack/Details/components/Loader';
 import Tabs from 'components/stack/Details/components/Tabs';
 import Readme from 'components/stack/Details/components/Readme';
 import RefreshMessage from 'components/stack/Details/components/RefreshMessage';
 import Progress from './components/Progress';
 import FilterLoader from './components/Loader';
+import Logs from './components/Logs';
+import Views, {VIEWS} from './components/Views';
 import actions from '../actions';
-import useForm from 'hooks/useForm';
-import {parseStackTabs, parseStackViews} from 'utils';
+import {parseStackTabs} from 'utils';
 import {useAppStore} from 'AppStore';
 import Avatar from 'components/Avatar';
 import css from './styles.module.css';
+
+import type {TView} from './components/Views/types';
 
 const REFRESH_INTERVAL = 1000;
 
@@ -39,20 +39,16 @@ const STATUSES = Object.freeze({
 
 type Props = {
     loading: boolean,
-    currentFrameId: number,
     attachmentIndex: number,
     frame: ?{},
     data: {},
     backUrl: string,
     user: string,
     stack: string,
-    headId: number,
     executionId: string,
-    onChangeHeadFrame: Function,
     onChangeAttachmentIndex: Function,
     onChangeExecutionId: Function,
     onUpdateReadme: Function,
-    onChangeFrame: Function,
     changeAccessLevel: Function,
     updatePermissions: Function,
 
@@ -83,18 +79,16 @@ const Details = ({
     const params = useParams();
     const didMountRef = useRef(false);
     const pollTimeoutRef = useRef(null);
-    const {form, setForm, onChange} = useForm({});
-    const [fields, setFields] = useState({});
-    const [logsExpand, setExpandLogs] = useState(false);
     const [executeData, setExecuteData] = useState(null);
     const [executing, setExecuting] = useState(false);
     const [calculating, setCalculating] = useState(false);
     const [error, setError] = useState(null);
-    const [appAttachments, setAppAttachment] = useState(null);
     const [isScheduled, setIsScheduled] = useState(false);
     const [activeTab, setActiveTab] = useState();
     const [tabs, setTabs] = useState([]);
     const {executeStack, pollStack} = actions();
+
+    const prevExecuteData = usePrevious(executeData);
 
     const [{currentUser}] = useAppStore();
     const currentUserName = currentUser.data?.user;
@@ -103,40 +97,16 @@ const Details = ({
     const stackName = data?.name;
     const frameId = data?.head?.id;
 
-    const getFormFromViews = views => {
-        if (!views || !Array.isArray(views))
-            return {};
+    const withSidebar = useMemo(() => {
+        return (executeData?.views || []).some(v => v.container === 'sidebar');
+    }, [executeData]);
 
-        return views.reduce((result, view, index) => {
-            switch (view.type) {
-                case 'ApplyView':
-                    return result;
-                case 'SliderView':
-                    result[index] = view.data[view.selected];
-                    break;
-                case 'ComboBoxView':
-                    result[index] = view.selected;
-                    break;
-                case 'CheckBoxView':
-                    result[index] = view.selected;
-                    break;
-                case 'FileUploaderView':
-                    result[index] = view.uploads;
-                    break;
-                default:
-                    result[index] = view.data;
-            }
+    const hasApplyButton = useMemo(() => {
+        if (!executeData?.views || !Array.isArray(executeData.views))
+            return false;
 
-            return result;
-        }, {});
-    };
-
-    const omitFieldsFromViews = (views, fieldNames: Array<string>) => {
-        if (!views || !Array.isArray(views) || !fieldNames.length)
-            return views;
-
-        return views.filter(v => fieldNames.indexOf(v.type) < 0);
-    };
+        return executeData.views.some(view => view.type === VIEWS.APPLY);
+    }, [executeData]);
 
     const setActiveExecutionId = (value?: string) => {
         if (typeof onChangeExecutionId === 'function')
@@ -153,37 +123,13 @@ const Details = ({
     };
 
     const updateExecuteData = data => {
-        const fields = parseStackViews(data?.views);
-
-        const isEmptyForm = fields.length && data?.views && !Object.keys(form).length;
-
-        const newForm = getFormFromViews(
-            isEmptyForm
-                ? omitFieldsFromViews(data?.views, [])
-                : data?.views
-        );
-
-        setFields(fields);
-
-        setForm(prevState => ({
-            ...prevState,
-            ...newForm,
-        }));
-
         setExecuteData({
             lastUpdate: Date.now(),
             ...data,
         });
     };
 
-    const hasApplyButton = () => {
-        if (!executeData?.views || !Array.isArray(executeData.views))
-            return false;
-
-        return executeData.views.some(view => view.type === 'ApplyView');
-    };
-
-    const submit = (form, apply = true) => {
+    const submit = (views = [], apply = true) => {
         setExecuting(true);
 
         if (apply)
@@ -195,27 +141,11 @@ const Details = ({
             frame: frameId,
             attachment: attachmentIndex || 0,
             apply,
-            views: executeData?.views && executeData.views.map((view, index) => {
-                switch (view.type) {
-                    case 'ApplyView':
-                        return view;
-                    case 'CheckBoxView':
-                        view.selected = form[index];
-                        break;
-                    case 'ComboBoxView':
-                        view.selected = form[index];
-                        break;
-                    case 'SliderView':
-                        view.selected = view.data.findIndex(i => i === form[index]);
-                        break;
-                    case 'FileUploaderView':
-                        view.uploads = form[index];
-                        break;
-                    default:
-                        view.data = form[index];
-                }
+            views: views.map(v => {
+                if (v.type === VIEWS.OUTPUT)
+                    delete v.data;
 
-                return view;
+                return v;
             }),
         })
             .then(data => {
@@ -240,30 +170,40 @@ const Details = ({
             });
     };
 
-    useDebounce(() => {
-        if (!isEqual(form, getFormFromViews(executeData?.views)) && !executing) {
-            submit(form, !!(!hasApplyButton() && appAttachments));
-        }
-    }, 300, [form]);
+    const onChangeView = (view: TView) => {
+        setExecuteData(prevState => {
+            const newState = {
+                ...prevState,
+                lastUpdate: Date.now(),
+                views: prevState.views.map(v => v.id !== view.id ? v : view),
+            };
 
-    const onApply = () => submit(form);
+            console.log('onChangeView', view.selected, view.data);
 
-    const onReset = () => {
-        startExecute();
-        setForm({});
+            if (!hasApplyButton && !isEqual(prevState.views, newState.views))
+                submit(newState.views);
+
+            return newState;
+        });
     };
 
+    const onApply = () => submit(executeData?.views);
+    //
+    // const onReset = () => {
+    //     startExecute();
+    // };
+
     useEffect(() => {
-        if (executeData && executeData.status === STATUSES.READY && !appAttachments && !executing) {
-            if (!hasApplyButton())
-                submit(form, true);
-        }
+        if (executing)
+            return;
+
+        if (executeData?.status === STATUSES.READY && !prevExecuteData)
+            submit(executeData?.views, !hasApplyButton);
     }, [executeData]);
 
     const startExecute = () => {
         setExecuting(true);
         setExecuteData(null);
-        setAppAttachment(null);
 
         executeStack({
             user: stackOwner,
@@ -309,7 +249,6 @@ const Details = ({
             } else {
                 setExecuting(true);
                 setCalculating(true);
-                setAppAttachment(null);
                 checkFinished({id: executionId, isUpdateData: true});
             }
         }
@@ -394,7 +333,6 @@ const Details = ({
                     onChangeExecutionId(tab.executionId);
 
                 setExecuteData(null);
-                setForm({});
                 onChangeAttachmentIndex(index);
 
                 return true;
@@ -435,9 +373,6 @@ const Details = ({
                 }
 
                 if ([STATUSES.FINISHED, STATUSES.READY].indexOf(data.status) >= 0) {
-                    if (data.outputs)
-                        setAppAttachment(data.outputs);
-
                     if (isUpdateData) {
                         setExecuting(false);
                         updateExecuteData(data);
@@ -469,13 +404,6 @@ const Details = ({
 
     if (loading)
         return <Loader />;
-
-    const withSidebar = Object.keys(fields).some((key, index) => {
-        if (fields[key].type === 'textarea')
-            return true;
-
-        return index >= 3;
-    });
 
     const attachment = getCurrentAttachment(activeTab);
 
@@ -561,39 +489,25 @@ const Details = ({
                         </Markdown>
                     )}
 
-                    <StackFilters
-                        fields={fields}
-                        form={form}
-                        onChange={onChange}
-                        onApply={onApply}
-                        onReset={onReset}
-                        className={css.filters}
-                        isSidebar={withSidebar}
-                        disabled={executing || calculating}
-                    />
+                    {Boolean(executeData?.views?.length) && (
+                        <Views
+                            className={css.sidebar}
+                            container="sidebar"
+                            onApplyClick={onApply}
+                            onChange={onChangeView}
+                            views={executeData?.views}
+                            disabled={calculating || executing}
+                        />
+                    )}
 
-                    {appAttachments && appAttachments.length && !calculating && (
-                        <div className={css.attachmentsGrid}>
-                            {
-                                appAttachments.map((attach, index) => (
-                                    <StackAttachment
-                                        key={index}
-
-                                        className={cx(css.attachment, {
-                                            noOne: appAttachments.length > 1,
-
-                                            withMaxHeight: (
-                                                attach['content_type'] === 'text/csv'
-                                                || attachment['application'] === 'attach'
-                                            ),
-                                        })}
-
-                                        stack={`${user}/${stack}`}
-                                        customData={attach}
-                                    />
-                                ))
-                            }
-                        </div>
+                    {Boolean(executeData?.views?.length) && (
+                        <Views
+                            className={css.views}
+                            onApplyClick={onApply}
+                            onChange={onChangeView}
+                            views={executeData?.views}
+                            disabled={calculating || executing}
+                        />
                     )}
 
                     {calculating && !isScheduled && (
@@ -608,18 +522,18 @@ const Details = ({
                         />
                     )}
 
-                    {!appAttachments && !error && isScheduled && (
+                    {!error && isScheduled && (
                         <Progress
                             className={css.progress}
                             message={t('initializingTheApplication')}
                         />
                     )}
 
-                    {!calculating && !executing && !appAttachments && !error && !isScheduled && (
-                        <div className={css.emptyMessage}>
-                            {t('clickApplyToSeeTheResult')}
-                        </div>
-                    )}
+                    {/*{!calculating && !executing && !error && !isScheduled && (*/}
+                    {/*    <div className={css.emptyMessage}>*/}
+                    {/*        {t('clickApplyToSeeTheResult')}*/}
+                    {/*    </div>*/}
+                    {/*)}*/}
 
                     {!calculating && !executing && error && (
                         <div className={css.error}>
@@ -629,27 +543,11 @@ const Details = ({
                         </div>
                     )}
 
-                    {executeData.logs && (
-                        <div className={css.logs}>
-                            <Button
-                                className={css.logsButton}
-                                color="primary"
-                                onClick={() => setExpandLogs(value => !value)}
-                                size="small"
-                            >
-                                {t('logs')}
-                                <span className={`mdi mdi-arrow-${logsExpand ? 'collapse' : 'expand'}`} />
-                            </Button>
-
-                            <div className={cx(css.logsExpand, {open: logsExpand})}>
-                                <div className={css.fromAgo}>{t('updated')} {moment(executeData.date).fromNow()}</div>
-
-                                <div className={css.log}>
-                                    {executeData.logs}
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    {executeData.logs && <Logs
+                        className={css.logs}
+                        logs={executeData.logs}
+                        date={executeData.date}
+                    />}
                 </div>
             )}
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import {get} from 'lodash-es';
+import get from 'lodash/get';
 import {Link} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
 import cx from 'classnames';

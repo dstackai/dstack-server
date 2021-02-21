@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {get as _get} from 'lodash-es';
+import _get from 'lodash/get';
 import config from 'config';
 
 export const CancelToken = axios.CancelToken;

@@ -1,0 +1,39 @@
+@import "styles/variables.css";
+@import "styles/media.css";
+
+.logs {
+    & .logsButton {
+        padding: 0 !important;
+        outline: none;
+        & :global(.mdi) {
+            font-size: 14px;
+            padding-left: 4px;
+        }
+    }
+    & .logsExpand {
+        overflow: hidden;
+        transition: max-height .5s ease-out;
+        &:not(:global(.open)) {
+            max-height: 0;
+        }
+        &:global(.open) {
+            max-height: 440px;
+        }
+    }
+    & .fromAgo {
+        padding-top: 16px;
+        font-size: 13px;
+        line-height: 16px;
+        color: rgba(48, 52, 64, 0.5);
+    }
+    & .log {
+        font-family: "Roboto Mono", monospace;
+        margin-top: 6px;
+        font-size: 13px;
+        line-height: 18px;
+        color: #303440;
+        white-space: pre-wrap;
+        overflow-y: auto;
+        max-height: 412px;
+    }
+}

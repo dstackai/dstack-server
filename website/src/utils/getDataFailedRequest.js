@@ -1,4 +1,4 @@
-import {get as _get} from 'lodash-es';
+import _get from 'lodash/get';
 
 const getDataFailedRequest = responseError => {
     let error = 'Unknown error';
