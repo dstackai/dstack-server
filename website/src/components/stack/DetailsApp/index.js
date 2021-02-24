@@ -171,6 +171,8 @@ const Details = ({
     };
 
     const onChangeView = (view: TView) => {
+        let newViews;
+
         setExecuteData(prevState => {
             const newState = {
                 ...prevState,
@@ -178,13 +180,13 @@ const Details = ({
                 views: prevState.views.map(v => v.id !== view.id ? v : view),
             };
 
-            console.log('onChangeView', view.selected, view.data);
-
-            if (!hasApplyButton && !isEqual(prevState.views, newState.views))
-                submit(newState.views);
+            newViews = newState.views;
 
             return newState;
         });
+
+        if (!hasApplyButton && !isEqual(executeData.views, newViews))
+            submit(newViews);
     };
 
     const onApply = () => submit(executeData?.views);
