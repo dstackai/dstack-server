@@ -1,0 +1,19 @@
+@import "styles/variables.css";
+@import "styles/media.css";
+
+.outputView {
+    display: flex;
+    flex-direction: column;
+
+    & .label {
+        flex-shrink: 0;
+        font-weight: 500;
+        font-size: 16px;
+        line-height: 19px;
+        margin-bottom: 14px;
+    }
+    .view {
+        flex-grow: 1;
+        min-height: 0;
+    }
+}

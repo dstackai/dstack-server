@@ -10,7 +10,7 @@
     }
 }
 .label {
-    -webkit-flex-shrink: 0;
+    flex-shrink: 0;
     font-weight: 500;
     font-size: 16px;
     line-height: 19px;

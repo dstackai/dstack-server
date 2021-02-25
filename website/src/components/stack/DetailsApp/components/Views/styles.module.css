@@ -17,9 +17,42 @@
     & .cell {
         grid-column: span 2;
         grid-row: span 1;
-        &:global(.OutputView) {
-            display: flex;
-            flex-direction: column;
+        display: flex;
+        flex-direction: column;
+        &:not(.output, .input) {
+            align-self: flex-end;
+        }
+        &.checkbox {
+            min-height: 32px;
+            justify-content: center;
+        }
+    }
+    & .view {
+        flex-grow: 1;
+        min-height: 0;
+        &.input {
+            padding-bottom: 0;
+        }
+        &.select {
+            padding-bottom: 0;
+        }
+        &.checkbox {
+            padding-bottom: 0;
+        }
+        &.uploader {
+            padding-bottom: 0;
+        }
+        &.slider {
+            min-height: 32px;
+        }
+        &.apply {
+
+        }
+        &.uplodaer {
+
+        }
+        &.output {
+
         }
     }
 }

@@ -64,6 +64,7 @@ const InputView = ({className, view, disabled, debounce = 300, onChange: onChang
                 disabled={(disabled && !isFocus) || !view.enabled}
                 onFocus={onFocus}
                 onBlur={onBlur}
+                style={{height: 'auto'}}
             />
         );
 };

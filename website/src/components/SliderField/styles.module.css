@@ -3,7 +3,8 @@
   display: flex;
   align-items: center;
   & .slider {
-    width: 150px;
+    flex-grow: 1;
+    min-width: 150px;
   }
   &:global(.disabled) {
     opacity: .5;
