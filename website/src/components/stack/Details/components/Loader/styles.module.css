@@ -11,7 +11,9 @@
     width: 490px;
     height: 34px;
     background: linear-gradient(90deg, #F7F9FB -3.86%, #EEF1F3 34.95%, #FDFDFD 107.97%);
-    animation: stacks-pulse 1.5s infinite;
+    :global {
+        animation: loader-pulse 1.5s infinite;
+    }
 
 }
 .label {
@@ -19,33 +21,26 @@
     width: 175px;
     height: 20px;
     background: linear-gradient(90deg, #F7F9FB -3.86%, #EEF1F3 34.95%, #FDFDFD 107.97%);
-    animation: stacks-pulse 1.5s infinite;
+    :global {
+        animation: loader-pulse 1.5s infinite;
+    }
 }
 .description {
     margin-top: 43px;
     width: 459px;
     height: 20px;
     background: linear-gradient(90deg, #F7F9FB -3.86%, #EEF1F3 34.95%, #FDFDFD 107.97%);
-    animation: stacks-pulse 1.5s infinite;
+    :global {
+        animation: loader-pulse 1.5s infinite;
+    }
 }
 .diagram {
     margin-top: 20px;
     width: 570px;
     height: 369px;
     background: linear-gradient(90deg, #F7F9FB -3.86%, #EEF1F3 34.95%, #FDFDFD 107.97%);
-    animation: stacks-pulse 1.5s infinite;
-}
-
-@keyframes stacks-pulse {
-    0% {
-        opacity: .6;
-    }
-    50% {
-        opacity: 1;
-    }
-    100% {
-        opacity: .6;
+    :global {
+        animation: loader-pulse 1.5s infinite;
     }
 }
-
 

@@ -142,7 +142,9 @@
     height: 50px;
     max-width: 400px;
     background: linear-gradient(90deg, #F7F9FB -3.86%, #EEF1F3 34.95%, #FDFDFD 107.97%);
-    animation: stacks-pulse 1.5s infinite;
+    :global {
+        animation: loader-pulse 1.5s infinite;
+    }
 }
 
 .modal {

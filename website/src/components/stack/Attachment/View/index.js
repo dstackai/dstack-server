@@ -22,15 +22,15 @@ const base64ImagePrefixes = {
 
 type Props = {
     className?: string,
-    frameId: string,
+    id: string,
     fullAttachment?: {},
     attachment: {},
     requestStatus?: ?number,
-    stack: string,
+    stack?: string,
 }
 
 
-const View = ({frameId, attachment, fullAttachment, className, requestStatus, stack}: Props) => {
+const View = ({id, attachment, fullAttachment, className, requestStatus, stack = ''}: Props) => {
     const {t} = useTranslation();
     const viewRef = useRef();
     const [noRender, setNoRender] = useState(false);
@@ -56,8 +56,8 @@ const View = ({frameId, attachment, fullAttachment, className, requestStatus, st
                 Bokeh = window.Bokeh;
             }
 
-            if (json && document.querySelector(`#bokeh-${frameId}`))
-                Bokeh.embed.embed_item(json, `bokeh-${frameId}`);
+            if (json && document.querySelector(`#bokeh-${id}`))
+                Bokeh.embed.embed_item(json, `bokeh-${id}`);
         }
     }, [attachment]);
 
@@ -186,7 +186,7 @@ model = ds.pull(${a.join(', ')})`;
         </div>;
     };
 
-    const renderBokeh = () => <div id={`bokeh-${frameId}`} />;
+    const renderBokeh = () => <div id={`bokeh-${id}`} />;
 
     const renderAttachment = () => {
         if (noRender)

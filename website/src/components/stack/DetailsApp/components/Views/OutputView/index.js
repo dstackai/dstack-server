@@ -13,18 +13,21 @@ type Props = {
 }
 
 const OutputView = ({className, view}: Props) => {
-    // TODO исправить имя стека
-
     return (
         <div className={cn(css.outputView, className)}>
             {view.label && <div className={css.label}>{view.label}</div>}
 
-            <StackView
-                className={css.view}
-                frameId={''}
-                attachment={view}
-                stack={''}
-            />
+            {!view?.data && (
+                <div className={css.loader} />
+            )}
+
+            {view?.data && (
+                <StackView
+                    className={css.view}
+                    id={view.id}
+                    attachment={view}
+                />
+            )}
         </div>
     );
 };

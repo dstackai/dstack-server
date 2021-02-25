@@ -12,7 +12,9 @@
     height: 22px;
     background: linear-gradient(90deg, #F7F9FB -3.86%, #EEF1F3 34.95%, #FDFDFD 107.97%);
     border-radius: 4px;
-    animation: stacks-pulse 1.5s infinite;
+    :global {
+        animation: loader-pulse 1.5s infinite;
+    }
 }
 .grid {
     margin-top: 24px;
@@ -29,7 +31,9 @@
     & .pic {
         background: linear-gradient(90deg, #F7F9FB -3.86%, #EEF1F3 34.95%, #FDFDFD 107.97%);
         border-radius: 4px;
-        animation: stacks-pulse 1.5s infinite;
+        :global {
+            animation: loader-pulse 1.5s infinite;
+        }
         &::before {
             content: "";
             display: block;
@@ -46,18 +50,9 @@
         height: 24px;
         background: linear-gradient(90deg, #F7F9FB -3.86%, #EEF1F3 34.95%, #FDFDFD 107.97%);
         border-radius: 4px;
-        animation: stacks-pulse 1.5s infinite;
-    }
-}
-@keyframes stacks-pulse {
-    0% {
-        opacity: .6;
-    }
-    50% {
-        opacity: 1;
-    }
-    100% {
-        opacity: .6;
+        :global {
+            animation: loader-pulse 1.5s infinite;
+        }
     }
 }
 

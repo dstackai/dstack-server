@@ -6,7 +6,9 @@
     flex-direction: column;
     &:global(.loading) {
         background: linear-gradient(90deg, #F7F9FB -3.86%, #EEF1F3 34.95%, #FDFDFD 107.97%);
-        animation: loading-pulse 1.5s infinite;
+        :global {
+            animation: loader-pulse 1.5s infinite;
+        }
     }
 }
 .label {
@@ -19,15 +21,4 @@
 .view {
     flex-grow: 1;
     flex-basis: 100% !important;
-}
-@keyframes loading-pulse {
-    0% {
-        opacity: .6;
-    }
-    50% {
-        opacity: 1;
-    }
-    100% {
-        opacity: .6;
-    }
 }

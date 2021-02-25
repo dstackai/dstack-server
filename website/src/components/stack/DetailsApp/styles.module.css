@@ -201,10 +201,11 @@
     grid-area: description;
 }
 .description + .views {
+    grid-area: content;
     margin-top: 20px;
 }
 .views {
-    grid-area: content;
+    grid-area: description / content;
     min-width: 0;
 }
 .progress {

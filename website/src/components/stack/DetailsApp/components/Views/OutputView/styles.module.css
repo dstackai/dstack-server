@@ -4,7 +4,6 @@
 .outputView {
     display: flex;
     flex-direction: column;
-
     & .label {
         flex-shrink: 0;
         font-weight: 500;
@@ -12,8 +11,15 @@
         line-height: 19px;
         margin-bottom: 14px;
     }
-    .view {
+    & .loader,
+    & .view {
         flex-grow: 1;
         min-height: 0;
+    }
+    & .loader {
+        background: linear-gradient(90deg, #F7F9FB -3.86%, #EEF1F3 34.95%, #FDFDFD 107.97%);
+        :global {
+            animation: loader-pulse 1.5s infinite;
+        }
     }
 }

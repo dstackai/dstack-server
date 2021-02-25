@@ -84,6 +84,7 @@ const Attachment = ({
 
             {!loading && (
                 <View
+                    id={frameId}
                     className={css.view}
                     requestStatus={requestStatus}
                     fullAttachment={fullAttachment}

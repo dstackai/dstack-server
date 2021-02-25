@@ -15,7 +15,6 @@ import Loader from 'components/stack/Details/components/Loader';
 import Tabs from 'components/stack/Details/components/Tabs';
 import Readme from 'components/stack/Details/components/Readme';
 import RefreshMessage from 'components/stack/Details/components/RefreshMessage';
-import Progress from './components/Progress';
 import FilterLoader from './components/Loader';
 import Logs from './components/Logs';
 import Views, {VIEWS} from './components/Views';
@@ -36,6 +35,14 @@ const STATUSES = Object.freeze({
     FINISHED: 'FINISHED',
     FAILED: 'FAILED',
 });
+
+type ExecuteData = {
+    tqdm?: {
+        desc?: string,
+        n: number,
+        total: number,
+    }
+}
 
 type Props = {
     loading: boolean,
@@ -79,7 +86,7 @@ const Details = ({
     const params = useParams();
     const didMountRef = useRef(false);
     const pollTimeoutRef = useRef(null);
-    const [executeData, setExecuteData] = useState(null);
+    const [executeData, setExecuteData]:[?ExecuteData | {}, Function] = useState(null);
     const [executing, setExecuting] = useState(false);
     const [calculating, setCalculating] = useState(false);
     const [error, setError] = useState(null);
@@ -479,11 +486,13 @@ const Details = ({
                 items={tabs}
             />}
 
-            {(!executeData && executing) && <div className={css.container}>
-                <FilterLoader className={css.filterLoader} />
-            </div>}
+            {(!executeData?.views && (executing || (!error && isScheduled))) && (
+                <div className={css.container}>
+                    <FilterLoader className={css.filterLoader} />
+                </div>
+            )}
 
-            {executeData && (
+            {executeData?.views && (
                 <div className={cx(css.container, {[css.withSidebar]: withSidebar})}>
                     {attachment?.description && (
                         <Markdown className={css.description}>
@@ -511,31 +520,6 @@ const Details = ({
                             disabled={calculating || executing}
                         />
                     )}
-
-                    {calculating && !isScheduled && (
-                        <Progress
-                            className={css.progress}
-                            message={executeData?.tqdm?.desc || t('calculatingTheData')}
-
-                            progress={executeData?.tqdm
-                                ? executeData.tqdm.n / executeData.tqdm.total * 100
-                                : undefined
-                            }
-                        />
-                    )}
-
-                    {!error && isScheduled && (
-                        <Progress
-                            className={css.progress}
-                            message={t('initializingTheApplication')}
-                        />
-                    )}
-
-                    {/*{!calculating && !executing && !error && !isScheduled && (*/}
-                    {/*    <div className={css.emptyMessage}>*/}
-                    {/*        {t('clickApplyToSeeTheResult')}*/}
-                    {/*    </div>*/}
-                    {/*)}*/}
 
                     {!calculating && !executing && error && (
                         <div className={css.error}>

@@ -19,26 +19,18 @@
 .side {
     grid-area: sidebar;
     background: linear-gradient(90deg, #F7F9FB -3.86%, #EEF1F3 34.95%, #FDFDFD 107.97%);
-    animation: filter-pulse 1.5s infinite;
+    :global {
+        animation: loader-pulse 1.5s infinite;
+    }
 }
 .content {
     grid-area: content;
     background: linear-gradient(90deg, #F7F9FB -3.86%, #EEF1F3 34.95%, #FDFDFD 107.97%);
-    animation: filter-pulse 1.5s infinite;
+    :global {
+        animation: loader-pulse 1.5s infinite;
+    }
     @media (--mobile) {
         margin-top: 16px;
-    }
-}
-
-@keyframes filter-pulse {
-    0% {
-        opacity: .6;
-    }
-    50% {
-        opacity: 1;
-    }
-    100% {
-        opacity: .6;
     }
 }
 
