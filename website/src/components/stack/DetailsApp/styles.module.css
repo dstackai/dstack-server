@@ -228,7 +228,9 @@
 .error {
     min-width: 0;
     grid-area: content;
-    margin-top: 30px;
+    &:nth-child(n+2) {
+        margin-top: 30px;
+    }
     .message {
         font-size: 14px;
         line-height: 17px;

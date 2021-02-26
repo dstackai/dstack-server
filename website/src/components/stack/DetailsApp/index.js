@@ -486,13 +486,13 @@ const Details = ({
                 items={tabs}
             />}
 
-            {(!executeData?.views && (executing || (!error && isScheduled))) && (
+            {((!executeData?.views && !executeData?.logs) && (executing || (!error && isScheduled))) && (
                 <div className={css.container}>
                     <FilterLoader className={css.filterLoader} />
                 </div>
             )}
 
-            {executeData?.views && (
+            {(executeData?.views || executeData?.logs) && (
                 <div className={cx(css.container, {[css.withSidebar]: withSidebar})}>
                     {attachment?.description && (
                         <Markdown className={css.description}>
