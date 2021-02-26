@@ -399,7 +399,7 @@ class ApplicationContainer:
               rowspan: ty.Optional[int] = None) -> Input:
         input = Input(text, handler, label, depends, require_apply, optional, self.id,
                      self.validate_colspan(colspan, minimum=2, default=2),
-                     self.validate_rowspan(rowspan, minimum=2, default=2))
+                     self.validate_rowspan(rowspan, minimum=1, default=1))
         self.controls.append(input)
         return input
 
