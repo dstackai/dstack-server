@@ -2,6 +2,7 @@ import io
 import pickle
 from abc import ABC, abstractmethod
 
+import cloudpickle
 import joblib
 
 from dstack.content import MediaType
@@ -39,6 +40,20 @@ class JoblibPersistence(Persistence):
 
     def storage(self) -> str:
         return "joblib"
+
+
+class CloudPicklePersistence(Persistence):
+    def encode(self, model):
+        return cloudpickle.dumps(model)
+
+    def decode(self, stream):
+        return cloudpickle.load(stream)
+
+    def type(self) -> MediaType:
+        return MediaType("application/octet-stream", "sklearn")
+
+    def storage(self) -> str:
+        return "cloudpickle"
 
 
 class PicklePersistence(Persistence):
