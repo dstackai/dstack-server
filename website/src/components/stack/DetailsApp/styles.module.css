@@ -177,6 +177,11 @@
     border: 1px solid rgb(233, 234, 238);
     @media (--mobile) {
         padding: 10px;
+        &.withSidebar {
+            & .views {
+                margin-top: 20px;
+            }
+        }
     }
     @media (--desktop) {
         padding: 20px;

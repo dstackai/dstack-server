@@ -7,20 +7,35 @@
         grid-template-columns: repeat(2, 1fr);
         grid-gap: 16px;
         grid-auto-rows: 50px;
+        @media (max-width: 768px) {
+            grid-template-columns: 1fr;
+        }
     }
     &.main {
         grid-template-columns: repeat(12, 1fr);
         grid-column-gap: 16px;
         grid-row-gap: 20px;
         grid-auto-rows: 50px;
+        @media (max-width: 1280px) {
+            grid-template-columns: repeat(6, 1fr);
+        }
+        @media (max-width: 768px) {
+            grid-template-columns: repeat(2, 1fr);
+        }
     }
     & .cell {
         grid-column: span 2;
         grid-row: span 1;
         display: flex;
         flex-direction: column;
-        &:not(.output, .input) {
+        &:not(.output, .input, .uploader) {
             align-self: flex-end;
+        }
+        &.uploader {
+            overflow: hidden;
+            &:hover {
+                overflow: visible;
+            }
         }
         &.checkbox {
             min-height: 32px;
@@ -28,8 +43,11 @@
         }
     }
     & .view {
-        flex-grow: 1;
-        min-height: 0;
+        /* TODO: remove after refactoring upload view */
+        &:not(.uploader) {
+            flex-grow: 1;
+            min-height: 0;
+        }
         &.input {
             padding-bottom: 0;
         }
@@ -41,14 +59,13 @@
         }
         &.uploader {
             padding-bottom: 0;
+            /* TODO: remove after refactoring upload view */
+            background-color: var(--color-white);
         }
         &.slider {
             min-height: 32px;
         }
         &.apply {
-
-        }
-        &.uplodaer {
 
         }
         &.output {

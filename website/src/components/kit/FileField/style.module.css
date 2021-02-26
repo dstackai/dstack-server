@@ -29,11 +29,6 @@
         }
     }
     &:global(.appearance-compact) {
-        & .section {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-        }
         & .label {
             width: 100%;
         }
@@ -44,7 +39,7 @@
 
         }
         & .file {
-            margin-left: 12px;
+            margin-right: 12px;
         }
         & .fileBar {
             position: absolute;
@@ -141,31 +136,42 @@
 .files {
     display: flex;
     flex-wrap: wrap;
+    max-width: 100%;
+    padding-top: 6px;
+    padding-bottom: 6px;
 }
 .file {
+    max-width: 100%;
     position: relative;
 }
 .fileTop {
     display: flex;
     align-items: baseline;
     & > :global(.mdi-file) {
+        flex-shrink: 0;
         font-size: 14px;
         line-height: 18px;
         color: var(--color-light-gray);
     }
     & .fileName {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
         margin-left: 2px;
         font-size: 14px;
         line-height: 18px;
         color: var(--color-dark-gray);
     }
     & .fileSize {
+        white-space: nowrap;
+        flex-shrink: 0;
         margin-left: 2px;
         font-size: 14px;
         line-height: 18px;
         color: var(--color-light-gray);
     }
     & .fileRemove {
+        flex-shrink: 0;
         padding: 0;
         margin: 0;
         outline: none;

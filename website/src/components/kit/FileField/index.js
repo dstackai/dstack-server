@@ -228,53 +228,51 @@ const FileField = ({
         <div className={cn(css.field, className, size, `appearance-${appearance}`, {active, disabled})}>
             {label && <div className={css.label}>{label}</div>}
 
-            <div className={css.section}>
-                <div
-                    className={cn(css.input, {
-                        error: hasErrors,
-                        disabled: !multiple && (uploadedFiles.length || value.length),
-                    })}
-                    onDrop={onDrop}
-                    onDragEnter={onDragEnter}
-                    onDragOver={onDragEnter}
-                    onDragLeave={onDragLeave}
-                >
-                    <input
-                        ref={inputRef}
-                        onChange={onChangeInput}
-                        type="file"
-                        multiple={multiple}
-                    />
+            <div
+                className={cn(css.input, {
+                    error: hasErrors,
+                    disabled: !multiple && (uploadedFiles.length || value.length),
+                })}
+                onDrop={onDrop}
+                onDragEnter={onDragEnter}
+                onDragOver={onDragEnter}
+                onDragLeave={onDragLeave}
+            >
+                <input
+                    ref={inputRef}
+                    onChange={onChangeInput}
+                    type="file"
+                    multiple={multiple}
+                />
 
-                    {appearance !== 'compact' && (
-                        <Fragment>
-                            <div className={css.placeholder}>
-                                {t('dragHereAFile')}
-                                {' '}
-                                {t('or')}
-                            </div>
+                {appearance !== 'compact' && (
+                    <Fragment>
+                        <div className={css.placeholder}>
+                            {t('dragHereAFile')}
                             {' '}
-                        </Fragment>
-                    )}
-                    <Button
-                        className={css.button}
-                        color="primary"
-                        size="small"
-                        onClick={onClick}
-                    >
-                        {t('uploadFile')}
-                    </Button>
-                </div>
+                            {t('or')}
+                        </div>
+                        {' '}
+                    </Fragment>
+                )}
+                <Button
+                    className={css.button}
+                    color="primary"
+                    size="small"
+                    onClick={onClick}
+                >
+                    {t('uploadFile')}
+                </Button>
+            </div>
 
-                <div className={css.files}>
-                    {value.map(fileItem => (
-                        <FileItem key={fileItem.id} file={fileItem} onDelete={removeFile} />
-                    ))}
+            <div className={css.files}>
+                {value.map(fileItem => (
+                    <FileItem key={fileItem.id} file={fileItem} onDelete={removeFile} />
+                ))}
 
-                    {uploadedFiles.map(fileItem => (
-                        <FileItem key={fileItem.id} file={fileItem} onDelete={cancelUploadFile} />
-                    ))}
-                </div>
+                {uploadedFiles.map(fileItem => (
+                    <FileItem key={fileItem.id} file={fileItem} onDelete={cancelUploadFile} />
+                ))}
             </div>
 
             {hasErrors && <div className={css.error}>{errors.join(', ')}</div>}

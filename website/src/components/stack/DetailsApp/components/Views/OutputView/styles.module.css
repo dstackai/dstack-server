@@ -16,6 +16,14 @@
         flex-grow: 1;
         min-height: 0;
     }
+    & .view {
+       @media (--mobile) {
+           margin-left: 0 !important;
+           margin-right: 0 !important;
+           padding-left: 0 !important;
+           padding-right: 0 !important;
+       }
+    }
     & .loader {
         background: linear-gradient(90deg, #F7F9FB -3.86%, #EEF1F3 34.95%, #FDFDFD 107.97%);
         :global {
