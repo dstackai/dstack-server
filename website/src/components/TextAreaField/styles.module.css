@@ -23,6 +23,9 @@
         }
     }
     &:global(.small) {
+        .label {
+            margin-bottom: 4px;
+        }
         & .textarea {
             & > textarea {
                 height: var(--field-small-height);
