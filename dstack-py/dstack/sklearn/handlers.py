@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Dict
 
-import joblib
+import cloudpickle
 import numpy
 import scipy
 import sklearn
@@ -10,12 +10,12 @@ from sklearn.linear_model import LinearRegression
 
 from dstack.content import BytesContent
 from dstack.handler import Encoder, Decoder
-from dstack.sklearn.persistence import JoblibPersistence, Persistence, PicklePersistence
+from dstack.sklearn.persistence import CloudPicklePersistence, Persistence, PicklePersistence, JoblibPersistence
 from dstack.stack import FrameData
 
 
 class SklearnModelEncoder(Encoder[BaseEstimator]):
-    PERSISTENCE = JoblibPersistence()
+    PERSISTENCE = CloudPicklePersistence()
 
     def __init__(self, persistence: Optional[Persistence] = None):
         super().__init__()
@@ -31,7 +31,7 @@ class SklearnModelEncoder(Encoder[BaseEstimator]):
                     "scikit-learn": sklearn.__version__,
                     "scipy": scipy.__version__,
                     "numpy": numpy.__version__,
-                    "joblib": joblib.__version__,
+                    "cloudpickle": cloudpickle.__version__,
                     "storage_format": self.persistence.storage()}
 
         if obj.__class__ in self.map:
@@ -45,7 +45,12 @@ class SklearnModelDecoder(Decoder[BaseEstimator]):
 
     def decode(self, data: FrameData) -> BaseEstimator:
         storage_format = data.settings["storage_format"]
-        persist = JoblibPersistence() if storage_format == "joblib" else PicklePersistence()
+        if storage_format == "cloudpickle":
+            persist = CloudPicklePersistence()
+        elif storage_format == "joblib":
+            persist = JoblibPersistence()
+        else:
+            persist = PicklePersistence()
         return persist.decode(data.data.stream())
 
 

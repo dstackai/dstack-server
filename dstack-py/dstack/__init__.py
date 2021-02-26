@@ -25,7 +25,9 @@ from dstack.tqdm import tqdm, trange
 from dstack.application.dependencies import Dependency, RequirementsDependency, ProjectDependency, ModuleDependency, \
     PackageDependency
 
-__all__ = ['Control', 'Output', 'Input', 'Select', 'Slider', 'Markdown', 'Uploader', 'Checkbox', 'Upload', 'tqdm',
+from dstack.version import __version__
+
+__all__ = ['__version__', 'Control', 'Output', 'Input', 'Select', 'Slider', 'Markdown', 'Uploader', 'Checkbox', 'Upload', 'tqdm',
            'trange']
 
 
