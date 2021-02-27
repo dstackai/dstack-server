@@ -7,6 +7,7 @@ from pathlib import Path
 from tempfile import gettempdir
 from typing import Optional, List, Callable
 from uuid import uuid4
+import stat
 
 from packaging.version import parse as parse_version
 
@@ -29,7 +30,12 @@ class Java(object):
     def path(self) -> str:
         return str(self.java_home / "bin" / self._java())
 
+    def make_executable(self):
+        st = os.stat(self.path())
+        os.chmod(self.path(), st.st_mode | stat.S_IEXEC)
+
     def version(self) -> str:
+        self.make_executable()
         result = subprocess.run([self.path(), "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = result.stderr.decode()
         java_version_str = output.splitlines()[0]

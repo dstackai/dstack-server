@@ -48,6 +48,7 @@ def start(args: Namespace):
     java = installer.find_jdk()
     jar = installer.jar_path()
 
+    java.make_executable()
     cmd = [java.path(), "-jar", jar]
 
     if args.port:
