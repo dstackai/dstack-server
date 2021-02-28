@@ -7,7 +7,6 @@ from pathlib import Path
 from tempfile import gettempdir
 from typing import Optional, List, Callable
 from uuid import uuid4
-import stat
 
 from packaging.version import parse as parse_version
 
@@ -30,12 +29,7 @@ class Java(object):
     def path(self) -> str:
         return str(self.java_home / "bin" / self._java())
 
-    def make_executable(self):
-        st = os.stat(self.path())
-        os.chmod(self.path(), st.st_mode | stat.S_IEXEC)
-
     def version(self) -> str:
-        self.make_executable()
         result = subprocess.run([self.path(), "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = result.stderr.decode()
         java_version_str = output.splitlines()[0]
@@ -164,11 +158,21 @@ class Installer(object):
 
         shutil.unpack_archive(str(archive_path), extract_dir=str(extract_dir))
 
+        self._add_permissions(extract_dir)
+
         list_files = list(extract_dir.iterdir())
         assert len(list_files) == 1
 
         self._move(list_files[0], jdk_path)
         self._delete(temp)
+
+    @staticmethod
+    def _add_permissions(extract_dir):
+        for root, dirs, files in os.walk(extract_dir):
+            for momo in dirs:
+                os.chmod(os.path.join(root, momo), 0o755)
+            for momo in files:
+                os.chmod(os.path.join(root, momo), 0o755)
 
     def version(self) -> Optional[str]:
         return self.config.get_property("server.version")
