@@ -11,7 +11,7 @@
         line-height: 19px;
         margin-bottom: 14px;
     }
-    & .loader,
+    & .empty,
     & .view {
         flex-grow: 1;
         min-height: 0;
@@ -24,10 +24,19 @@
            padding-right: 0 !important;
        }
     }
-    & .loader {
-        background: linear-gradient(90deg, #F7F9FB -3.86%, #EEF1F3 34.95%, #FDFDFD 107.97%);
-        :global {
-            animation: loader-pulse 1.5s infinite;
+    & .empty {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        & svg {
+            flex-shrink: 0;
+        }
+        & .emptyLabel {
+            margin-top: 14px;
+            font-size: 16px;
+            line-height: 20px;
+            color: var(--color-mediun-gray);
         }
     }
 }

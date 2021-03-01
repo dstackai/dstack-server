@@ -5,34 +5,33 @@
 }
 
 .progress {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
     align-items: center;
     justify-content: center;
-    min-height: 250px;
-}
-.percent {
-    font-size: 16px;
-    line-height: 19px;
-    color: var(--color-dark-gray);
-}
-.bar {
-    height: 8px;
-    margin-top: 6px;
-    max-width: 300px;
-    width: 100%;
-    background: rgba(180, 184, 199, .2);
-    border-radius: 10px;
-    overflow: hidden;
-    & > div {
-        height: inherit;
-        border-radius: 10px;
-        background-color: var(--color-blue);
+    & .percent {
+        grid-column: 1;
+        grid-row: 1;
+        font-size: 10px;
+        line-height: 12px;
+        color: var(--color-dark-gray);
+        text-align: center;
     }
-}
-.label {
-    margin-top: 10px;
-    font-size: 12px;
-    line-height: 14px;
-    color: rgba(48, 52, 64, 0.6);
+    & svg {
+        grid-column: 1;
+        grid-row: 1;
+        transform: rotate(-90deg);
+        & circle {
+            &:global(.bar) {
+                fill: none;
+                stroke: var(--color-light-gray);
+            }
+            &:global(.progress) {
+                fill: none;
+                stroke: var(--color-blue);
+                stroke-dasharray: 1000;
+            }
+        }
+    }
 }

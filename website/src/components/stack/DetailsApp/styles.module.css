@@ -51,11 +51,23 @@
     align-items: center;
     margin-left: auto;
     padding-left: 10px;
+    height: 36px;
+}
+.progress {
+    margin-right: 6px;
+}
+.run {
+    & :global(.mdi) {
+        height: 14px;
+        font-size: 14px;
+        line-height: 14px;
+        margin-right: 2px;
+    }
 }
 .share {
-    position: relative;
-    top: 3px;
-    margin-left: auto;
+    &:not(:first-child) {
+        margin-left: 12px;
+    }
 }
 .dropdown {
     &-button {
@@ -211,10 +223,6 @@
 }
 .views {
     grid-area: description / content;
-    min-width: 0;
-}
-.progress {
-    grid-area: content;
     min-width: 0;
 }
 .emptyMessage {

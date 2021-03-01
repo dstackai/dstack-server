@@ -171,6 +171,7 @@ export default {
     'newReport': 'New report',
     'neverRun': 'Never run',
     'noCreditCardRequired': 'No credit card required!',
+    'noDataYet': 'No data yet.',
     'noMatch': 'No match',
     'noPreview': 'No Preview',
     'noSpaces': 'no spaces',

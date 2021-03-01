@@ -11,7 +11,6 @@ export const VIEWS = Object.freeze({
     SELECT: 'SelectView',
     SLIDER: 'SliderView',
     CHECKBOX: 'CheckboxView',
-    APPLY: 'ApplyView',
     UPLOADER: 'UploaderView',
     OUTPUT: 'OutputView',
 });
@@ -34,7 +33,6 @@ const viewsClassNameMap = {
     [VIEWS.SELECT]: css.select,
     [VIEWS.SLIDER]: css.slider,
     [VIEWS.CHECKBOX]: css.checkbox,
-    [VIEWS.APPLY]: css.apply,
     [VIEWS.UPLOADER]: css.uploader,
     [VIEWS.OUTPUT]: css.output,
 };
@@ -43,13 +41,12 @@ type Props = {
     className?: string,
     views?: Array<TView>,
     disabled?: boolean,
-    onApplyClick: Function,
     onChange: (TView) => void,
 }
 
 const debounce = 1000;
 
-const Views = ({className, views, container = 'main', disabled, onApplyClick, onChange}: Props) => {
+const Views = ({className, views, container = 'main', disabled, onChange}: Props) => {
     const containerViews = useMemo(() => {
         return views.filter(v => (v.container === container || (!v.container && container === 'main')));
     }, [views]);
@@ -76,7 +73,7 @@ const Views = ({className, views, container = 'main', disabled, onApplyClick, on
             ? <View
                 className={cn(css.view, viewsClassNameMap[view.type])}
                 view={view}
-                {...{disabled, debounce, onApplyClick, onChange}}
+                {...{disabled, debounce, onChange}}
             />
             : null;
     };

@@ -4,10 +4,10 @@ import React, {useEffect, useState, useRef, useMemo} from 'react';
 import cx from 'classnames';
 import get from 'lodash/get';
 import isEqual from 'lodash/isEqual';
-import {usePrevious} from 'react-use';
 import {useTranslation} from 'react-i18next';
 import {Link, useParams} from 'react-router-dom';
 import BackButton from 'components/BackButton';
+import Button from 'components/Button';
 import Share from 'components/Share';
 import PermissionUsers from 'components/PermissionUsers';
 import Markdown from 'components/stack/Markdown';
@@ -17,6 +17,7 @@ import Readme from 'components/stack/Details/components/Readme';
 import RefreshMessage from 'components/stack/Details/components/RefreshMessage';
 import FilterLoader from './components/Loader';
 import Logs from './components/Logs';
+import Progress from './components/Progress';
 import Views, {VIEWS} from './components/Views';
 import actions from '../actions';
 import {parseStackTabs} from 'utils';
@@ -95,8 +96,6 @@ const Details = ({
     const [tabs, setTabs] = useState([]);
     const {executeStack, pollStack} = actions();
 
-    const prevExecuteData = usePrevious(executeData);
-
     const [{currentUser}] = useAppStore();
     const currentUserName = currentUser.data?.user;
 
@@ -108,12 +107,7 @@ const Details = ({
         return (executeData?.views || []).some(v => v.container === 'sidebar');
     }, [executeData]);
 
-    const hasApplyButton = useMemo(() => {
-        if (!executeData?.views || !Array.isArray(executeData.views))
-            return false;
-
-        return executeData.views.some(view => view.type === VIEWS.APPLY);
-    }, [executeData]);
+    const hasApplyButton = get(executeData, 'require_apply', false);
 
     const setActiveExecutionId = (value?: string) => {
         if (typeof onChangeExecutionId === 'function')
@@ -192,8 +186,8 @@ const Details = ({
             return newState;
         });
 
-        if (!hasApplyButton && !isEqual(executeData.views, newViews))
-            submit(newViews);
+        if (!isEqual(executeData.views, newViews))
+            submit(newViews, !hasApplyButton);
     };
 
     const onApply = () => submit(executeData?.views);
@@ -201,14 +195,6 @@ const Details = ({
     // const onReset = () => {
     //     startExecute();
     // };
-
-    useEffect(() => {
-        if (executing)
-            return;
-
-        if (executeData?.status === STATUSES.READY && !prevExecuteData)
-            submit(executeData?.views, !hasApplyButton);
-    }, [executeData]);
 
     const startExecute = () => {
         setExecuting(true);
@@ -447,6 +433,31 @@ const Details = ({
                 )}
 
                 <div className={css.sideHeader}>
+                    {calculating && !isScheduled && (
+                        <Progress
+                            className={css.progress}
+
+                            progress={executeData?.tqdm
+                                ? executeData.tqdm.n / executeData.tqdm.total * 100
+                                : undefined
+                            }
+                        />
+                    )}
+
+                    {hasApplyButton && (
+                        <Button
+                            className={css.run}
+                            variant="contained"
+                            color="primary"
+                            size="small"
+                            disabled={executing || calculating}
+                            onClick={onApply}
+                        >
+                            <span className="mdi mdi-play" />
+                            {t('run')}
+                        </Button>
+                    )}
+
                     {data && data.user === currentUserName && (
                         <Share
                             instancePath={`${user}/${stack}`}
@@ -504,7 +515,6 @@ const Details = ({
                         <Views
                             className={css.sidebar}
                             container="sidebar"
-                            onApplyClick={onApply}
                             onChange={onChangeView}
                             views={executeData?.views}
                             disabled={calculating || executing}
@@ -514,7 +524,6 @@ const Details = ({
                     {Boolean(executeData?.views?.length) && (
                         <Views
                             className={css.views}
-                            onApplyClick={onApply}
                             onChange={onChangeView}
                             views={executeData?.views}
                             disabled={calculating || executing}
