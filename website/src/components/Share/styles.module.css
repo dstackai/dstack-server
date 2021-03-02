@@ -1,21 +1,6 @@
 @import "styles/variables.css";
 @import "styles/media.css";
 
-.desktopButton {
-    @media (--mobile) {
-        display: none;
-    }
-}
-
-.mobileButton {
-    padding-left: 6px;
-    padding-right: 6px;
-    font-size: 16px;
-    @media (--desktop) {
-        display: none;
-    }
-}
-
 .modal {
 
 }

@@ -7,8 +7,8 @@ import isEqual from 'lodash/isEqual';
 import {useTranslation} from 'react-i18next';
 import {Link, useParams} from 'react-router-dom';
 import BackButton from 'components/BackButton';
+import Dropdown from 'components/Dropdown';
 import Button from 'components/Button';
-import Share from 'components/Share';
 import PermissionUsers from 'components/PermissionUsers';
 import Markdown from 'components/stack/Markdown';
 import Loader from 'components/stack/Details/components/Loader';
@@ -30,8 +30,6 @@ import type {TView} from './components/Views/types';
 const REFRESH_INTERVAL = 1000;
 
 const STATUSES = Object.freeze({
-    READY: 'READY',
-    SCHEDULED: 'SCHEDULED',
     RUNNING: 'RUNNING',
     FINISHED: 'FINISHED',
     FAILED: 'FAILED',
@@ -48,17 +46,13 @@ type ExecuteData = {
 type Props = {
     loading: boolean,
     attachmentIndex: number,
-    frame: ?{},
     data: {},
     backUrl: string,
-    user: string,
-    stack: string,
     executionId: string,
     onChangeAttachmentIndex: Function,
     onChangeExecutionId: Function,
     onUpdateReadme: Function,
-    changeAccessLevel: Function,
-    updatePermissions: Function,
+    toggleShare?: Function,
 
     updates: {
         has?: Boolean,
@@ -73,14 +67,10 @@ const Details = ({
     attachmentIndex,
     onChangeAttachmentIndex,
     onUpdateReadme,
+    toggleShare,
     data,
-    frame,
     loading,
     backUrl,
-    user,
-    stack,
-    changeAccessLevel,
-    updatePermissions,
     updates,
 }: Props) => {
     const {t} = useTranslation();
@@ -91,7 +81,6 @@ const Details = ({
     const [executing, setExecuting] = useState(false);
     const [calculating, setCalculating] = useState(false);
     const [error, setError] = useState(null);
-    const [isScheduled, setIsScheduled] = useState(false);
     const [activeTab, setActiveTab] = useState();
     const [tabs, setTabs] = useState([]);
     const {executeStack, pollStack} = actions();
@@ -147,7 +136,6 @@ const Details = ({
         };
 
         if (apply && hasApplyButton) {
-            setCalculating(true);
             params.apply = true;
         }
 
@@ -158,13 +146,9 @@ const Details = ({
                 updateExecuteData(data);
                 setActiveExecutionId(data.id);
 
-                if (apply && data.status !== STATUSES.SCHEDULED) {
+                if (data.status === STATUSES.RUNNING) {
+                    setCalculating(true);
                     checkFinished({id: data.id, isUpdateData: apply});
-                }
-
-                if (data.status === STATUSES.SCHEDULED) {
-                    setIsScheduled(true);
-                    checkFinished({id: data.id, isUpdateData: true});
                 }
             })
             .catch(() => {
@@ -217,10 +201,10 @@ const Details = ({
                 updateExecuteData(data);
                 setActiveExecutionId(data.id);
 
-                if (data.status === STATUSES.SCHEDULED) {
-                    setIsScheduled(true);
+                setCalculating(data.status === STATUSES.RUNNING);
+
+                if (data.status === STATUSES.RUNNING)
                     checkFinished({id: data.id, isUpdateData: true});
-                }
 
                 if (data.status === STATUSES.FAILED) {
                     setExecuteData(prevState => ({
@@ -247,7 +231,6 @@ const Details = ({
             if (!executionId) {
                 startExecute();
             } else {
-                setExecuting(true);
                 setCalculating(true);
                 checkFinished({id: executionId, isUpdateData: true});
             }
@@ -340,15 +323,14 @@ const Details = ({
         }
     };
 
-    const checkFinished = ({id, isUpdateData}) => {
+    const checkFinished = ({id}) => {
         pollStack({id: id})
             .then(data => {
-                setIsScheduled(data.status === STATUSES.SCHEDULED);
                 setActiveExecutionId(data.id);
 
-                if ([STATUSES.SCHEDULED, STATUSES.RUNNING].indexOf(data.status) >= 0) {
-                    setCalculating(true);
+                setCalculating(data.status === STATUSES.RUNNING);
 
+                if (data.status === STATUSES.RUNNING) {
                     setExecuteData(prevState => ({
                         ...prevState,
                         tqdm: data?.tqdm,
@@ -359,48 +341,16 @@ const Details = ({
                             clearTimeout(pollTimeoutRef.current);
 
                         pollTimeoutRef.current = setTimeout(() => {
-                            checkFinished({id: data.id, isUpdateData});
+                            checkFinished({id: data.id});
                         }, REFRESH_INTERVAL);
                     }
                 }
 
-                if (
-                    [
-                        STATUSES.FINISHED,
-                        STATUSES.FAILED,
-                        STATUSES.READY,
-                    ].indexOf(data.status) >= 0
-                ) {
-                    setCalculating(false);
-                }
+                if ([STATUSES.FINISHED, STATUSES.FAILED].indexOf(data.status) >= 0)
+                    updateExecuteData(data);
 
-                if ([STATUSES.FINISHED, STATUSES.READY].indexOf(data.status) >= 0) {
-                    if (isUpdateData) {
-                        setExecuting(false);
-                        updateExecuteData(data);
-                    } else {
-                        setExecuteData(prevState => ({
-                            ...prevState,
-                            logs: data.logs,
-                            date: Date.now(),
-                        }));
-                    }
-                }
-
-                if (data.status === STATUSES.FAILED) {
-                    if (isUpdateData) {
-                        setExecuting(false);
-                        updateExecuteData(data);
-                    } else {
-                        setExecuteData(prevState => ({
-                            ...prevState,
-                            logs: data.logs,
-                            date: Date.now(),
-                        }));
-                    }
-
+                if (data.status === STATUSES.FAILED)
                     setError({status: data.status});
-                }
             });
     };
 
@@ -464,24 +414,17 @@ const Details = ({
                         </Button>
                     )}
 
-                    {data && data.user === currentUserName && (
-                        <Share
-                            instancePath={`${user}/${stack}`}
-                            stackName={stack}
-                            onChangeAccessLevel={changeAccessLevel}
-                            className={css.share}
-                            accessLevel={data['access_level']}
-                            defaultPermissions={data.permissions}
+                    {data && data.user === currentUserName && toggleShare && (
+                        <Dropdown
+                            className={css.dropdown}
 
-                            urlParams={{
-                                a: attachmentIndex ? attachmentIndex : null,
-                                f: frameId !== data?.head?.id ? frame?.id : null,
-                                'execution_id': executionId,
-                            }}
-
-                            onUpdatePermissions={
-                                permissions => updatePermissions(`${user}/${stack}`, permissions)
-                            }
+                            items={[
+                                {
+                                    title: t('share'),
+                                    value: 'share',
+                                    onClick: toggleShare,
+                                },
+                            ]}
                         />
                     )}
                 </div>
@@ -503,7 +446,7 @@ const Details = ({
                 items={tabs}
             />}
 
-            {((!executeData?.views && !executeData?.logs) && (executing || (!error && isScheduled))) && (
+            {((!executeData?.views && !executeData?.logs) && (executing || calculating)) && (
                 <div className={css.container}>
                     <FilterLoader className={css.filterLoader} />
                 </div>
@@ -523,7 +466,7 @@ const Details = ({
                             container="sidebar"
                             onChange={onChangeView}
                             views={executeData?.views}
-                            disabled={calculating || executing}
+                            loading={calculating || executing}
                         />
                     )}
 
@@ -532,7 +475,7 @@ const Details = ({
                             className={css.views}
                             onChange={onChangeView}
                             views={executeData?.views}
-                            disabled={calculating || executing}
+                            loading={calculating || executing}
                         />
                     )}
 

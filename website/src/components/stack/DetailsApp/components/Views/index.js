@@ -40,13 +40,13 @@ const viewsClassNameMap = {
 type Props = {
     className?: string,
     views?: Array<TView>,
-    disabled?: boolean,
+    loading?: boolean,
     onChange: (TView) => void,
 }
 
 const debounce = 1000;
 
-const Views = ({className, views, container = 'main', disabled, onChange}: Props) => {
+const Views = ({className, views, container = 'main', loading, onChange}: Props) => {
     const containerViews = useMemo(() => {
         return views.filter(v => (v.container === container || (!v.container && container === 'main')));
     }, [views]);
@@ -73,7 +73,7 @@ const Views = ({className, views, container = 'main', disabled, onChange}: Props
             ? <View
                 className={cn(css.view, viewsClassNameMap[view.type])}
                 view={view}
-                {...{disabled, debounce, onChange}}
+                {...{disabled: loading, debounce, onChange}}
             />
             : null;
     };

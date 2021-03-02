@@ -7,9 +7,9 @@ import get from 'lodash/get';
 import isEqual from 'lodash/isEqual';
 import _debounce from 'lodash/debounce';
 import usePrevious from 'hooks/usePrevious';
-import {Link} from 'react-router-dom';
+import {Link, useParams} from 'react-router-dom';
 import BackButton from 'components/BackButton';
-import Share from 'components/Share';
+import Dropdown from 'components/Dropdown';
 import PermissionUsers from 'components/PermissionUsers';
 import StackFilters from 'components/StackFilters';
 import StackAttachment from '../Attachment';
@@ -30,17 +30,11 @@ type Props = {
     attachmentIndex: number,
     frame: ?{},
     data: {},
-    downloadAttachment: Function,
     backUrl: string,
-    user: string,
-    stack: string,
     headId: number,
-    onChangeHeadFrame: Function,
+    toggleShare?: Function,
     onUpdateReadme: Function,
     onChangeAttachmentIndex: Function,
-    onChangeFrame: Function,
-    changeAccessLevel: Function,
-    updatePermissions: Function,
 
     updates: {
         has?: Boolean,
@@ -57,11 +51,8 @@ const Details = ({
     frame,
     loading,
     backUrl,
-    user,
-    stack,
-    changeAccessLevel,
-    updatePermissions,
     updates,
+    toggleShare,
 }: Props) => {
     const {t} = useTranslation();
     const didMountRef = useRef(false);
@@ -70,6 +61,7 @@ const Details = ({
     const [fields, setFields] = useState({});
     const [tabs, setTabs] = useState([]);
     const prevFrame = usePrevious(frame);
+    const {stack, user} = useParams();
 
     const [{currentUser}] = useAppStore();
     const currentUserName = currentUser.data?.user;
@@ -229,23 +221,17 @@ const Details = ({
                 )}
 
                 <div className={css.sideHeader}>
-                    {data && data.user === currentUserName && (
-                        <Share
-                            stackName={stack}
-                            instancePath={`${user}/${stack}`}
-                            onChangeAccessLevel={changeAccessLevel}
-                            className={css.share}
-                            accessLevel={data['access_level']}
-                            defaultPermissions={data.permissions}
+                    {data && data.user === currentUserName && toggleShare && (
+                        <Dropdown
+                            className={css.dropdown}
 
-                            urlParams={{
-                                a: attachmentIndex ? attachmentIndex : null,
-                                f: frame?.id !== data?.head?.id ? frame?.id : null,
-                            }}
-
-                            onUpdatePermissions={
-                                permissions => updatePermissions(`${user}/${stack}`, permissions)
-                            }
+                            items={[
+                                {
+                                    title: t('share'),
+                                    value: 'share',
+                                    onClick: toggleShare,
+                                },
+                            ]}
                         />
                     )}
                 </div>
@@ -258,15 +244,6 @@ const Details = ({
                     close={updates.cancelAction}
                 />
             )}
-
-            {/*<StackFrames*/}
-            {/*    frames={get(data, 'frames', [])}*/}
-            {/*    frame={currentFrameId}*/}
-            {/*    headId={headId}*/}
-            {/*    onMarkAsHead={onChangeHeadFrame}*/}
-            {/*    onChange={onChangeFrame}*/}
-            {/*    className={css.revisions}*/}
-            {/*/>*/}
 
             {Boolean(tabs.length) && <Tabs
                 className={css.tabs}

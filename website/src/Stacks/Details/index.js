@@ -7,14 +7,14 @@ import {useTranslation} from 'react-i18next';
 import {Link, useHistory, useLocation, useParams} from 'react-router-dom';
 import {connect} from 'react-redux';
 import Helmet from 'react-helmet';
+import Share from 'components/Share';
 import AccessForbidden from 'components/AccessForbidden';
 import NotFound from 'components/NotFound';
 import StackDetails from 'components/stack/Details';
 import StackDetailsApp from 'components/stack/DetailsApp';
-import StackUpload from 'components/stack/Upload';
 import {isSignedIn, parseSearch, getStackCategory, dataFetcher} from 'utils';
 import {deleteStack} from 'Stacks/List/actions';
-import {fetchDetails, clearDetails, fetchFrame, downloadAttachment, update, updatePermissions} from './actions';
+import {fetchDetails, clearDetails, fetchFrame, update, updatePermissions} from './actions';
 import routes from 'routes';
 import config from 'config';
 
@@ -31,8 +31,6 @@ type Props = {
     data?: {},
     frameRequestStatus: ?number,
     loadingFrame?: boolean,
-    currentUser?: string,
-    currentUserToken?: string,
     updatePermissions: Function,
 }
 
@@ -46,7 +44,6 @@ const dataFormat = data => data?.head;
 const Details = ({
     fetchDetails,
     fetchFrame,
-    downloadAttachment,
     clearDetails,
     update,
     data = {},
@@ -55,8 +52,6 @@ const Details = ({
     frameRequestStatus,
     loading,
     requestStatus,
-    currentUser,
-    currentUserToken,
     updatePermissions,
 }: Props) => {
     let parsedAttachmentIndex;
@@ -78,12 +73,8 @@ const Details = ({
 
     const {t} = useTranslation();
 
-    const [isShowUploadModal, setIsShowUploadModal] = useState(false);
+    const [isShowShareModal, setIsShowShareModal] = useState(false);
     const isFirstChangeSearch = useRef(false);
-
-    const downloadAttachmentHandle = () => {
-        downloadAttachment(`${params.user}/${params.stack}`, selectedFrame || headId, attachmentIndex || 0);
-    };
 
     const {data: headData} = useSWR([
         config.API_URL + config.STACK_HEAD(params.user, params.stack),
@@ -156,14 +147,6 @@ const Details = ({
         return () => clearDetails();
     }, []);
 
-    const setHeadFrame = frameId => {
-        update({
-            stack: `${data.user}/${data.name}`,
-            noUpdateStore: true,
-            head: frameId,
-        }, () => setHeadId(frameId));
-    };
-
     const onUpdateReadme = readme => {
         update({
             stack: `${data.user}/${data.name}`,
@@ -181,13 +164,7 @@ const Details = ({
             setHeadId(data.head.id);
     }, [data]);
 
-    const onChangeFrame = frameId => {
-        setSelectedFrame(frameId);
-        setAttachmentIndex(undefined);
-        setExecutionId(undefined);
-    };
-
-    const toggleUploadModal = () => setIsShowUploadModal(!isShowUploadModal);
+    const toggleShareModal = () => setIsShowShareModal(val => !val);
 
     const changeAccessLevel = accessLevel => {
         update({
@@ -261,23 +238,11 @@ const Details = ({
                 attachmentIndex={attachmentIndex || 0}
                 executionId={executionId}
                 data={data}
-                frameRequestStatus={frameRequestStatus}
-                currentUser={currentUser}
-                currentUserToken={currentUserToken}
-                toggleUpload={toggleUploadModal}
+                toggleShare={toggleShareModal}
                 backUrl={routes.categoryStacks(categoryMap[category])}
-                changeAccessLevel={changeAccessLevel}
-                updatePermissions={updatePermissions}
-                user={params.user}
-                stack={params.stack}
                 onUpdateReadme={onUpdateReadme}
-                onChangeFrame={onChangeFrame}
-                onChangeHeadFrame={setHeadFrame}
                 onChangeExecutionId={setExecutionId}
                 onChangeAttachmentIndex={setAttachmentIndex}
-                downloadAttachment={downloadAttachmentHandle}
-                configurePythonCommand={config.CONFIGURE_PYTHON_COMMAND(currentUserToken, currentUser)}
-                configureRCommand={config.CONFIGURE_R_COMMAND(currentUserToken, currentUser)}
                 updates={{
                     has: hasUpdate,
                     refreshAction: refresh,
@@ -285,13 +250,24 @@ const Details = ({
                 }}
             />
 
-            <StackUpload
-                stack={params.stack}
-                isShow={isShowUploadModal}
-                onClose={() => setIsShowUploadModal(false)}
-                refresh={fetchData}
-                apiUrl={config.API_URL}
-                user={params.user}
+            <Share
+                isShow={isShowShareModal}
+                instancePath={`${params.user}/${params.stack}`}
+                stackName={params.stack}
+                onChangeAccessLevel={changeAccessLevel}
+                accessLevel={data['access_level']}
+                defaultPermissions={data.permissions}
+                close={toggleShareModal}
+
+                urlParams={{
+                    a: attachmentIndex || null,
+                    f: frame?.id !== data?.head?.id ? frame?.id : null,
+                    'execution_id': executionId || null,
+                }}
+
+                onUpdatePermissions={
+                    permissions => updatePermissions(`${params.user}/${params.stack}`, permissions)
+                }
             />
         </Fragment>
     );
@@ -311,8 +287,6 @@ export default connect(
             loadingFrame: state.stacks.details.loadingFrame,
             attachmentRequestStatus: state.stacks.details.attachmentRequestStatus,
             loading: state.stacks.details.loading,
-            currentUser: state.app.userData?.user,
-            currentUserToken: state.app.userData?.token,
         };
     },
 
@@ -322,7 +296,6 @@ export default connect(
         deleteStack,
         fetchFrame,
         update,
-        downloadAttachment,
         updatePermissions,
     },
 )(Details);

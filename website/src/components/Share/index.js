@@ -3,7 +3,7 @@ import React, {useState, useEffect, Fragment, useMemo} from 'react';
 import get from 'lodash/get';
 import isEqual from 'lodash/isEqual';
 import {useTranslation} from 'react-i18next';
-import cx from 'classnames';
+import cn from 'classnames';
 import useDebounce from 'hooks/useDebounce';
 import Copy from 'components/Copy';
 import Modal from 'components/Modal';
@@ -28,29 +28,31 @@ type Props = {
     accessLevel: 'private' | 'public' | 'internal',
     defaultPermissions?: Array<{}>,
     stackName?: string,
+    isShow?: boolean,
+    close: Function,
 };
 
 const Share = ({
     className,
     instancePath,
-    accessLevel: initialAccessLevel,
+    accessLevel: propAccessLevel,
     defaultPermissions = [],
     onChangeAccessLevel,
     urlParams = {},
     onUpdatePermissions,
     stackName,
+    isShow: isShowModal,
+    close,
 }: Props) => {
     const [{configInfo}] = useAppStore();
     const [userExists, setUserExists] = useState(null);
     const [isEmail, setIsEmail] = useState(false);
-    const [accessLevel, setAccessLevel] = useState(initialAccessLevel);
+    const [accessLevel, setAccessLevel] = useState(propAccessLevel);
     const [permissions, setPermissions] = useState(defaultPermissions);
     const [loading, setLoading] = useState(false);
-    const [isShowModal, setIsShowModal] = useState(false);
     const [userName, setUserName] = useState('');
     const {checkUser, addPermissions, removePermissions} = useActions();
     const {t} = useTranslation();
-    const toggleModal = () => setIsShowModal(!isShowModal);
 
     const dropdownOptionsMap = {
         public: t('public'),
@@ -60,8 +62,13 @@ const Share = ({
 
     useEffect(() => {
         setPermissions(defaultPermissions);
-        setAccessLevel(initialAccessLevel);
+        setAccessLevel(propAccessLevel);
     }, [instancePath]);
+
+    useEffect(() => {
+        if (!accessLevel)
+            setAccessLevel(propAccessLevel);
+    }, [propAccessLevel]);
 
     const checkUserName = useDebounce(userName => {
         setUserExists(null);
@@ -151,7 +158,7 @@ const Share = ({
 
     const renderUser = (user, index) => {
         return (
-            <div className={cx(css.user, {disabled: !user.user})} key={index}>
+            <div className={cn(css.user, {disabled: !user.user})} key={index}>
                 <Avatar
                     className={css.userPic}
                     name={user.user || user.email}
@@ -161,11 +168,11 @@ const Share = ({
 
                 <span
                     onClick={removeUser(user)}
-                    className={cx(css.userDelete, 'mdi mdi-close')}
+                    className={cn(css.userDelete, 'mdi mdi-close')}
                 />
 
                 {user.user && (
-                    <span className={cx(css.userMessage, css.userMessageSuccess)}>{t('done')}</span>
+                    <span className={cn(css.userMessage, css.userMessageSuccess)}>{t('done')}</span>
                 )}
 
                 {user.email && (
@@ -194,31 +201,12 @@ const Share = ({
 
     return (
         <Fragment>
-            <Button
-                className={cx(css.desktopButton, className)}
-                color="primary"
-                size="small"
-                variant="contained"
-                onClick={toggleModal}
-            >
-                {t('share')}
-            </Button>
-
-            <Button
-                className={cx(css.mobileButton, className)}
-                color="primary"
-                size="small"
-                onClick={toggleModal}
-            >
-                <span className="mdi mdi-share-variant" />
-            </Button>
-
             {instancePath && <Modal
                 isShow={isShowModal}
-                onClose={toggleModal}
+                onClose={close}
                 size="small"
                 title={t('shareStack')}
-                className={css.modal}
+                className={cn(css.modal, className)}
                 dialogClassName={css.dialog}
                 withCloseButton
             >
@@ -285,7 +273,7 @@ const Share = ({
                                 />
 
                                 {Boolean(userName.length) && !loading && <div
-                                    className={cx(css.checkUserMessage, {
+                                    className={cn(css.checkUserMessage, {
                                         success: userExists,
                                         fail: userExists === false,
                                         secondary: isEmail,

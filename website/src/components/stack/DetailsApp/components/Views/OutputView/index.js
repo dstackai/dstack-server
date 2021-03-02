@@ -14,14 +14,18 @@ type Props = {
     disabled?: boolean,
 }
 
-const OutputView = ({className, view}: Props) => {
+const OutputView = ({className, view, disabled}: Props) => {
     const {t} = useTranslation();
 
     return (
         <div className={cn(css.outputView, className)}>
             {view.label && <div className={css.label}>{view.label}</div>}
 
-            {!view?.data && (
+            {!view?.data && disabled && (
+                <div className={css.loader} />
+            )}
+
+            {!view?.data && !disabled && (
                 <div className={css.empty}>
                     <GraphIcon />
                     <div className={css.emptyLabel}>{t('noDataYet')}</div>

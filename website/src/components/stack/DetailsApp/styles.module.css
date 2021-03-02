@@ -59,18 +59,9 @@
 .run {
 
 }
-.share {
+.dropdown {
     &:not(:first-child) {
         margin-left: 12px;
-    }
-}
-.dropdown {
-    &-button {
-        outline: none;
-        height: 26px !important;
-        line-height: 26px !important;
-        padding-left: 6px;
-        padding-right: 6px;
     }
 }
 .description {

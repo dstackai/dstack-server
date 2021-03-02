@@ -52,10 +52,10 @@
     margin-left: auto;
     padding-left: 10px;
 }
-.share {
-    position: relative;
-    top: 3px;
-    margin-left: auto;
+.dropdown {
+    &:not(:first-child) {
+        margin-left: 12px;
+    }
 }
 .dropdown {
     &-button {
