@@ -1,6 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val snapshotVersion = "0.6.3"
+val baseVersion = "0.6.3"
 
 plugins {
     java
@@ -13,7 +13,7 @@ allprojects {
     apply(plugin = "idea")
 
     group = "ai.dstack"
-    version = project.findProperty("dstack_version")?.toString() ?: "$snapshotVersion-SNAPSHOT"
+    version = project.findProperty("dstack_version")?.toString() ?: "$baseVersion-SNAPSHOT"
 
     repositories {
         maven { url = uri("https://kotlin.bintray.com/kotlinx") }

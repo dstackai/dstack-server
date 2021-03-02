@@ -178,8 +178,8 @@ jobs:
         run: |
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           VERSION=$(./gradlew properties -no-daemon --console=plain -q | grep "^version:" | awk '{printf $2}')
-          SNAPSHOT_VERSION=$(echo $VERSION | awk '{p=index($1,"-");printf substr($1,0,p-1)}')
-          DSTACK_VERSION="${SNAPSHOT_VERSION}.dev${TIMESTAMP}"
+          BASE_VERSION=$(echo $VERSION | awk '{p=index($1,"-");printf substr($1,0,p-1)}')
+          DSTACK_VERSION="${BASE_VERSION}.dev${TIMESTAMP}"
           ./gradlew -Pdstack_version=$DSTACK_VERSION build
           echo "::set-output name=timestamp::$(echo $TIMESTAMP)"
           echo "::set-output name=dstack_version::$(echo $DSTACK_VERSION)"
@@ -193,7 +193,7 @@ jobs:
           pip install dstack
           dstack config add --user dstack --token ${{ secrets.DSTACK_TOKEN_STGN }} --server https://stgn.dstack.cloud/api
           DSTACK_VERSION=${{ steps.build.outputs.dstack_version }}
-          python -c "from dstack import push; from dstack.cli.installer import Installer; from pathlib import Path; print(push(Installer._STACK, Path('server-local-cli/build/libs/server-local-cli-$DSTACK_VERSION.jar'), version='$DSTACK_VERSION', jdk_version='8', jdk_compatible_versions='1.8.0_.*'))"
+          python -c "from pkg_resources import parse_version; from dstack import push, FrameMeta; from dstack.cli.installer import Installer; from pathlib import Path; print(push(Installer._STACK, Path('server-local-cli/build/libs/server-local-cli-$DSTACK_VERSION.jar'), meta=FrameMeta({'base_version': parse_version('$DSTACK_VERSION').base_version}), version='$DSTACK_VERSION', jdk_version='8', jdk_compatible_versions='1.8.0_.*'))"
 
   publish-server-release:
     needs: build-server
@@ -232,4 +232,4 @@ jobs:
           pip install dstack
           dstack config add --user dstack --token ${{ secrets.DSTACK_TOKEN_PROD }} --server https://dstack.cloud/api
           VERSION=${GITHUB_REF#refs/tags/v}
-          python -c "from dstack import push; from dstack.cli.installer import Installer; from pathlib import Path; print(push(Installer._STACK, Path('server-local-cli/build/libs/server-local-cli-$VERSION.jar'), version='$VERSION', jdk_version='8', jdk_compatible_versions='1.8.0_.*'))"
+          python -c "from pkg_resources import parse_version; from dstack import push, FrameMeta; from dstack.cli.installer import Installer; from pathlib import Path; print(push(Installer._STACK, Path('server-local-cli/build/libs/server-local-cli-$VERSION.jar'), meta=FrameMeta({'base_version': parse_version('$VERSION').base_version}), version='$VERSION', jdk_version='8', jdk_compatible_versions='1.8.0_.*'))"
