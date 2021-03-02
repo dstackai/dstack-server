@@ -174,9 +174,7 @@ const Details = ({
             });
     };
 
-    const onChangeView = (view: TView) => {
-        let newViews;
-
+    const getViewsAfterUpdate = (view: TView) => new Promise(resolve => {
         setExecuteData(prevState => {
             const newState = {
                 ...prevState,
@@ -184,13 +182,17 @@ const Details = ({
                 views: prevState.views.map(v => v.id !== view.id ? v : view),
             };
 
-            newViews = newState.views;
-
+            resolve(newState.views);
             return newState;
         });
+    });
 
-        if (!isEqual(executeData.views, newViews))
-            submit(newViews, !hasApplyButton);
+    const onChangeView = (view: TView) => {
+        getViewsAfterUpdate(view)
+            .then((views: Array<TView>) => {
+                if (!isEqual(executeData.views, views))
+                    submit(views, !hasApplyButton);
+            });
     };
 
     const onApply = () => submit(executeData?.views);
