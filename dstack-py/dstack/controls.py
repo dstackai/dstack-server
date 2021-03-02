@@ -718,7 +718,7 @@ class Controller(object):
 
         for view in views:
             self.copy_of_controls_by_id[view.id].apply(view)
-        values = [c.view(apply) for c in self.copy_of_controls_by_id.values()]
+        values = [c.view(apply or not self.require_apply) for c in self.copy_of_controls_by_id.values()]
 
         self.copy_of_controls_by_id = None
 
