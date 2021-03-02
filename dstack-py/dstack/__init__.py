@@ -395,7 +395,7 @@ class ApplicationContainer:
               handler: ty.Optional[ty.Callable[..., None]] = None,
               label: ty.Optional[str] = None,
               depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
-              require_apply: bool = True,
+              require_apply: bool = False,
               optional: ty.Optional[bool] = None,
               colspan: ty.Optional[int] = None,
               rowspan: ty.Optional[int] = None) -> Input:
