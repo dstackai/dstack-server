@@ -19,7 +19,8 @@ class TestProtocol(Protocol):
     def access(self, stack: str, token: str) -> Dict:
         return self.handle({"stack": stack}, token)
 
-    def pull(self, stack: str, token: Optional[str], params: Optional[Dict]) -> Tuple[str, int, Dict]:
+    def pull(self, stack: str, token: Optional[str], params: Optional[Dict],
+             meta: Optional[Dict]) -> Tuple[str, int, Dict]:
         data = self.get_data(stack)
         frame = data["id"]
         attachments = data["attachments"]

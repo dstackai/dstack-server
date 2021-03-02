@@ -224,12 +224,13 @@ def get_encryption(profile: Profile) -> EncryptionMethod:
 
 
 # TODO: Write tests that ensures that cache works
-def pull_data(context: Context, params: ty.Optional[ty.Dict] = None, **kwargs) -> FrameData:
+def pull_data(context: Context, params: ty.Optional[ty.Dict] = None,
+              meta: ty.Optional[ty.Dict] = None, **kwargs) -> FrameData:
     path = context.stack_path()
     params = merge_or_none(params, kwargs)
 
     # TODO: Split context.protocol.pull into to pull_head and pull_frame
-    frame, index, res = context.protocol.pull(path, context.profile.token, params)
+    frame, index, res = context.protocol.pull(path, context.profile.token, params, meta)
     attach = res["attachment"]
 
     data = _cache_attach_data(attach, context, frame, index, path)

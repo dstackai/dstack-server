@@ -13,6 +13,7 @@ from packaging.version import parse as parse_version
 from dstack import pull_data, create_context
 from dstack.config import Profile, from_yaml_file, API_SERVER, Config
 from dstack.handler import FrameData
+from dstack.version import __version__ as dstack_version
 
 
 def _get_installer_path() -> Path:
@@ -68,7 +69,7 @@ class Installer(object):
 
     def _update(self, download: bool) -> bool:
         context = create_context(self._STACK, self._PROFILE, self.config)
-        server_attachment = pull_data(context)
+        server_attachment = pull_data(context, meta={"base_version": parse_version(dstack_version).base_version})
         server_version = server_attachment.params["version"]
         jdk_version = server_attachment.params["jdk_version"]
         jdk_compatible_versions = server_attachment.params["jdk_compatible_versions"].split(",")
