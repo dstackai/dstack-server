@@ -133,22 +133,25 @@ const Details = ({
     const submit = (views = [], apply = true) => {
         setExecuting(true);
 
-        if (apply)
-            setCalculating(true);
-
-        executeStack({
+        const params = {
             user: data.user,
             stack: data.name,
             frame: frameId,
             attachment: attachmentIndex || 0,
-            apply,
             views: views.map(v => {
                 if (v.type === VIEWS.OUTPUT)
                     delete v.data;
 
                 return v;
             }),
-        })
+        };
+
+        if (apply && hasApplyButton) {
+            setCalculating(true);
+            params.apply = true;
+        }
+
+        executeStack(params)
             .then(data => {
                 setExecuting(false);
                 setError(null);
