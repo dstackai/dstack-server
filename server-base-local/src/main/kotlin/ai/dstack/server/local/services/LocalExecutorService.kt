@@ -1,7 +1,6 @@
 package ai.dstack.server.local.services
 
 import ai.dstack.server.model.*
-import ai.dstack.server.model.Stack
 import ai.dstack.server.services.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -14,7 +13,6 @@ import java.util.zip.ZipInputStream
 import java.io.IOException
 import java.io.FileOutputStream
 import java.lang.IllegalStateException
-import java.util.*
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.io.BufferedOutputStream
@@ -26,7 +24,6 @@ class LocalExecutorService @Autowired constructor(
 ) : ExecutorService {
     companion object : KLogging() {
         const val EXECUTION_STAGE_ORIGINAL = "staged"
-        const val EXECUTION_STAGE_UPDATED = "running"
         const val EXECUTION_STAGE_FINAL = "finished"
     }
 
@@ -68,7 +65,7 @@ class LocalExecutorService @Autowired constructor(
     }
 
     private fun queue(attachment: Attachment, request: ExecutionRequest) {
-        writeExecutionFile(EXECUTION_STAGE_ORIGINAL, request.id, request.views, "SCHEDULED", null)
+        writeExecutionFile(EXECUTION_STAGE_ORIGINAL, request.id, request.views, "RUNNING", null)
         val queue = executionRequestQueues[attachment.filePath]
         queue!!.put(request)
     }
@@ -206,7 +203,6 @@ class LocalExecutorService @Autowired constructor(
 
     override fun poll(id: String): ExecutionResult? {
         val executionFile = (executionFileIfExists(id, EXECUTION_STAGE_FINAL)
-                ?: executionFileIfExists(id, EXECUTION_STAGE_UPDATED)
                 ?: executionFileIfExists(id, EXECUTION_STAGE_ORIGINAL))
         return executionFile?.let {
             executionFileObjectMapper.readValue(it, Map::class.java)
@@ -288,7 +284,7 @@ class LocalExecutorService @Autowired constructor(
     private fun destDir(attachment: Attachment) =
             File(config.appDirectory + "/" + attachment.filePath)
 
-    private val executorVersion = 23
+    private val executorVersion = 24
 
     private fun executorFile(attachment: Attachment) = File(destDir(attachment), "execute_v${executorVersion}.py")
 

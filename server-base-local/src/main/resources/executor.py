@@ -109,7 +109,7 @@ def execute(id, views, apply):
         with redirect_stdout(logs_handler):
             _views = [v.pack() for v in (views or []) if not isinstance(v, ctrl.OutputView)]
             _outputs = []
-            status = "FINISHED" if apply else "READY"
+            status = "FINISHED"
             try:
                 def list_func():
                     return controller.list(views, apply)
