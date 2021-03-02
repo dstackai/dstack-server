@@ -190,14 +190,10 @@ jobs:
       - name: Publish with dstack
         run: |
           python -m pip install --upgrade pip
-          pip install pyyaml
-          pip install requests
-          pip install tqdm
-          pip install deprecation
           pip install dstack
-          dstack config add --user dstack --token ${{ secrets.DSTACK_TOKEN_STGN }} --server https://api.stgn.dstack.ai
+          dstack config add --user dstack --token ${{ secrets.DSTACK_TOKEN_STGN }} --server https://stgn.dstack.cloud/api
           DSTACK_VERSION=${{ steps.build.outputs.dstack_version }}
-          python -c "from dstack import push_frame; from dstack.cli.installer import Installer; from pathlib import Path; print(push_frame(Installer._STACK, Path('server-local-cli/build/libs/server-local-cli-$DSTACK_VERSION.jar'), version='$DSTACK_VERSION', jdk_version='8', jdk_compatible_versions='1.8.0_.*'))"
+          python -c "from dstack import push; from dstack.cli.installer import Installer; from pathlib import Path; print(push(Installer._STACK, Path('server-local-cli/build/libs/server-local-cli-$DSTACK_VERSION.jar'), version='$DSTACK_VERSION', jdk_version='8', jdk_compatible_versions='1.8.0_.*'))"
 
   publish-server-release:
     needs: build-server
@@ -233,11 +229,7 @@ jobs:
       - name: Publish with dstack
         run: |
           python -m pip install --upgrade pip
-          pip install pyyaml
-          pip install requests
-          pip install tqdm
-          pip install deprecation
           pip install dstack
-          dstack config add --user dstack --token ${{ secrets.DSTACK_TOKEN_PROD }}
+          dstack config add --user dstack --token ${{ secrets.DSTACK_TOKEN_PROD }} --server https://dstack.cloud/api
           VERSION=${GITHUB_REF#refs/tags/v}
-          python -c "from dstack import push_frame; from dstack.cli.installer import Installer; from pathlib import Path; print(push_frame(Installer._STACK, Path('server-local-cli/build/libs/server-local-cli-$VERSION.jar'), version='$VERSION', jdk_version='8', jdk_compatible_versions='1.8.0_.*'))"
+          python -c "from dstack import push; from dstack.cli.installer import Installer; from pathlib import Path; print(push(Installer._STACK, Path('server-local-cli/build/libs/server-local-cli-$VERSION.jar'), version='$VERSION', jdk_version='8', jdk_compatible_versions='1.8.0_.*'))"

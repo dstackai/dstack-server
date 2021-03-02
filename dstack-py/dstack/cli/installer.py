@@ -158,11 +158,21 @@ class Installer(object):
 
         shutil.unpack_archive(str(archive_path), extract_dir=str(extract_dir))
 
+        self._add_permissions(extract_dir)
+
         list_files = list(extract_dir.iterdir())
         assert len(list_files) == 1
 
         self._move(list_files[0], jdk_path)
         self._delete(temp)
+
+    @staticmethod
+    def _add_permissions(extract_dir):
+        for root, dirs, files in os.walk(extract_dir):
+            for momo in dirs:
+                os.chmod(os.path.join(root, momo), 0o755)
+            for momo in files:
+                os.chmod(os.path.join(root, momo), 0o755)
 
     def version(self) -> Optional[str]:
         return self.config.get_property("server.version")
