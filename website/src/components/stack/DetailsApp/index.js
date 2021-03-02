@@ -347,6 +347,8 @@ const Details = ({
                 setActiveExecutionId(data.id);
 
                 if ([STATUSES.SCHEDULED, STATUSES.RUNNING].indexOf(data.status) >= 0) {
+                    setCalculating(true);
+
                     setExecuteData(prevState => ({
                         ...prevState,
                         tqdm: data?.tqdm,
@@ -438,7 +440,7 @@ const Details = ({
                 )}
 
                 <div className={css.sideHeader}>
-                    {calculating && !isScheduled && (
+                    {calculating && (
                         <Progress
                             className={css.progress}
 
@@ -458,8 +460,7 @@ const Details = ({
                             disabled={executing || calculating}
                             onClick={onApply}
                         >
-                            <span className="mdi mdi-play" />
-                            {t('run')}
+                            {t('apply')}
                         </Button>
                     )}
 

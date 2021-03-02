@@ -57,12 +57,7 @@
     margin-right: 6px;
 }
 .run {
-    & :global(.mdi) {
-        height: 14px;
-        font-size: 14px;
-        line-height: 14px;
-        margin-right: 2px;
-    }
+
 }
 .share {
     &:not(:first-child) {
