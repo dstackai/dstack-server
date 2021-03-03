@@ -12,7 +12,7 @@ import css from './styles.module.css';
 const EmptyMessage = ({onAdd}) => {
     return (
         <Trans i18nKey="readmeEmptyMessage">
-            Sure your ML model is easy to understand without README? IF no, please, <a
+            Sure your ML model is easy to understand without README? If no, please, <a
                 href="#"
                 onClick={onAdd}
             >add some helpful information</a> about how to use the model.

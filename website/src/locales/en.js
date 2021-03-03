@@ -196,7 +196,7 @@ export default {
     'r': 'R',
     'readAndWrite': 'Read and Write',
     'readme': 'Readme',
-    'readmeEmptyMessage': 'Sure your ML model is easy to understand without README? IF no, please, <1>add some helpful information</1> about how to use the model.',
+    'readmeEmptyMessage': 'Sure your ML model is easy to understand without README? If no, please, <1>add some helpful information</1> about how to use the model.',
     'readOnly': 'Readonly',
     'refresh': 'Refresh',
     'reLogIn': 'Re-log in',
