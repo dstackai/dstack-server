@@ -218,7 +218,7 @@ jobs:
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
           ./gradlew -Pdstack_version=$VERSION clean build
-          echo "::set-output name=version::$(echo VERSION)"
+          echo "::set-output name=version::$(echo $VERSION)"
       - name: Set up Python 3.6
         uses: actions/setup-python@v2
         with:
