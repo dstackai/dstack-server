@@ -3,10 +3,12 @@ import React, {useEffect, useRef, useState, Fragment} from 'react';
 import cn from 'classnames';
 import pick from 'lodash/pick';
 import isEqual from 'lodash/isEqual';
+import {useWindowSize} from 'react-use';
 import axios from 'axios';
 import {useTranslation} from 'react-i18next';
 import {formatBytes, checkAvailableExtension} from 'utils';
 import Button from 'components/Button';
+import Dropdown from 'components/Dropdown';
 import actions from './actions';
 import css from './style.module.css';
 
@@ -35,13 +37,14 @@ type UploadedFileListItem = {
 }
 
 type FileItemProps = {
+    className?: string,
     file: FileListItem | UploadedFileListItem,
     onDelete?: Function,
 }
 
-const FileItem = ({file, onDelete}: FileItemProps) => {
+const FileItem = ({file, onDelete, className}: FileItemProps) => {
     return (
-        <div className={css.file}>
+        <div className={cn(css.file, className)}>
             <div className={css.fileTop}>
                 <span className="mdi mdi-file" />
                 <span className={css.fileName}>{file['file_name']}</span>
@@ -79,10 +82,14 @@ const FileField = ({
     const inputRef = useRef(null);
     const [active, setActive] = useState(false);
     const isDidMount = useRef(false);
+    const sectionRef = useRef(null);
+    const filesRef = useRef(null);
+    const dropdownRef = useRef(null);
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [value, setValue] = useState(files);
     const [uploadedFiles, setUploadedFiles] = useState([]);
     const hasErrors = Boolean(errors.length);
+    const {width: windowWidth} = useWindowSize();
 
     const {upload} = actions();
 
@@ -95,6 +102,29 @@ const FileField = ({
         if (!isEqual(value, files) && onChange && uploadedFiles.length === 0 && isDidMount.current)
             onChange(value);
     }, [value]);
+
+    useEffect(() => {
+        if (sectionRef.current && filesRef.current && dropdownRef.current) {
+
+            dropdownRef.current.style.opacity = '0';
+            filesRef.current.style.opacity = '0';
+
+            dropdownRef.current.classList.remove('hidden');
+            filesRef.current.classList.remove('hidden');
+
+            const {x: sectionX, width: sectionWidth} = sectionRef.current.getBoundingClientRect();
+            const {x: filesX, width: filesWidth} = filesRef.current.getBoundingClientRect();
+            const overWidth = sectionX + sectionWidth < filesX + filesWidth;
+
+            if (overWidth)
+                filesRef.current.classList.add('hidden');
+            else
+                dropdownRef.current.classList.add('hidden');
+
+            dropdownRef.current.style.opacity = null;
+            filesRef.current.style.opacity = null;
+        }
+    }, [value, uploadedFiles, windowWidth]);
 
     useEffect(() => {
         if (isDidMount.current) {
@@ -224,55 +254,93 @@ const FileField = ({
         }
     };
 
+    const renderItem = ({onDelete, ...fileItem}) => (
+        <FileItem
+            key={fileItem.id}
+            file={fileItem}
+            onDelete={onDelete}
+        />
+    );
+
+    const allFiles = [
+        ...value.map(i => {
+            i.onDelete = removeFile;
+
+            return i;
+        }),
+        ...uploadedFiles.map(i => {
+            i.onDelete = cancelUploadFile;
+            return i;
+        }),
+    ];
+
     return (
         <div className={cn(css.field, className, size, `appearance-${appearance}`, {active, disabled})}>
             {label && <div className={css.label}>{label}</div>}
 
-            <div
-                className={cn(css.input, {
-                    error: hasErrors,
-                    disabled: !multiple && (uploadedFiles.length || value.length),
-                })}
-                onDrop={onDrop}
-                onDragEnter={onDragEnter}
-                onDragOver={onDragEnter}
-                onDragLeave={onDragLeave}
-            >
-                <input
-                    ref={inputRef}
-                    onChange={onChangeInput}
-                    type="file"
-                    multiple={multiple}
-                />
-
-                {appearance !== 'compact' && (
-                    <Fragment>
-                        <div className={css.placeholder}>
-                            {t('dragHereAFile')}
-                            {' '}
-                            {t('or')}
-                        </div>
-                        {' '}
-                    </Fragment>
-                )}
-                <Button
-                    className={css.button}
-                    color="primary"
-                    size="small"
-                    onClick={onClick}
+            <div ref={sectionRef} className={css.section}>
+                <div
+                    className={cn(css.input, {
+                        error: hasErrors,
+                        disabled: !multiple && (uploadedFiles.length || value.length),
+                    })}
+                    onDrop={onDrop}
+                    onDragEnter={onDragEnter}
+                    onDragOver={onDragEnter}
+                    onDragLeave={onDragLeave}
                 >
-                    {t('uploadFile')}
-                </Button>
-            </div>
+                    <input
+                        ref={inputRef}
+                        onChange={onChangeInput}
+                        type="file"
+                        multiple={multiple}
+                    />
 
-            <div className={css.files}>
-                {value.map(fileItem => (
-                    <FileItem key={fileItem.id} file={fileItem} onDelete={removeFile} />
-                ))}
+                    {appearance !== 'compact' && (
+                        <Fragment>
+                            <div className={css.placeholder}>
+                                {t('dragHereAFile')}
+                                {' '}
+                                {t('or')}
+                            </div>
+                            {' '}
+                        </Fragment>
+                    )}
 
-                {uploadedFiles.map(fileItem => (
-                    <FileItem key={fileItem.id} file={fileItem} onDelete={cancelUploadFile} />
-                ))}
+                    <Button
+                        className={css.button}
+                        color="primary"
+                        size="small"
+                        onClick={onClick}
+                    >
+                        {t('uploadFile')}
+                    </Button>
+                </div>
+
+                {Boolean(allFiles.length) && (
+                    <div className={css.files} ref={filesRef}>
+                        {allFiles.map(renderItem)}
+                    </div>
+                )}
+
+                {Boolean(allFiles.length) && (
+                    <Dropdown
+                        ref={dropdownRef}
+                        items={allFiles}
+                        className={css.filesDropdown}
+                        renderItem={renderItem}
+                        placement="bottomLeft"
+
+                    >
+                        <Button
+                            className={css.dropdownButton}
+                            color="primary"
+                            size="small"
+                        >
+                            {t('fileUploadedWithCount', {count: allFiles.length})}
+                        </Button>
+                    </Dropdown>
+                )}
             </div>
 
             {hasErrors && <div className={css.error}>{errors.join(', ')}</div>}

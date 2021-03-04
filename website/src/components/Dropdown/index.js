@@ -1,5 +1,5 @@
 // @flow
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, forwardRef} from 'react';
 import cx from 'classnames';
 import RcTooltip from 'rc-tooltip';
 import css from './styles.module.css';
@@ -10,13 +10,24 @@ type Item = {
 }
 
 type Props = {
+    placement?: 'bottomLeft' | 'bottomRight',
     children?: Function,
     className?: string,
     buttonClassName?: string,
-    items: Array<Item>
+    items: Array<Item>,
+} | {
+    placement?: 'bottomLeft' | 'bottomRight',
+    children?: Function,
+    className?: string,
+    buttonClassName?: string,
+    items: Array<{[key: string]: any}>,
+    renderItem: Function,
 }
 
-const Dropdown = ({className, buttonClassName, children, items}: Props) => {
+const Dropdown = forwardRef((
+    {className, buttonClassName, children, renderItem: propRenderItem, items, placement = 'bottomRight'}: Props,
+    ref
+):Props => {
     const [isShow, setIsShow] = useState(false);
     const buttonRef = useRef(null);
     const dropdownRef = useRef(null);
@@ -57,12 +68,30 @@ const Dropdown = ({className, buttonClassName, children, items}: Props) => {
             item.onClick();
     };
 
+    const renderItem = (item, index: number) => {
+        if (propRenderItem)
+            return propRenderItem(item);
+
+        return (
+            <div
+                key={index}
+                className={css.item}
+                onClick={onCLickItem(item)}
+            >
+                {item.title}
+            </div>
+        ) ;
+    };
+
     return (
-        <div className={cx(css.dropdown, className, {active: isShow})}>
+        <div
+            ref={ref}
+            className={cx(css.dropdown, className, {active: isShow})}
+        >
             <RcTooltip
                 arrowContent={null}
                 visible={isShow}
-                placement="bottomRight"
+                placement={placement}
                 destroyTooltipOnHide
                 align={{offset: [0, 0]}}
 
@@ -72,13 +101,7 @@ const Dropdown = ({className, buttonClassName, children, items}: Props) => {
                         ref={dropdownRef}
                         onClick={clickStopPropagation}
                     >
-                        {items.map((i, index) => <div
-                            key={index}
-                            className={css.item}
-                            onClick={onCLickItem(i)}
-                        >
-                            {i.title}
-                        </div>)}
+                        {items.map(renderItem)}
                     </div>
                 }
             >
@@ -94,6 +117,6 @@ const Dropdown = ({className, buttonClassName, children, items}: Props) => {
             </RcTooltip>
         </div>
     );
-};
+});
 
 export default Dropdown;

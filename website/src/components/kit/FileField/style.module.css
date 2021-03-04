@@ -29,6 +29,10 @@
         }
     }
     &:global(.appearance-compact) {
+        & .section {
+            display: flex;
+            align-items: center;
+        }
         & .label {
             width: 100%;
         }
@@ -36,7 +40,10 @@
             flex-shrink: 0;
         }
         & .files {
-
+            margin-left: 12px;
+        }
+        & .filesDropdown {
+            margin-left: 12px;
         }
         & .file {
             margin-right: 12px;
@@ -118,13 +125,18 @@
             text-align: center;
         }
         & .button {
+            width: 110px;
             padding: 0 !important;
             white-space: nowrap;
             font-size: 14px;
             line-height: 17px;
             outline: none;
+            color: var(--color-dark-gray);
         }
     }
+}
+.section {
+    position: relative;
 }
 .label {
     margin-bottom: 10px;
@@ -134,15 +146,52 @@
     opacity: .7;
 }
 .files {
+    position: relative;
     display: flex;
     flex-wrap: wrap;
     max-width: 100%;
     padding-top: 6px;
     padding-bottom: 6px;
+    &:global(.hidden) {
+        display: none;
+    }
+}
+.filesDropdown {
+    margin-left: 12px;
+    &:global(.hidden) {
+        display: none;
+    }
+}
+.dropdownButton {
+    position: relative;
+    padding: 0 !important;
+    white-space: nowrap;
+    font-size: 14px;
+    line-height: 17px;
+    text-decoration: dotted;
+    outline: none;
+    &::before {
+        content: "";
+        position: absolute;
+        top: calc(50% + 9px);
+        left: 0;
+        right: 0;
+        border-top: 1px dotted;
+    }
+}
+.dropdownItem {
+
 }
 .file {
     max-width: 100%;
     position: relative;
+    margin-right: 12px;
+    :not(.files) > & {
+        padding: 3px 12px;
+        &:nth-child(n+2) {
+            margin-top: 4px;
+        }
+    }
 }
 .fileTop {
     display: flex;

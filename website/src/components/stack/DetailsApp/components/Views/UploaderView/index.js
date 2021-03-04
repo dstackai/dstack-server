@@ -40,7 +40,7 @@ const UploaderView = ({className, view, disabled, onChange: onChangeProp}: Props
             multiple={view.multiple}
             files={files}
             disabled={disabled || !view?.enabled}
-            appearance={view.colspan > 2 ? 'normal' : 'compact'}
+            appearance={'compact'}
         />
     );
 };

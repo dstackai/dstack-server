@@ -90,6 +90,8 @@ export default {
     'exploreFreePlan': 'Explore free plan',
     'failed': 'Failed',
     'failedDueToTimeout': 'Failed due to timeout',
+    'fileUploadedWithCount': '{{count}} file uploaded',
+    'fileUploadedWithCount_plural': '{{count}} files uploaded',
     'findDashboard': 'Find dashboard',
     'findJob': 'Find job',
     'findStack': 'Find stack',
