@@ -4,9 +4,25 @@ import json
 from unittest import TestCase
 
 from dstack import JsonProtocol, BytesContent
+from dstack.protocol import is_sub_dict
+
+
+class TestIsSubDict(TestCase):
+    def test_is_sub_dict(self):
+        d1 = {"a": "A", "b": "B", "c": "C"}
+        self.assertTrue(is_sub_dict(d1, {"a": "A"}))
+        self.assertFalse(is_sub_dict(d1, {"a": "B"}))
+        self.assertTrue(is_sub_dict(d1, {"b": "B"}))
+        self.assertTrue(is_sub_dict(d1, {"a": "A", "b": "B"}))
+        self.assertFalse(is_sub_dict(d1, {"a": "A", "c": "B"}))
+        self.assertTrue(is_sub_dict(d1, {"a": "A", "b": "B", "c": "C"}))
+        self.assertTrue(is_sub_dict(d1, {}))
+        self.assertTrue(is_sub_dict({}, {}))
+        self.assertFalse(is_sub_dict({}, {"a": "A"}))
 
 
 class TestJsonProtocol(TestCase):
+
     def test_data_base64_length(self):
         def test_b64(s: str):
             buf = s.encode("UTF-8")

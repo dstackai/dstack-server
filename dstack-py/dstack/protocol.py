@@ -46,7 +46,7 @@ class Protocol(ABC):
 
 
 def is_sub_dict(super_dict, sub_dict):
-    return all(item in super_dict for item in sub_dict if type(item) == 'str')
+    return all(item in super_dict and super_dict.get(item) == sub_dict.get(item) for item in sub_dict if type(item) == str)
 
 
 class JsonProtocol(Protocol):
@@ -92,7 +92,7 @@ class JsonProtocol(Protocol):
         if meta is None:
             attachments = res["stack"]["head"]["attachments"]
         else:
-            frames = [f for f in res["stack"]["frames"] if is_sub_dict(f["params"].items(), meta)]
+            frames = [f for f in res["stack"]["frames"] if is_sub_dict(f["params"], meta)]
             if len(frames) > 0:
                 frame = frames[len(frames) - 1]["id"]
             else:
@@ -100,7 +100,7 @@ class JsonProtocol(Protocol):
             frame_url = f"/frames/{stack}/{frame}"
             attachments = self.do_request(frame_url, None, token=token, method="GET")["frame"]["attachments"]
         for index, attach in enumerate(attachments):
-            if (len(attachments) == 1 and empty) or is_sub_dict(attach["params"].items(), params.items()):
+            if (len(attachments) == 1 and empty) or is_sub_dict(attach["params"], params):
                 frame = res["stack"]["head"]["id"]
                 attach_url = f"/attachs/{stack}/{frame}/{index}?download=true"
                 return frame, index, self.do_request(attach_url, None, token=token, method="GET")

@@ -1,6 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val baseVersion = "0.6.3"
+val baseVersion = "0.6.4"
 
 plugins {
     java
