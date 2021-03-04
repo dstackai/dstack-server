@@ -9,7 +9,7 @@
 Installing and running `dstack` is very easy:
 
 ```bash
-pip install dstack
+pip install dstack==0.6.3
 dstack server start
 ```
 
@@ -39,30 +39,38 @@ for the FAANG companies and renders it for a selected symbol. Here's the Python 
 an application:
 
 ```python
-import dstack.controls as ctrl
 import dstack as ds
 import plotly.express as px
 
+app = ds.app()  # create an instance of the application
 
-@ds.cache()
+
+# an utility function that loads the data
 def get_data():
     return px.data.stocks()
 
 
-def output_handler(self, ticker):
-    self.data = px.line(get_data(), x='date', y=ticker.value())
+# a drop-down control that shows stock symbols
+stock = app.select(items=get_data().columns[1:].tolist())
 
 
-app = ds.app(controls=[(ctrl.ComboBox(items=get_data().columns[1:].tolist()))],
-             outputs=[(ctrl.Output(handler=output_handler))])
+# a handler that updates the plot based on the selected stock
+def output_handler(self, stock):
+    # a plotly line chart where the X axis is date and Y is the stock's price
+    self.data = px.line(get_data(), x='date', y=stock.value())
 
-result = ds.push("minimal_app", app)
-print(result.url)
+
+# a plotly chart output
+app.output(handler=output_handler, depends=[stock])
+
+# deploy the application with the name "stocks" and print its URL 
+url = app.deploy("stocks")
+print(url)
 ```
 
 If you run it and click the provided URL, you'll see the application:
 
-![](https://gblobscdn.gitbook.com/assets%2F-LyOZaAwuBdBTEPqqlZy%2F-MSI_BjrbZF2tVv5JDD4%2F-MSI_M7NOj__N0y6h45A%2Fdstack_stocks.png?alt=media&token=6a5eea9b-1661-4850-8bfd-7face8e97789)
+![](https://gblobscdn.gitbook.com/assets%2F-LyOZaAwuBdBTEPqqlZy%2F-MUsHMnuErEkCp8Ojc5p%2F-MUsJ7mB7rWxPiL04Bs2%2Fds_stocks.png?alt=media&token=3c4494da-fa48-40ee-bf1d-003de9c81076)
 
 To learn about how this application works and to see other examples, please check out
 the [Tutorials](https://docs.dstack.ai/tutorials) documentation page.
@@ -80,28 +88,34 @@ way, one can develop ML models, push them to the registry, and then later pull t
 Here's a very simple example of how to push a model to `dstack`:
 
 ```python
-from sklearn import datasets
-from sklearn import svm
+from sklearn.svm import SVC
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.preprocessing import LabelBinarizer
 import dstack as ds
 
-digits = datasets.load_digits()
-clf = svm.SVC(gamma=0.001, C=100.)
-clf.fit(digits.data[:-1], digits.target[:-1])
+X = [[1, 2], [2, 4], [4, 5], [3, 2], [3, 1]]
+y = [0, 0, 1, 1, 2]
 
-url = ds.push("clf_app", clf)
+classif = OneVsRestClassifier(estimator=SVC(random_state=0))
+classif.fit(X, y)
+
+url = ds.push("classif", classif)
 print(url)
 ```
 
 Now, if you click the URL, it will open the following page:
 
-![](https://gblobscdn.gitbook.com/assets%2F-LyOZaAwuBdBTEPqqlZy%2F-MRGNY5YFKhVKgIGfGWP%2F-MRGNzac1vfYPdiF6LKJ%2Fds_%20clf_app.png?alt=media&token=6cc4027a-6c4a-489d-bd55-a88f17a7344b)
+![](https://gblobscdn.gitbook.com/assets%2F-LyOZaAwuBdBTEPqqlZy%2F-MUtdamHIbD6Der3jOCe%2F-MUtiDbgzXQkltK6ypTu%2Fds_model.png?alt=media&token=684c81e3-ec1f-4005-9117-444089f56cad)
 
 Here you can see the snippet of how to pull the model from an application or from anywhere else:
 
 ```python
 import dstack as ds
 
-model = ds.pull('/dstack/clf_app')
+X = [[1, 2], [2, 4], [4, 5], [3, 2], [3, 1]]
+
+classif = ds.pull('/dstack/classif')
+classif.predict(X)
 ```
 
 To learn how to build an application that uses a simple ML model, check out

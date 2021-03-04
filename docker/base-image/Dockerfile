@@ -2,7 +2,7 @@ FROM debian:stable-slim
 
 ENV PIP_URL_PRIMARY=https://test.pypi.org/simple/
 ENV PIP_URL_SECONDARY=https://pypi.org/simple/
-ENV DSTACK_PIP_VERSION=0.6.3.dev19
+ENV DSTACK_PIP_VERSION=0.6.3
 
 ENV PYTHON_3_6_VERSION=3.6.12
 ENV PYTHON_3_7_VERSION=3.7.9
