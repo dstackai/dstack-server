@@ -121,6 +121,11 @@ class LocalCliAppConfig : AppConfig {
             return smtpHost != null
         }
 
+    override val gaTrackingId: String?
+        get() {
+            return getEnvIfNotEmpty("DSTACK_GA_TRACKING_ID")
+        }
+
     private fun getEnvIfNotEmpty(name: String): String? {
         val e = System.getenv(name)
         return if (!e.isNullOrBlank()) e else null

@@ -23,4 +23,5 @@ interface AppConfig {
     val smtpFrom: String?
     val pythonExecutables: Map<String, String>
     val emailEnabled: Boolean
+    val gaTrackingId: String?
 }

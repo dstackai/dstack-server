@@ -19,5 +19,6 @@ dependencies {
     compile(Deps.spring_data_jpa)
     compile(Deps.sqlite_dialect)
     compile(Deps.sqlite_jdbc)
+    compile(Deps.google_analytics_java)
     compile(project(":server-base"))
 }
