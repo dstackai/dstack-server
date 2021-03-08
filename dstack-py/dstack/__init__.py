@@ -315,9 +315,8 @@ def app(description: ty.Optional[str] = None,
         requirements: ty.Optional[str] = None,
         project: bool = False,
         layout: ty.Optional[str] = "grid",
-        columns: ty.Optional[int] = 12,
-        require_apply: bool = False):
-    return Application(description, controls, depends, requirements, project, None, layout, columns, require_apply)
+        columns: ty.Optional[int] = 12):
+    return Application(description, controls, depends, requirements, project, None, layout, columns)
 
 
 def default_hash_func(*args, **kwargs):
@@ -492,15 +491,13 @@ class ApplicationBase(ApplicationContainer):
                  project: bool,
                  sidebar: ty.Optional[Sidebar],
                  layout: ty.Optional[str],
-                 columns: ty.Optional[int],
-                 require_apply: ty.Optional[bool]):
+                 columns: ty.Optional[int]):
         super().__init__(id, layout, columns, controls)
         self.description = description
         self.depends = depends
         self.requirements = requirements
         self.project = project
         self._sidebar = sidebar
-        self.require_apply = require_apply
 
     def sidebar(self) -> Sidebar:
         if self._sidebar:
@@ -538,15 +535,12 @@ class Application(ApplicationBase):
                  project: bool,
                  sidebar: ty.Optional[Sidebar],
                  layout: ty.Optional[str],
-                 columns: ty.Optional[int],
-                 require_apply: ty.Optional[bool]):
-        super().__init__("main", description, controls, depends, requirements, project, sidebar, layout, columns,
-                         require_apply)
+                 columns: ty.Optional[int]):
+        super().__init__("main", description, controls, depends, requirements, project, sidebar, layout, columns)
         self.description = description
         self.depends = depends
         self.requirements = requirements
         self.tabs = []
-        self.require_apply = require_apply
 
     def tab(self, title: str, description: ty.Optional[str] = None,
             controls: ty.Optional[ty.List[Control]] = None,
@@ -554,10 +548,8 @@ class Application(ApplicationBase):
             requirements: ty.Optional[str] = None,
             project: bool = False,
             layout: ty.Optional[str] = "grid",
-            columns: ty.Optional[int] = 12,
-            require_apply: ty.Optional[bool] = None):
-        tab = ApplicationBase("main", description, controls, depends, requirements, project, None, layout, columns,
-                              require_apply)
+            columns: ty.Optional[int] = 12):
+        tab = ApplicationBase("main", description, controls, depends, requirements, project, None, layout, columns)
         self.tabs.append((title, tab))
         return tab
 
@@ -573,15 +565,14 @@ class Application(ApplicationBase):
                                    _tab.project or self.project,
                                    _tab._sidebar or self._sidebar,
                                    _tab.layout or self.layout,
-                                   _tab.columns or self.columns,
-                                   _tab.require_apply or self.require_apply)
+                                   _tab.columns or self.columns)
                 _app.merge_sidebar()
                 _frame.add(_app, _app.description, params={_id: tab(title)})
                 counter = counter + 1
             return _frame.push()
         else:
             _app = Application(self.description, self.controls, self.depends, self.requirements, self.project,
-                               self._sidebar, self.layout, self.columns, self.require_apply)
+                               self._sidebar, self.layout, self.columns)
             _app.merge_sidebar()
             return push(id, _app, _app.description, access, profile=profile)
 

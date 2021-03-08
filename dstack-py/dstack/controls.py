@@ -681,15 +681,14 @@ class Container(object):
 # TODO: Merge Application and Controller
 class Controller(object):
     def __init__(self, controls: ty.List[Control],
-                 containers: ty.List[Container],
-                 require_apply: ty.Optional[bool]):
+                 containers: ty.List[Container]):
         self.controls_by_id: ty.Dict[str, Control] = {}
         self.copy_of_controls_by_id = None
         # TODO: Validate controls and container (container IDs are valid and that there are no containers
         #  without controls)
         self.containers = containers
 
-        self.require_apply = require_apply
+        self.require_apply = False
 
         for control in controls:
             if control.is_apply_required():
