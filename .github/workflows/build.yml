@@ -139,13 +139,9 @@ jobs:
           chmod +x docker/base-image/build.sh
           chmod +x docker/base-image/release.sh
       - name: Build base image
-        run: |
-          docker/base-image/build.sh
-        env:
-          VERSION: ${{needs.publish-server-release.outputs.version}}
+        run: docker/base-image/build.sh
       - name: Release base image
-        run: |
-          docker/base-image/release.sh
+        run: docker/base-image/release.sh
         env:
           VERSION: ${{needs.publish-server-release.outputs.version}}
           DOCKER_PASS: ${{ secrets.DOCKERHUB_PASSWORD }}
@@ -218,10 +214,11 @@ jobs:
           mkdir server-local-cli/src/main/resources/website
           cp -a website-dist/** server-local-cli/src/main/resources/website
       - name: Build with Gradle
+        id: build
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
           ./gradlew -Pdstack_version=$VERSION clean build
-          echo "::set-output name=version::$(echo VERSION)"
+          echo "::set-output name=version::$(echo $VERSION)"
       - name: Set up Python 3.6
         uses: actions/setup-python@v2
         with:

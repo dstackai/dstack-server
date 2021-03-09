@@ -12,7 +12,8 @@
         {"name": "DSTACK_SMTP_PORT", "value": "${smtp_port}"},
         {"name": "DSTACK_SMTP_USER", "value": "${smtp_user}"},
         {"name": "DSTACK_SMTP_PASSWORD", "value": "${smtp_password}"},
-        {"name": "DSTACK_SMTP_FROM", "value": "${smtp_from}"}
+        {"name": "DSTACK_SMTP_FROM", "value": "${smtp_from}"},
+        {"name": "DSTACK_GA_TRACKING_ID", "value": "UA-4493451-5"}
     ],
     "image": "${image}",
     "cpu": ${fargate_cpu},

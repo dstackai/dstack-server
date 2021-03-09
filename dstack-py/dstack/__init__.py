@@ -315,9 +315,8 @@ def app(description: ty.Optional[str] = None,
         requirements: ty.Optional[str] = None,
         project: bool = False,
         layout: ty.Optional[str] = "grid",
-        columns: ty.Optional[int] = 12,
-        require_apply: bool = False):
-    return Application(description, controls, depends, requirements, project, None, layout, columns, require_apply)
+        columns: ty.Optional[int] = 12):
+    return Application(description, controls, depends, requirements, project, None, layout, columns)
 
 
 def default_hash_func(*args, **kwargs):
@@ -373,12 +372,14 @@ class ApplicationContainer:
                handler: ty.Optional[ty.Callable[..., None]] = None,
                selected: ty.Optional[ty.Union[int, list]] = None,
                multiple: bool = False,
+               placeholder: ty.Optional[str] = None,
                label: ty.Optional[str] = None,
                depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
                title: ty.Optional[ty.Callable[[T], str]] = None,
+               visible: bool = True,
                colspan: ty.Optional[int] = None,
                rowspan: ty.Optional[int] = None) -> Select:
-        select = Select(items, handler, None, selected, multiple, label, depends, title, self.id,
+        select = Select(items, handler, None, selected, multiple, placeholder, label, depends, title, self.id, visible,
                         self.validate_colspan(colspan, minimum=2, default=2),
                         self.validate_rowspan(rowspan, minimum=1, default=1))
         self.controls.append(select)
@@ -394,13 +395,15 @@ class ApplicationContainer:
     def input(self,
               text: ty.Union[ty.Optional[str], ty.Callable[[], str]] = None,
               handler: ty.Optional[ty.Callable[..., None]] = None,
+              placeholder: ty.Optional[str] = None,
               label: ty.Optional[str] = None,
               depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
               require_apply: bool = False,
               optional: ty.Optional[bool] = None,
+              visible: bool = True,
               colspan: ty.Optional[int] = None,
               rowspan: ty.Optional[int] = None) -> Input:
-        input = Input(text, handler, label, depends, require_apply, optional, self.id,
+        input = Input(text, handler, placeholder, label, depends, require_apply, optional, self.id, visible,
                      self.validate_colspan(colspan, minimum=2, default=2),
                      self.validate_rowspan(rowspan, minimum=1, default=1))
         self.controls.append(input)
@@ -411,10 +414,11 @@ class ApplicationContainer:
                handler: ty.Optional[ty.Callable[..., None]] = None,
                label: ty.Optional[str] = None,
                depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
+               visible: bool = True,
                colspan: ty.Optional[int] = None,
                rowspan: ty.Optional[int] = None,
                require_apply: bool = False) -> Output:
-        output = Output(data, handler, label, depends, self.id,
+        output = Output(data, handler, label, depends, self.id, visible,
                         self.validate_colspan(colspan, 6, default=6),
                         self.validate_rowspan(rowspan, minimum=6, default=6), require_apply)
         self.controls.append(output)
@@ -424,10 +428,11 @@ class ApplicationContainer:
                  handler: ty.Optional[ty.Callable[..., None]] = None,
                  label: ty.Optional[str] = None,
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
+                 visible: bool = True,
                  colspan: ty.Optional[int] = None,
                  rowspan: ty.Optional[int] = None,
                  require_apply: bool = False) -> Markdown:
-        markdown = Markdown(text, handler, label, depends, self.id,
+        markdown = Markdown(text, handler, label, depends, self.id, visible,
                             self.validate_colspan(colspan, minimum=6, default=self.columns),
                             self.validate_rowspan(rowspan, minimum=1, default=1), require_apply)
         self.controls.append(markdown)
@@ -439,10 +444,11 @@ class ApplicationContainer:
                selected: int = 0,
                label: ty.Optional[str] = None,
                depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
+               visible: bool = True,
                colspan: ty.Optional[int] = None,
                rowspan: ty.Optional[int] = None,
                require_apply: bool = False) -> Slider:
-        slider = Slider(values, handler, selected, label, depends, self.id,
+        slider = Slider(values, handler, selected, label, depends, self.id, visible,
                         self.validate_colspan(colspan, minimum=2, default=2),
                         self.validate_rowspan(rowspan, minimum=1, default=1, maximum=1), require_apply)
         self.controls.append(slider)
@@ -455,9 +461,10 @@ class ApplicationContainer:
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
                  handler: ty.Optional[ty.Callable[..., None]] = None,
                  optional: ty.Optional = None,
+                 visible: bool = True,
                  colspan: ty.Optional[int] = None,
                  rowspan: ty.Optional[int] = None) -> Uploader:
-        uploader = Uploader(uploads, multiple, label, depends, handler, optional, self.id,
+        uploader = Uploader(uploads, multiple, label, depends, handler, optional, self.id, visible,
                             self.validate_colspan(colspan, minimum=2, default=2),
                             self.validate_rowspan(rowspan, minimum=1, default=1))
         self.controls.append(uploader)
@@ -468,9 +475,10 @@ class ApplicationContainer:
                  handler: ty.Optional[ty.Callable[..., None]] = None,
                  label: ty.Optional[str] = None,
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
+                 visible: bool = True,
                  colspan: ty.Optional[int] = None,
                  rowspan: ty.Optional[int] = None) -> Checkbox:
-        checkbox = Checkbox(selected, handler, label, depends, self.id,
+        checkbox = Checkbox(selected, handler, label, depends, self.id, visible,
                             self.validate_colspan(colspan, minimum=2 if label else 1, default=2 if label else 1),
                             self.validate_rowspan(rowspan, minimum=1, default=1, maximum=1))
         self.controls.append(checkbox)
@@ -492,15 +500,13 @@ class ApplicationBase(ApplicationContainer):
                  project: bool,
                  sidebar: ty.Optional[Sidebar],
                  layout: ty.Optional[str],
-                 columns: ty.Optional[int],
-                 require_apply: ty.Optional[bool]):
+                 columns: ty.Optional[int]):
         super().__init__(id, layout, columns, controls)
         self.description = description
         self.depends = depends
         self.requirements = requirements
         self.project = project
         self._sidebar = sidebar
-        self.require_apply = require_apply
 
     def sidebar(self) -> Sidebar:
         if self._sidebar:
@@ -538,15 +544,12 @@ class Application(ApplicationBase):
                  project: bool,
                  sidebar: ty.Optional[Sidebar],
                  layout: ty.Optional[str],
-                 columns: ty.Optional[int],
-                 require_apply: ty.Optional[bool]):
-        super().__init__("main", description, controls, depends, requirements, project, sidebar, layout, columns,
-                         require_apply)
+                 columns: ty.Optional[int]):
+        super().__init__("main", description, controls, depends, requirements, project, sidebar, layout, columns)
         self.description = description
         self.depends = depends
         self.requirements = requirements
         self.tabs = []
-        self.require_apply = require_apply
 
     def tab(self, title: str, description: ty.Optional[str] = None,
             controls: ty.Optional[ty.List[Control]] = None,
@@ -554,10 +557,8 @@ class Application(ApplicationBase):
             requirements: ty.Optional[str] = None,
             project: bool = False,
             layout: ty.Optional[str] = "grid",
-            columns: ty.Optional[int] = 12,
-            require_apply: ty.Optional[bool] = None):
-        tab = ApplicationBase("main", description, controls, depends, requirements, project, None, layout, columns,
-                              require_apply)
+            columns: ty.Optional[int] = 12):
+        tab = ApplicationBase("main", description, controls, depends, requirements, project, None, layout, columns)
         self.tabs.append((title, tab))
         return tab
 
@@ -573,15 +574,14 @@ class Application(ApplicationBase):
                                    _tab.project or self.project,
                                    _tab._sidebar or self._sidebar,
                                    _tab.layout or self.layout,
-                                   _tab.columns or self.columns,
-                                   _tab.require_apply or self.require_apply)
+                                   _tab.columns or self.columns)
                 _app.merge_sidebar()
                 _frame.add(_app, _app.description, params={_id: tab(title)})
                 counter = counter + 1
             return _frame.push()
         else:
             _app = Application(self.description, self.controls, self.depends, self.requirements, self.project,
-                               self._sidebar, self.layout, self.columns, self.require_apply)
+                               self._sidebar, self.layout, self.columns)
             _app.merge_sidebar()
             return push(id, _app, _app.description, access, profile=profile)
 
