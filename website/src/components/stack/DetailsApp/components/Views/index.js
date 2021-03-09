@@ -48,7 +48,10 @@ const debounce = 1000;
 
 const Views = ({className, views, container = 'main', loading, onChange}: Props) => {
     const containerViews = useMemo(() => {
-        return views.filter(v => (v.container === container || (!v.container && container === 'main')));
+        return views.filter(v => (
+            v.visible &&
+            (v.container === container || (!v.container && container === 'main'))
+        ));
     }, [views]);
 
     const {width: windowWidth} = useWindowSize();
