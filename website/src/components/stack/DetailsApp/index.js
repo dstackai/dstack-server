@@ -126,6 +126,7 @@ const Details = ({
             user: data.user,
             stack: data.name,
             frame: frameId,
+            'previous_execution_id': executionId,
             attachment: attachmentIndex || 0,
             views: views.map(v => {
                 if (v.type === VIEWS.OUTPUT)
