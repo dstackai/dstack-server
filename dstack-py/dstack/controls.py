@@ -182,6 +182,7 @@ class Control(ABC, ty.Generic[V]):
 class InputView(View):
     def __init__(self, id: str,
                  text: ty.Optional[str],
+                 placeholder: ty.Optional[str],
                  enabled: ty.Optional[bool],
                  label: ty.Optional[str],
                  optional: ty.Optional[bool],
@@ -193,9 +194,12 @@ class InputView(View):
                  rowspan: ty.Optional[int]):
         super().__init__(id, enabled, label, optional, container, require_apply, depends, visible, colspan, rowspan)
         self.text = text
+        self.placeholder = placeholder
 
     def _pack(self) -> ty.Dict:
         _dict = {"data": self.text}
+        if self.placeholder:
+            _dict["placeholder"] = self.placeholder
         return _dict
 
 
@@ -242,6 +246,7 @@ class Input(Control[InputView], ty.Generic[T]):
     def __init__(self,
                  text: ty.Union[ty.Optional[str], ty.Callable[[], str]],
                  handler: ty.Optional[ty.Callable[..., None]],
+                 placeholder: ty.Optional[str],
                  label: ty.Optional[str],
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]],
                  require_apply: bool,
@@ -253,6 +258,7 @@ class Input(Control[InputView], ty.Generic[T]):
                  ):
         super().__init__(label, None, depends, handler, require_apply, optional, container, visible, colspan, rowspan)
         self.text = text
+        self.placeholder = placeholder
 
     def _view(self) -> InputView:
         if isinstance(self.text, str):
@@ -261,7 +267,7 @@ class Input(Control[InputView], ty.Generic[T]):
             text = self.text()
         else:
             text = None
-        return InputView(self._id, text, self.enabled, self.label, self.optional, self.container,
+        return InputView(self._id, text, self.placeholder, self.enabled, self.label, self.optional, self.container,
                          self._require_apply if self._require_apply else None,
                          [c.get_id() for c in self._parents], self.visible, self.colspan, self.rowspan)
 
@@ -370,6 +376,7 @@ class SelectView(View):
                  selected: ty.Optional[ty.Union[int, ty.List[int]]],
                  titles: ty.Optional[ty.List[str]],
                  multiple: ty.Optional[bool],
+                 placeholder: ty.Optional[str],
                  enabled: ty.Optional[bool],
                  label: ty.Optional[str],
                  optional: ty.Optional[bool],
@@ -383,6 +390,7 @@ class SelectView(View):
         self.titles = titles
         self.selected = selected
         self.multiple = multiple
+        self.placeholder = placeholder
 
     def _pack(self) -> ty.Dict:
         _dict = {"titles": self.titles}
@@ -390,6 +398,8 @@ class SelectView(View):
             _dict["selected"] = self.selected
         if self.multiple:
             _dict["multiple"] = True
+        if self.placeholder:
+            _dict["placeholder"] = self.placeholder
         return _dict
 
 
@@ -400,6 +410,7 @@ class Select(Control[SelectView], ty.Generic[T]):
                  model: ty.Optional[ListModel[T]],
                  selected: ty.Optional[ty.Union[int, list]],
                  multiple: bool,
+                 placeholder: ty.Optional[str],
                  label: ty.Optional[str],
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]],
                  title: ty.Optional[ty.Callable[[T], str]],
@@ -413,6 +424,7 @@ class Select(Control[SelectView], ty.Generic[T]):
         self._model = model
         self.selected = selected or ([] if multiple else 0)
         self.multiple = multiple
+        self.placeholder = placeholder
         self.title = title
         if self.multiple:
             assert isinstance(self.selected, list)
@@ -432,8 +444,8 @@ class Select(Control[SelectView], ty.Generic[T]):
 
     def _view(self) -> SelectView:
         model = self.get_model()
-        return SelectView(self._id, self.selected, model.titles(), True if self.multiple else None, self.enabled,
-                          self.label, self.optional, self.container,
+        return SelectView(self._id, self.selected, model.titles(), True if self.multiple else None,
+                          self.placeholder, self.enabled, self.label, self.optional, self.container,
                           self._require_apply if self._require_apply else None,
                           [c.get_id() for c in self._parents], self.visible, self.colspan, self.rowspan)
 
@@ -618,7 +630,7 @@ class Uploader(Control[UploaderView]):
 def unpack_view(source: ty.Dict) -> View:
     type = source["type"]
     if type == "InputView":
-        return InputView(source["id"], source.get("data"), source.get("enabled"),
+        return InputView(source["id"], source.get("data"), source.get("placeholder"), source.get("enabled"),
                          source.get("label"), source.get("optional"), source.get("container"),
                          source.get("require_apply"), source.get("depends"),
                          source.get("visible") is not False, source.get("colspan"), source.get("rowspan"))
@@ -635,7 +647,7 @@ def unpack_view(source: ty.Dict) -> View:
                 selected = []
             elif isinstance(selected, int):
                 selected = [selected]
-        return SelectView(source["id"], selected, source.get("titles"), multiple,
+        return SelectView(source["id"], selected, source.get("titles"), multiple, source.get("placeholder"),
                           source.get("enabled"), source.get("label"), source.get("optional"), source.get("container"),
                           source.get("require_apply"), source.get("depends"),
                           source.get("visible") is not False, source.get("colspan"), source.get("rowspan"))

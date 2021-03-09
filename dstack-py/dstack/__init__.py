@@ -372,13 +372,14 @@ class ApplicationContainer:
                handler: ty.Optional[ty.Callable[..., None]] = None,
                selected: ty.Optional[ty.Union[int, list]] = None,
                multiple: bool = False,
+               placeholder: ty.Optional[str] = None,
                label: ty.Optional[str] = None,
                depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
                title: ty.Optional[ty.Callable[[T], str]] = None,
                visible: bool = True,
                colspan: ty.Optional[int] = None,
                rowspan: ty.Optional[int] = None) -> Select:
-        select = Select(items, handler, None, selected, multiple, label, depends, title, self.id, visible,
+        select = Select(items, handler, None, selected, multiple, placeholder, label, depends, title, self.id, visible,
                         self.validate_colspan(colspan, minimum=2, default=2),
                         self.validate_rowspan(rowspan, minimum=1, default=1))
         self.controls.append(select)
@@ -394,6 +395,7 @@ class ApplicationContainer:
     def input(self,
               text: ty.Union[ty.Optional[str], ty.Callable[[], str]] = None,
               handler: ty.Optional[ty.Callable[..., None]] = None,
+              placeholder: ty.Optional[str] = None,
               label: ty.Optional[str] = None,
               depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
               require_apply: bool = False,
@@ -401,7 +403,7 @@ class ApplicationContainer:
               visible: bool = True,
               colspan: ty.Optional[int] = None,
               rowspan: ty.Optional[int] = None) -> Input:
-        input = Input(text, handler, label, depends, require_apply, optional, self.id, visible,
+        input = Input(text, handler, placeholder, label, depends, require_apply, optional, self.id, visible,
                      self.validate_colspan(colspan, minimum=2, default=2),
                      self.validate_rowspan(rowspan, minimum=1, default=1))
         self.controls.append(input)
