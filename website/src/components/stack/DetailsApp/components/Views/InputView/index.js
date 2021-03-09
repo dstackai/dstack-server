@@ -38,32 +38,29 @@ const InputView = ({className, view, disabled, debounce = 300, onChange: onChang
     const onFocus = () => setIsFocus(true);
     const onBlur = () => setIsFocus(false);
 
+    const props = {
+        size: 'small',
+        className,
+        onChange,
+        label: view.label,
+        name: view.id,
+        value,
+        disabled: (disabled && !isFocus) || !view.enabled,
+        placeholder: view.placeholder,
+        onFocus,
+        onBlur,
+    };
+
     if (!view.rowspan || view.rowspan < 2)
         return (
             <TextField
-                size="small"
-                className={className}
-                onChange={onChange}
-                label={view.label}
-                name={view.id}
-                value={value}
-                disabled={(disabled && !isFocus) || !view.enabled}
-                onFocus={onFocus}
-                onBlur={onBlur}
+                {...props}
             />
         );
     else
         return (
             <TextAreaField
-                size="small"
-                className={className}
-                onChange={onChange}
-                label={view.label}
-                name={view.id}
-                value={value}
-                disabled={(disabled && !isFocus) || !view.enabled}
-                onFocus={onFocus}
-                onBlur={onBlur}
+                {...props}
                 style={{height: 'auto'}}
             />
         );

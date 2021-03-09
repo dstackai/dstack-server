@@ -51,6 +51,7 @@ const SelectView = ({className, disabled, view, onChange: onChangeProp}: Props) 
             options={options}
             value={value}
             disabled={disabled || !view.enabled}
+            placeholder={view.placeholder}
             mode={view.multiple ? 'multiple' : null}
         />
     );
