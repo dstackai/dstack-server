@@ -167,13 +167,12 @@ class TestControls(TestCase):
         self.assertEqual({"uploads": []}, file_uploader_view._pack())
         today = date.today()
         file_uploader_view.uploads.append(ctrl.Upload("some_file_id", "some_file_name", 123, today))
-        packed_view = {"id": file_uploader._id, 'colspan': 2, 'container': 'main',
-                       "enabled": True, "label": None, "optional": False, 'rowspan': 1,
+        packed_view = {"id": file_uploader._id, "colspan": 2, "container": "main",
+                       "enabled": True, "label": None, "optional": False, "visible": True, "rowspan": 1,
                        "type": "UploaderView", "uploads": [
                 {"id": "some_file_id", "file_name": "some_file_name", "length": 123,
                  "created_date": today.strftime("%Y-%m-%d")}]}
-        self.assertEqual(packed_view,
-                         file_uploader_view.pack())
+        self.assertEqual(packed_view, file_uploader_view.pack())
         file_uploader.apply(file_uploader_view)
         value = file_uploader.value()
         self.assertTrue(isinstance(value, list))

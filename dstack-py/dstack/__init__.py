@@ -375,9 +375,10 @@ class ApplicationContainer:
                label: ty.Optional[str] = None,
                depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
                title: ty.Optional[ty.Callable[[T], str]] = None,
+               visible: bool = True,
                colspan: ty.Optional[int] = None,
                rowspan: ty.Optional[int] = None) -> Select:
-        select = Select(items, handler, None, selected, multiple, label, depends, title, self.id,
+        select = Select(items, handler, None, selected, multiple, label, depends, title, self.id, visible,
                         self.validate_colspan(colspan, minimum=2, default=2),
                         self.validate_rowspan(rowspan, minimum=1, default=1))
         self.controls.append(select)
@@ -397,9 +398,10 @@ class ApplicationContainer:
               depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
               require_apply: bool = False,
               optional: ty.Optional[bool] = None,
+              visible: bool = True,
               colspan: ty.Optional[int] = None,
               rowspan: ty.Optional[int] = None) -> Input:
-        input = Input(text, handler, label, depends, require_apply, optional, self.id,
+        input = Input(text, handler, label, depends, require_apply, optional, self.id, visible,
                      self.validate_colspan(colspan, minimum=2, default=2),
                      self.validate_rowspan(rowspan, minimum=1, default=1))
         self.controls.append(input)
@@ -410,10 +412,11 @@ class ApplicationContainer:
                handler: ty.Optional[ty.Callable[..., None]] = None,
                label: ty.Optional[str] = None,
                depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
+               visible: bool = True,
                colspan: ty.Optional[int] = None,
                rowspan: ty.Optional[int] = None,
                require_apply: bool = False) -> Output:
-        output = Output(data, handler, label, depends, self.id,
+        output = Output(data, handler, label, depends, self.id, visible,
                         self.validate_colspan(colspan, 6, default=6),
                         self.validate_rowspan(rowspan, minimum=6, default=6), require_apply)
         self.controls.append(output)
@@ -423,10 +426,11 @@ class ApplicationContainer:
                  handler: ty.Optional[ty.Callable[..., None]] = None,
                  label: ty.Optional[str] = None,
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
+                 visible: bool = True,
                  colspan: ty.Optional[int] = None,
                  rowspan: ty.Optional[int] = None,
                  require_apply: bool = False) -> Markdown:
-        markdown = Markdown(text, handler, label, depends, self.id,
+        markdown = Markdown(text, handler, label, depends, self.id, visible,
                             self.validate_colspan(colspan, minimum=6, default=self.columns),
                             self.validate_rowspan(rowspan, minimum=1, default=1), require_apply)
         self.controls.append(markdown)
@@ -438,10 +442,11 @@ class ApplicationContainer:
                selected: int = 0,
                label: ty.Optional[str] = None,
                depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
+               visible: bool = True,
                colspan: ty.Optional[int] = None,
                rowspan: ty.Optional[int] = None,
                require_apply: bool = False) -> Slider:
-        slider = Slider(values, handler, selected, label, depends, self.id,
+        slider = Slider(values, handler, selected, label, depends, self.id, visible,
                         self.validate_colspan(colspan, minimum=2, default=2),
                         self.validate_rowspan(rowspan, minimum=1, default=1, maximum=1), require_apply)
         self.controls.append(slider)
@@ -454,9 +459,10 @@ class ApplicationContainer:
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
                  handler: ty.Optional[ty.Callable[..., None]] = None,
                  optional: ty.Optional = None,
+                 visible: bool = True,
                  colspan: ty.Optional[int] = None,
                  rowspan: ty.Optional[int] = None) -> Uploader:
-        uploader = Uploader(uploads, multiple, label, depends, handler, optional, self.id,
+        uploader = Uploader(uploads, multiple, label, depends, handler, optional, self.id, visible,
                             self.validate_colspan(colspan, minimum=2, default=2),
                             self.validate_rowspan(rowspan, minimum=1, default=1))
         self.controls.append(uploader)
@@ -467,9 +473,10 @@ class ApplicationContainer:
                  handler: ty.Optional[ty.Callable[..., None]] = None,
                  label: ty.Optional[str] = None,
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
+                 visible: bool = True,
                  colspan: ty.Optional[int] = None,
                  rowspan: ty.Optional[int] = None) -> Checkbox:
-        checkbox = Checkbox(selected, handler, label, depends, self.id,
+        checkbox = Checkbox(selected, handler, label, depends, self.id, visible,
                             self.validate_colspan(colspan, minimum=2 if label else 1, default=2 if label else 1),
                             self.validate_rowspan(rowspan, minimum=1, default=1, maximum=1))
         self.controls.append(checkbox)
