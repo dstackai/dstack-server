@@ -34,10 +34,17 @@ const SelectView = ({className, disabled, view, onChange: onChangeProp}: Props) 
 
     const onChange = (value: number | Array<number>) => {
         if (onChangeProp)
-            onChangeProp({
-                ...view,
-                selected: value,
-            });
+            onChangeProp(
+                {
+                    ...view,
+                    selected: value,
+                },
+
+                {
+                    source: view.id,
+                    type: 'select',
+                }
+            );
     };
 
     return (

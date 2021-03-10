@@ -25,10 +25,17 @@ const CheckboxView = ({className, view, disabled, onChange: onChangeProp}: Props
         setValue(!!event.target?.checked);
 
         if (onChangeProp) {
-            onChangeProp({
-                ...view,
-                selected: !!event.target?.checked,
-            });
+            onChangeProp(
+                {
+                    ...view,
+                    selected: !!event.target?.checked,
+                },
+
+                {
+                    source: view.id,
+                    type: 'select',
+                }
+            );
         }
     };
 

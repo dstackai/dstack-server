@@ -20,14 +20,21 @@ const UploaderView = ({className, view, disabled, onChange: onChangeProp}: Props
 
     useEffect(() => setFiles(view.uploads), [view]);
 
-    const onChange = files => {
-        setFiles(files);
+    const onChange = newFiles => {
+        setFiles(newFiles);
 
         if (onChangeProp)
-            onChangeProp({
-                ...view,
-                uploads: files,
-            });
+            onChangeProp(
+                {
+                    ...view,
+                    uploads: newFiles,
+                },
+
+                {
+                    source: view.id,
+                    type: newFiles.length > files.length ? 'added' : 'removed',
+                }
+            );
     };
 
     return (

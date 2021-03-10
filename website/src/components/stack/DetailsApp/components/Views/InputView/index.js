@@ -29,10 +29,17 @@ const InputView = ({className, view, disabled, debounce = 300, onChange: onChang
         setValue(event.target.value);
 
         if (onChangeProp)
-            onChangePropDebounce({
-                ...view,
-                data: event.target.value,
-            });
+            onChangePropDebounce(
+                {
+                    ...view,
+                    data: event.target.value,
+                },
+
+                {
+                    source: view.id,
+                    type: 'change',
+                }
+            );
     };
 
     const onFocus = () => setIsFocus(true);

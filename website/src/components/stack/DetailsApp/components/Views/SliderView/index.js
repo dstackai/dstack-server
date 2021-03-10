@@ -49,10 +49,17 @@ const SliderView = ({className, view, disabled, debounce = 300, onChange: onChan
         setValue(event.target.value);
 
         if (onChangeProp)
-            onChangePropDebounce({
-                ...view,
-                selected: view.data.indexOf(event.target.value),
-            });
+            onChangePropDebounce(
+                {
+                    ...view,
+                    selected: view.data.indexOf(event.target.value),
+                },
+
+                {
+                    source: view.id,
+                    type: 'select',
+                }
+            );
     };
 
     return (

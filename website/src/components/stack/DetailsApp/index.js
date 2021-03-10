@@ -119,7 +119,7 @@ const Details = ({
         });
     };
 
-    const submit = (views = [], apply = true) => {
+    const submit = (views = [], apply = true, event) => {
         setExecuting(true);
 
         const params = {
@@ -128,6 +128,7 @@ const Details = ({
             frame: frameId,
             'previous_execution_id': executionId,
             attachment: attachmentIndex || 0,
+            event,
             views: views.map(v => {
                 if (v.type === VIEWS.OUTPUT)
                     delete v.data;
@@ -172,7 +173,9 @@ const Details = ({
         });
     });
 
-    const onChangeView = (view: TView) => {
+    const onChangeView = (view: TView, event: {source: string, type: string}) => {
+        console.log(event);
+
         getViewsAfterUpdate(view)
             .then((views: Array<TView>) => {
                 if (!isEqual(executeData.views, views)) {
@@ -181,7 +184,7 @@ const Details = ({
                             .some(v => !v['require_apply']);
 
                     if (hasNotRequiredApplyDepends)
-                        submit(views, !hasApplyButton);
+                        submit(views, !hasApplyButton, event);
                 }
             });
     };
