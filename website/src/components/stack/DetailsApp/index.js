@@ -174,8 +174,6 @@ const Details = ({
     });
 
     const onChangeView = (view: TView, event: {source: string, type: string}) => {
-        console.log(event);
-
         getViewsAfterUpdate(view)
             .then((views: Array<TView>) => {
                 if (!isEqual(executeData.views, views)) {
