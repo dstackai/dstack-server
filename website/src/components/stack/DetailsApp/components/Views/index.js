@@ -81,6 +81,13 @@ const Views = ({className, views, container = 'main', loading, onChange}: Props)
             : null;
     };
 
+    const calcViewHeight = (view: TView) => {
+        if (view.type === VIEWS.OUTPUT && view['content_type'] !== 'text/markdown')
+            return `${50 * view.rowspan + rowGap * (view.rowspan - 1)}px`;
+
+        return null;
+    };
+
     if (!containerViews?.length)
         return null;
 
@@ -95,8 +102,7 @@ const Views = ({className, views, container = 'main', loading, onChange}: Props)
                     style={{
                         gridColumn: getGridColumns(viewItem),
                         gridRow: `span ${viewItem.rowspan}`,
-                        height: viewItem.type === VIEWS.OUTPUT
-                            && `${50 * viewItem.rowspan + rowGap * (viewItem.rowspan - 1)}px`,
+                        height: calcViewHeight(viewItem),
                     }}
                 >
                     {renderView(viewItem)}
