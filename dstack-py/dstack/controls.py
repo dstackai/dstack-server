@@ -171,9 +171,9 @@ class Control(ABC, ty.Generic[V]):
     def _value(self) -> ty.Optional[ty.Any]:
         pass
 
-    # TODO: Rethink after multiple outputs refactoring is done
     def _check_pickle(self):
-        pass
+        if not hasattr(self, "visible"):
+            self.visible = True
 
     def __hash__(self):
         return hash(self.value())
@@ -282,6 +282,8 @@ class Input(Control[InputView], ty.Generic[T]):
 
     def _check_pickle(self):
         super()._check_pickle()
+        if not hasattr(self, "placeholder"):
+            self.placeholder = False
 
     def _check_after_update(self):
         pass
@@ -478,6 +480,8 @@ class Select(Control[SelectView], ty.Generic[T]):
 
     def _check_pickle(self):
         super()._check_pickle()
+        if not hasattr(self, "placeholder"):
+            self.placeholder = False
 
 
 class SliderView(View):
