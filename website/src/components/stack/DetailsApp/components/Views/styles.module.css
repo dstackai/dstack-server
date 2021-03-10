@@ -3,10 +3,10 @@
 
 .views {
     display: grid;
+    grid-auto-rows: minmax(32px, max-content);
     &.sidebar {
         grid-template-columns: repeat(2, 1fr);
         grid-gap: 16px;
-        grid-auto-rows: 50px;
         @media (max-width: 768px) {
             grid-template-columns: 1fr;
         }
@@ -15,7 +15,6 @@
         grid-template-columns: repeat(12, 1fr);
         grid-column-gap: 16px;
         grid-row-gap: 20px;
-        grid-auto-rows: 50px;
         @media (max-width: 1280px) {
             grid-template-columns: repeat(6, 1fr);
         }
@@ -40,6 +39,9 @@
         &.checkbox {
             min-height: 32px;
             justify-content: center;
+        }
+        &.output {
+
         }
     }
     & .view {

@@ -84,6 +84,8 @@ const Views = ({className, views, container = 'main', loading, onChange}: Props)
     if (!containerViews?.length)
         return null;
 
+    const rowGap = container === 'main' ? 20 : 16;
+
     return (
         <div className={cn(css.views, css[container], className)}>
             {containerViews.map((viewItem: TView, index: number) => (
@@ -93,6 +95,8 @@ const Views = ({className, views, container = 'main', loading, onChange}: Props)
                     style={{
                         gridColumn: getGridColumns(viewItem),
                         gridRow: `span ${viewItem.rowspan}`,
+                        height: viewItem.type === VIEWS.OUTPUT
+                            && `${50 * viewItem.rowspan + rowGap * (viewItem.rowspan - 1)}px`,
                     }}
                 >
                     {renderView(viewItem)}
