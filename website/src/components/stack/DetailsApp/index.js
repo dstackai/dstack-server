@@ -175,8 +175,14 @@ const Details = ({
     const onChangeView = (view: TView) => {
         getViewsAfterUpdate(view)
             .then((views: Array<TView>) => {
-                if (!isEqual(executeData.views, views))
-                    submit(views, !hasApplyButton);
+                if (!isEqual(executeData.views, views)) {
+                    const hasNotRequiredApplyDepends =
+                        views.filter(v => v.depends && v.depends.indexOf(view.id) >= 0)
+                            .some(v => !v['require_apply']);
+
+                    if (hasNotRequiredApplyDepends)
+                        submit(views, !hasApplyButton);
+                }
             });
     };
 
