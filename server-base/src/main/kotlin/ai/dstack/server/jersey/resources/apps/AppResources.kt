@@ -128,8 +128,10 @@ class AppResources {
                                     val stackUser = userService.get(stack.userName)!!
                                     val id = UUID.randomUUID().toString()
                                     executionService.create(Execution(id, stack.path, null))
-                                    val status = executorService.execute(id, stackUser, frame, attachment,
-                                            payload.views, payload.apply == true)
+                                    val status = executorService.execute(
+                                            id, stackUser, frame, attachment,
+                                            payload.views, payload.event
+                                    )
                                     ok(status)
                                 } else {
                                     unsupportedApplication(attachment.application)

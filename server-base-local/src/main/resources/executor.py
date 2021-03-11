@@ -100,7 +100,7 @@ def handle_tqdm(id, func, token, server):
     return result
 
 
-def execute(id, views, apply):
+def execute(id, views, event):
     executions = Path(executions_home) / "finished"
     executions.mkdir(exist_ok=True)
     execution_file = executions / (id + '.json')
@@ -111,6 +111,8 @@ def execute(id, views, apply):
             _outputs = []
             status = "FINISHED"
             try:
+                apply = event is not None and event.get("type") == "apply"
+
                 def list_func():
                     return controller.list(views, apply)
 
@@ -132,7 +134,7 @@ def execute(id, views, apply):
         logs = "Please update the client version of dstack and re-deploy the application: pip install dstack>=0.6.3"
 
     _containers = [_c.pack() for _c in controller.containers]
-    execution = {"id": id, "status": status, "containers": _containers}
+    execution = {"id": id, "status": status, "containers": _containers, "event": event}
     if len(logs) > 0:
         execution["logs"] = logs
     if views is not None:
@@ -147,12 +149,12 @@ def parse_command(command):
     id = command_json.get("id")
     _views = command_json.get("views")
     views = [ctrl.unpack_view(v) for v in _views] if _views is not None else None
-    apply = command_json.get("apply")
-    return id, views, apply
+    event = command_json.get("event")
+    return id, views, event
 
 
 while True:
     command = sys.stdin.readline().strip()
-    id, views, apply = parse_command(command)
+    id, views, event = parse_command(command)
     # TODO: Support timeout in future
-    execute(id, views, apply)
+    execute(id, views, event)

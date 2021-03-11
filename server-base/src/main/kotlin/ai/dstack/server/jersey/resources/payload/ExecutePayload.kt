@@ -11,5 +11,5 @@ data class ExecutePayload(
         val frame: String?,
         val attachment: Int?,
         val views: List<Map<String, Any?>>?,
-        val apply: Boolean?
+        val event: Map<String, Any?>?
 )

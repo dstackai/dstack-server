@@ -30,7 +30,7 @@ class LocalExecutorService @Autowired constructor(
     private val executionHome = File(config.executionDirectory).absolutePath
 
     override fun execute(id: String, stackUser: User, frame: Frame, attachment: Attachment,
-                         views: List<Map<String, Any?>>?, apply: Boolean): ExecutionResult {
+                         views: List<Map<String, Any?>>?, event: Map<String, Any?>?): ExecutionResult {
         val minorPythonVersion = frame.minorPythonVersion
         val clientVersion = frame.clientVersion
         return if (minorPythonVersion != null) {
@@ -38,24 +38,25 @@ class LocalExecutorService @Autowired constructor(
                 val pythonExecutable = config.pythonExecutables[minorPythonVersion]
                 if (pythonExecutable != null) {
                     init(stackUser, frame, attachment)
-                    queue(attachment, ExecutionRequest(id, views, apply))
+                    queue(attachment, ExecutionRequest(id, views, event))
                     return poll(id)!!
                 } else {
-                    failed(id, views, "The required Python version is not supported: $minorPythonVersion")
+                    failed(id, views, event, "The required Python version is not supported: $minorPythonVersion")
                 }
             } else {
-                failed(id, views, "Please update the client version of dstack and re-deploy " +
+                failed(id, views, event, "Please update the client version of dstack and re-deploy " +
                         "the application: pip install dstack>=0.6.3")
             }
         } else {
-            failed(id, views, "The Python version is missing in the application. " +
+            failed(id, views, event, "The Python version is missing in the application. " +
                     "Make sure you use the latest client to push the application.")
         }
     }
 
-    private fun failed(id: String, views: List<Map<String, Any?>>?, logs: String): ExecutionResult {
+    private fun failed(id: String, views: List<Map<String, Any?>>?,
+                       event: Map<String, Any?>?, logs: String): ExecutionResult {
         val failedExecution = failedExecution(id, logs).toByteArray()
-        writeExecutionFile(EXECUTION_STAGE_FINAL, id, views, "FAILED", logs)
+        writeExecutionFile(EXECUTION_STAGE_FINAL, id, views, event, "FAILED", logs)
         return executionFileObjectMapper.readValue(failedExecution, Map::class.java)
     }
 
@@ -65,7 +66,7 @@ class LocalExecutorService @Autowired constructor(
     }
 
     private fun queue(attachment: Attachment, request: ExecutionRequest) {
-        writeExecutionFile(EXECUTION_STAGE_ORIGINAL, request.id, request.views, "RUNNING", null)
+        writeExecutionFile(EXECUTION_STAGE_ORIGINAL, request.id, request.views, request.event, "RUNNING", null)
         val queue = executionRequestQueues[attachment.filePath]
         queue!!.put(request)
     }
@@ -114,7 +115,7 @@ class LocalExecutorService @Autowired constructor(
     private data class ExecutionRequest(
             val id: String,
             val views: List<Map<String, Any?>>?,
-            val apply: Boolean
+            val event: Map<String, Any?>?
     )
 
     private val executionRequestQueues = mutableMapOf<String, BlockingQueue<ExecutionRequest>>()
@@ -228,13 +229,16 @@ class LocalExecutorService @Autowired constructor(
     private val executionRequestsObjectMapper = ObjectMapper()
             .registerModule(KotlinModule())
 
-    private fun writeExecutionFile(stage: String, id: String,
-                                   views: List<Map<String, Any?>>?, status: String, logs: String?) {
+    private fun writeExecutionFile(stage: String, id: String, views: List<Map<String, Any?>>?,
+                                   event: Map<String, Any?>?, status: String, logs: String?) {
         val executionFile = executionFile(id, stage)
         executionFile.parentFile.mkdirs()
         val execution = mutableMapOf<String, Any?>("id" to id, "status" to status)
         views?.let {
             execution["views"] = it
+        }
+        event?.let {
+            execution["event"] = it
         }
         logs?.let {
             execution["logs"] = it
@@ -284,7 +288,7 @@ class LocalExecutorService @Autowired constructor(
     private fun destDir(attachment: Attachment) =
             File(config.appDirectory + "/" + attachment.filePath)
 
-    private val executorVersion = 24
+    private val executorVersion = 25
 
     private fun executorFile(attachment: Attachment) = File(destDir(attachment), "execute_v${executorVersion}.py")
 
