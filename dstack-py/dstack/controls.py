@@ -244,7 +244,7 @@ class CheckboxView(View):
 
 class Input(Control[InputView], ty.Generic[T]):
     def __init__(self,
-                 text: ty.Union[ty.Optional[str], ty.Callable[[], str]],
+                 text: ty.Optional[str],
                  handler: ty.Optional[ty.Callable[..., None]],
                  placeholder: ty.Optional[str],
                  label: ty.Optional[str],
@@ -261,13 +261,7 @@ class Input(Control[InputView], ty.Generic[T]):
         self.placeholder = placeholder
 
     def _view(self) -> InputView:
-        if isinstance(self.text, str):
-            text = self.text
-        elif isinstance(self.text, ty.Callable):
-            text = self.text()
-        else:
-            text = None
-        return InputView(self._id, text, self.placeholder, self.enabled, self.label, self.optional, self.container,
+        return InputView(self._id, self.text, self.placeholder, self.enabled, self.label, self.optional, self.container,
                          self._require_apply if self._require_apply else None,
                          [c.get_id() for c in self._parents], self.visible, self.colspan, self.rowspan)
 
@@ -276,8 +270,7 @@ class Input(Control[InputView], ty.Generic[T]):
         assert self._id == view.id
         self.text = view.text or ""
 
-    def _value(self) -> ty.Optional[ty.Any]:
-        # TODO: Check if data can be ty.Callable
+    def _value(self) -> ty.Optional[str]:
         return self.text
 
     def _check_pickle(self):
@@ -291,7 +284,7 @@ class Input(Control[InputView], ty.Generic[T]):
 
 class Checkbox(Control[CheckboxView], ty.Generic[T]):
     def __init__(self,
-                 selected: ty.Union[bool, ty.Callable[[], bool]],
+                 selected: bool,
                  handler: ty.Optional[ty.Callable[..., None]],
                  label: ty.Optional[str],
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]],
@@ -304,11 +297,7 @@ class Checkbox(Control[CheckboxView], ty.Generic[T]):
         self.selected = selected
 
     def _view(self) -> CheckboxView:
-        if isinstance(self.selected, bool):
-            selected = self.selected
-        elif isinstance(self.selected, ty.Callable):
-            selected = self.selected()
-        return CheckboxView(self._id, selected, self.enabled, self.label, self.optional, self.container,
+        return CheckboxView(self._id, self.selected, self.enabled, self.label, self.optional, self.container,
                             self._require_apply if self._require_apply else None,
                             [c.get_id() for c in self._parents], self.visible, self.colspan, self.rowspan)
 
@@ -323,7 +312,7 @@ class Checkbox(Control[CheckboxView], ty.Generic[T]):
 
 class ListModel(ABC, ty.Generic[T]):
     @abstractmethod
-    def apply(self, data: T):
+    def apply(self, data: ty.List[T]):
         pass
 
     @abstractmethod
@@ -331,7 +320,7 @@ class ListModel(ABC, ty.Generic[T]):
         pass
 
     @abstractmethod
-    def element(self, index: int) -> ty.Any:
+    def element(self, index: int) -> T:
         pass
 
     @abstractmethod
@@ -348,14 +337,14 @@ class ListModel(ABC, ty.Generic[T]):
 
 
 class AbstractListModel(ListModel[T], ABC):
-    def __init__(self, title_func: ty.Optional[ty.Callable[[ty.Any], str]] = None):
-        self.items: ty.Optional[ty.List[ty.Any]] = None
+    def __init__(self, title_func: ty.Optional[ty.Callable[[T], str]] = None):
+        self.items: ty.Optional[ty.List[T]] = None
         self.title_func = title_func
 
     def size(self) -> int:
         return len(self.items)
 
-    def element(self, index: int) -> ty.Any:
+    def element(self, index: int) -> T:
         return self.items[index]
 
     def title(self, index: int) -> str:
@@ -366,11 +355,6 @@ class AbstractListModel(ListModel[T], ABC):
 class DefaultListModel(AbstractListModel[ty.List[ty.Any]]):
     def apply(self, items: ty.List[ty.Any]):
         self.items = items
-
-
-class CallableListModel(AbstractListModel[ty.Callable[[], ty.List[ty.Any]]]):
-    def apply(self, items: ty.Callable[[], ty.List[ty.Any]]):
-        self.items = items()
 
 
 class SelectView(View):
@@ -407,7 +391,7 @@ class SelectView(View):
 
 class Select(Control[SelectView], ty.Generic[T]):
     def __init__(self,
-                 items: ty.Union[ty.Optional[T], ty.Callable[[], T]],
+                 items: ty.Optional[ty.List[T]],
                  handler: ty.Optional[ty.Callable[..., None]],
                  model: ty.Optional[ListModel[T]],
                  selected: ty.Optional[ty.Union[int, list]],
@@ -431,11 +415,9 @@ class Select(Control[SelectView], ty.Generic[T]):
         if self.multiple:
             assert isinstance(self.selected, list)
 
-    def _derive_model(self) -> ListModel[ty.Any]:
+    def _derive_model(self) -> ListModel[T]:
         if isinstance(self.items, list):
             return DefaultListModel(self.title)
-        elif isinstance(self.items, ty.Callable):
-            return CallableListModel(self.title)
         else:
             raise ValueError(f"Unsupported items type: {type(self.items)}")
 
@@ -506,7 +488,7 @@ class SliderView(View):
 
 class Slider(Control[SliderView]):
     def __init__(self,
-                 values: ty.Optional[ty.Union[ty.Iterable[float], ty.Callable]],
+                 values: ty.Optional[ty.Iterable[float]],
                  handler: ty.Optional[ty.Callable[..., None]],
                  selected: int,
                  label: ty.Optional[str],
@@ -592,7 +574,7 @@ class UploaderView(View):
 
 class Uploader(Control[UploaderView]):
     def __init__(self,
-                 uploads: ty.Union[ty.Optional[ty.List[Upload]], ty.Callable[[], ty.List[Upload]]],
+                 uploads: ty.Optional[ty.List[Upload]],
                  multiple: bool,
                  label: ty.Optional[str],
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]],
@@ -604,15 +586,11 @@ class Uploader(Control[UploaderView]):
                  rowspan: ty.Optional[int]
                  ):
         super().__init__(label, None, depends, handler, False, optional, container, visible, colspan, rowspan)
-        self.uploads: ty.Union[ty.List[Upload], ty.Callable[[], ty.List[Upload]]] = uploads if uploads else []
+        self.uploads: ty.Optional[ty.List[Upload]] = uploads if uploads else []
         self.multiple = multiple
 
     def _view(self) -> UploaderView:
-        if isinstance(self.uploads, list):
-            uploads = self.uploads
-        elif isinstance(self.uploads, ty.Callable):
-            uploads = self.uploads()
-        return UploaderView(self.get_id(), uploads, self.multiple, self.enabled, self.label,
+        return UploaderView(self.get_id(), self.uploads, self.multiple, self.enabled, self.label,
                             self.optional, self.container,
                             self._require_apply if self._require_apply else None,
                             [c.get_id() for c in self._parents], self.visible, self.colspan, self.rowspan)
@@ -623,7 +601,6 @@ class Uploader(Control[UploaderView]):
         self.uploads = view.uploads
 
     def _value(self) -> ty.List[Upload]:
-        # TODO: Check if uploads can be ty.Callable
         return self.uploads
 
     def _check_pickle(self):
@@ -679,7 +656,7 @@ def unpack_view(source: ty.Dict) -> View:
 class Output(Control[OutputView], ty.Generic[T]):
 
     def __init__(self,
-                 data: ty.Union[ty.Optional[ty.Any], ty.Callable[[], ty.Any]],
+                 data: ty.Optional[ty.Any],
                  handler: ty.Optional[ty.Callable[..., None]],
                  label: ty.Optional[str],
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]],
@@ -692,11 +669,7 @@ class Output(Control[OutputView], ty.Generic[T]):
         self.data = data
 
     def _view(self) -> V:
-        if isinstance(self.data, ty.Callable):
-            data = self.data()
-        else:
-            data = self.data
-        return OutputView(self._id, data, self.enabled, self.label, self.optional, self.container,
+        return OutputView(self._id, self.data, self.enabled, self.label, self.optional, self.container,
                           self._require_apply if self._require_apply else None,
                           [c.get_id() for c in self._parents], self.visible, self.colspan, self.rowspan)
 
@@ -704,16 +677,12 @@ class Output(Control[OutputView], ty.Generic[T]):
         pass
 
     def _value(self) -> ty.Optional[ty.Any]:
-        if isinstance(self.data, ty.Callable):
-            data = self.data()
-        else:
-            data = self.data
-        return data
+        return self.data
 
 
 class Markdown(Output, ty.Generic[T]):
     def __init__(self,
-                 text: ty.Union[ty.Optional[str], ty.Callable[[], str]],
+                 text: ty.Optional[str],
                  handler: ty.Optional[ty.Callable[..., None]],
                  label: ty.Optional[str],
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]],
@@ -723,14 +692,15 @@ class Markdown(Output, ty.Generic[T]):
                  rowspan: ty.Optional[int],
                  require_apply: bool):
         super().__init__(
-            (md.Markdown(text) if isinstance(text, str) else lambda: md.Markdown(
-                text())) if text is not None else None, handler, label, depends, container, visible,
+            md.Markdown(text) if text is not None else None, handler, label, depends, container, visible,
             colspan, rowspan, require_apply)
         self.text = text
 
     def _check_after_update(self):
         if isinstance(self.text, str):
             self.data = md.Markdown(self.text)
+        else:
+            self.data = None
 
 
 class Container(object):

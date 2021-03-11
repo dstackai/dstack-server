@@ -368,7 +368,7 @@ class ApplicationContainer:
         self.controls = controls or []
 
     def select(self,
-               items: ty.Union[ty.Optional[T], ty.Callable[[], T]] = None,
+               items: ty.Optional[T] = None,
                handler: ty.Optional[ty.Callable[..., None]] = None,
                selected: ty.Optional[ty.Union[int, list]] = None,
                multiple: bool = False,
@@ -424,7 +424,7 @@ class ApplicationContainer:
         self.controls.append(output)
         return output
 
-    def markdown(self, text: ty.Union[ty.Optional[str], ty.Callable[[], str]] = None,
+    def markdown(self, text: ty.Optional[str] = None,
                  handler: ty.Optional[ty.Callable[..., None]] = None,
                  label: ty.Optional[str] = None,
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
@@ -439,7 +439,7 @@ class ApplicationContainer:
         return markdown
 
     def slider(self,
-               values: ty.Optional[ty.Union[ty.Iterable[float], ty.Callable]] = None,
+               values: ty.Optional[ty.Iterable[float]] = None,
                handler: ty.Optional[ty.Callable[..., None]] = None,
                selected: int = 0,
                label: ty.Optional[str] = None,
@@ -455,7 +455,7 @@ class ApplicationContainer:
         return slider
 
     def uploader(self,
-                 uploads: ty.Union[ty.Optional[ty.List[Upload]], ty.Callable[[], ty.List[Upload]]] = None,
+                 uploads: ty.Optional[ty.List[Upload]] = None,
                  multiple: bool = False,
                  label: ty.Optional[str] = None,
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
@@ -471,7 +471,7 @@ class ApplicationContainer:
         return uploader
 
     def checkbox(self,
-                 selected: ty.Union[bool, ty.Callable[[], bool]] = False,
+                 selected: bool = False,
                  handler: ty.Optional[ty.Callable[..., None]] = None,
                  label: ty.Optional[str] = None,
                  depends: ty.Optional[ty.Union[ty.List[Control], Control]] = None,
