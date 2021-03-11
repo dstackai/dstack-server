@@ -3,12 +3,10 @@ import React, {useEffect, useRef, useState, Fragment} from 'react';
 import cn from 'classnames';
 import pick from 'lodash/pick';
 import isEqual from 'lodash/isEqual';
-import {useWindowSize} from 'react-use';
 import axios from 'axios';
 import {useTranslation} from 'react-i18next';
 import {formatBytes, checkAvailableExtension} from 'utils';
 import Button from 'components/Button';
-import Dropdown from 'components/Dropdown';
 import actions from './actions';
 import css from './style.module.css';
 
@@ -42,7 +40,7 @@ type FileItemProps = {
     onDelete?: Function,
 }
 
-const FileItem = ({file, onDelete, className}: FileItemProps) => {
+const FileItem = ({file, onDelete, disabled, className}: FileItemProps) => {
     return (
         <div className={cn(css.file, className)}>
             <div className={css.fileTop}>
@@ -51,7 +49,11 @@ const FileItem = ({file, onDelete, className}: FileItemProps) => {
                 <span className={css.fileSize}>{formatBytes(file.length)}</span>
 
                 {onDelete && (
-                    <button className={css.fileRemove} onClick={() => onDelete(file.id)}>
+                    <button
+                        disabled={disabled}
+                        className={css.fileRemove}
+                        onClick={() => onDelete(file.id)}
+                    >
                         <span className="mdi mdi-close" />
                     </button>
                 )}
@@ -82,14 +84,10 @@ const FileField = ({
     const inputRef = useRef(null);
     const [active, setActive] = useState(false);
     const isDidMount = useRef(false);
-    const sectionRef = useRef(null);
-    const filesRef = useRef(null);
-    const dropdownRef = useRef(null);
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [value, setValue] = useState(files);
     const [uploadedFiles, setUploadedFiles] = useState([]);
     const hasErrors = Boolean(errors.length);
-    const {width: windowWidth} = useWindowSize();
 
     const {upload} = actions();
 
@@ -99,37 +97,26 @@ const FileField = ({
     }, [files]);
 
     useEffect(() => {
-        if (!isEqual(value, files) && onChange && uploadedFiles.length === 0 && isDidMount.current)
-            onChange(value);
+        // if (!isEqual(value, files)
+        //     && onChange
+        //     && uploadedFiles.length === 0
+        //     && isDidMount.current
+        // )
+        //     onChange(value);
     }, [value]);
 
     useEffect(() => {
-        if (sectionRef.current && filesRef.current && dropdownRef.current) {
-
-            dropdownRef.current.style.opacity = '0';
-            filesRef.current.style.opacity = '0';
-
-            dropdownRef.current.classList.remove('hidden');
-            filesRef.current.classList.remove('hidden');
-
-            const {x: sectionX, width: sectionWidth} = sectionRef.current.getBoundingClientRect();
-            const {x: filesX, width: filesWidth} = filesRef.current.getBoundingClientRect();
-            const overWidth = sectionX + sectionWidth < filesX + filesWidth;
-
-            if (overWidth)
-                filesRef.current.classList.add('hidden');
-            else
-                dropdownRef.current.classList.add('hidden');
-
-            dropdownRef.current.style.opacity = null;
-            filesRef.current.style.opacity = null;
-        }
-    }, [value, uploadedFiles, windowWidth]);
-
-    useEffect(() => {
         if (isDidMount.current) {
-            if (selectedFiles) {
-                selectedFiles.forEach(submit);
+            if (selectedFiles?.length) {
+                Promise.all(selectedFiles.map(submit))
+                    .then(() => {
+                        setValue(value => {
+                            onChange(value);
+                            return value;
+                        });
+                    });
+
+                setSelectedFiles([]);
             }
         } else
             isDidMount.current = true;
@@ -178,7 +165,14 @@ const FileField = ({
     };
 
     const removeFile = (id: string) => {
-        setValue(prevState => prevState.filter(f => f.id !== id));
+        setValue(prevState => {
+            const state = prevState.filter(f => f.id !== id);
+
+            if (onChange)
+                onChange(state);
+
+            return state;
+        });
     };
 
     const cancelUploadFile = (id: string) => {
@@ -193,69 +187,93 @@ const FileField = ({
     };
 
     const submit = async (file: File) => {
-        const cancelTokenSource = axios.CancelToken.source();
-        const response = await  upload({file});
+        return new Promise(async resolve => {
+            try {
+                const cancelTokenSource = axios.CancelToken.source();
+                const response = await upload({file});
 
-        setUploadedFiles(prevState => {
-            return [
-                ...prevState,
-                {
-                    ...response,
-                    progress: 0,
-                    cancelTokenSource,
-                },
-            ];
-        });
-
-        if (response['upload_url']) {
-            await axios.put(
-                response['upload_url'],
-                file,
-                {
-                    cancelToken: cancelTokenSource.token,
-                    headers: {'Content-Type': 'application/octet-stream'},
-
-                    onUploadProgress: progressEvent => {
-                        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-
-                        setUploadedFiles(prevState => {
-                            const newState = [...prevState];
-                            const file = newState.find(i => i.id === response.id);
-
-
-                            if (file)
-                                if (percentCompleted < 100)
-                                    file.progress = percentCompleted;
-                                else {
-                                    setValue(prevValue => {
-                                        return prevValue
-                                            .concat(pick(file, ['id', 'file_name', 'length', 'created_date']));
-                                    });
-
-                                    return prevState.filter(f => f.id !== file.id);
-                                }
-
-                            return newState;
-                        });
-                    },
-                }
-            );
-        } else {
-            setUploadedFiles(prevState => {
-                const file = prevState.find(i => i.id === response.id);
-
-                setValue(prevValue => {
-                    return prevValue
-                        .concat(pick(file, ['id', 'file_name', 'length', 'created_date']));
+                setUploadedFiles(prevState => {
+                    return [
+                        ...prevState,
+                        {
+                            ...response,
+                            progress: 0,
+                            cancelTokenSource,
+                        },
+                    ];
                 });
 
-                return prevState.filter(f => f.id !== file.id);
-            });
-        }
+                if (response['upload_url']) {
+                    try {
+                        await axios.put(
+                            response['upload_url'],
+                            file,
+                            {
+                                cancelToken: cancelTokenSource.token,
+                                headers: {'Content-Type': 'application/octet-stream'},
+
+                                onUploadProgress: progressEvent => {
+                                    const percentCompleted = Math.round(
+                                        (progressEvent.loaded * 100) / progressEvent.total
+                                    );
+
+                                    setUploadedFiles(prevUploadedFiles => {
+                                        const newState = [...prevUploadedFiles];
+                                        const index = newState.findIndex(i => i.id === response.id);
+                                        const file = newState[index];
+
+
+                                        if (file)
+                                            if (percentCompleted < 100)
+                                                file.progress = percentCompleted;
+                                            else {
+                                                setValue(prevValue => {
+                                                    const newState = prevValue
+                                                        .concat(pick(
+                                                            file,
+                                                            ['id', 'file_name', 'length', 'created_date'],
+                                                        ));
+
+                                                    resolve(newState);
+                                                    return newState;
+                                                });
+
+                                                prevUploadedFiles.splice(index, 1);
+                                                return prevUploadedFiles;
+                                            }
+
+                                        return newState;
+                                    });
+                                },
+                            }
+                        );
+                    } catch {
+                        resolve();
+                    }
+                } else {
+                    setUploadedFiles(prevState => {
+                        const file = prevState.find(i => i.id === response.id);
+
+                        setValue(prevValue => {
+                            const newState = prevValue
+                                .concat(pick(file, ['id', 'file_name', 'length', 'created_date']));
+
+                            resolve(newState);
+                            return newState;
+                        });
+
+                        return prevState.filter(f => f.id !== file.id);
+                    });
+                }
+            } catch {
+                resolve();
+            }
+        });
     };
 
     const renderItem = ({onDelete, ...fileItem}) => (
         <FileItem
+            disabled={disabled}
             key={fileItem.id}
             file={fileItem}
             onDelete={onDelete}
@@ -278,7 +296,7 @@ const FileField = ({
         <div className={cn(css.field, className, size, `appearance-${appearance}`, {active, disabled})}>
             {label && <div className={css.label}>{label}</div>}
 
-            <div ref={sectionRef} className={css.section}>
+            <div className={css.section}>
                 <div
                     className={cn(css.input, {
                         error: hasErrors,
@@ -318,28 +336,9 @@ const FileField = ({
                 </div>
 
                 {Boolean(allFiles.length) && (
-                    <div className={css.files} ref={filesRef}>
+                    <Fragment className={css.files}>
                         {allFiles.map(renderItem)}
-                    </div>
-                )}
-
-                {Boolean(allFiles.length) && (
-                    <Dropdown
-                        ref={dropdownRef}
-                        items={allFiles}
-                        className={css.filesDropdown}
-                        renderItem={renderItem}
-                        placement="bottomLeft"
-
-                    >
-                        <Button
-                            className={css.dropdownButton}
-                            color="primary"
-                            size="small"
-                        >
-                            {t('fileUploadedWithCount', {count: allFiles.length})}
-                        </Button>
-                    </Dropdown>
+                    </Fragment>
                 )}
             </div>
 

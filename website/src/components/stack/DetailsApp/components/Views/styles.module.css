@@ -31,10 +31,7 @@
             align-self: flex-end;
         }
         &.uploader {
-            overflow: hidden;
-            &:hover {
-                overflow: visible;
-            }
+
         }
         &.checkbox {
             min-height: 32px;
@@ -45,7 +42,6 @@
         }
     }
     & .view {
-        /* TODO: remove after refactoring upload view */
         &:not(.uploader) {
             flex-grow: 1;
             min-height: 0;
@@ -61,8 +57,6 @@
         }
         &.uploader {
             padding-bottom: 0;
-            /* TODO: remove after refactoring upload view */
-            background-color: var(--color-white);
         }
         &.slider {
             min-height: 32px;

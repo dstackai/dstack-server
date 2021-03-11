@@ -30,23 +30,26 @@
     }
     &:global(.appearance-compact) {
         & .section {
+            margin-top: -8px;
+            margin-left: -8px;
+            margin-right: -8px;
             display: flex;
             align-items: center;
+            flex-wrap: wrap;
+            & > * {
+                margin: 8px;
+                max-width: calc(100% - 16px);
+            }
         }
         & .label {
             width: 100%;
         }
         & .input {
             flex-shrink: 0;
-        }
-        & .files {
-            margin-left: 12px;
-        }
-        & .filesDropdown {
-            margin-left: 12px;
+            margin-bottom: 0;
         }
         & .file {
-            margin-right: 12px;
+
         }
         & .fileBar {
             position: absolute;
@@ -64,14 +67,8 @@
                 margin-left: 6px;
             }
         }
-        & .files {
-            margin-left: -8px;
-            margin-right: -8px;
-        }
         & .file {
-            margin-top: 8px;
-            margin-left: 8px;
-            margin-right: 8px;
+
         }
         & .fileBar {
             margin-top: 6px;
@@ -145,53 +142,10 @@
     color: var(--color-dark-gray);
     opacity: .7;
 }
-.files {
-    position: relative;
-    display: flex;
-    flex-wrap: wrap;
-    max-width: 100%;
-    padding-top: 6px;
-    padding-bottom: 6px;
-    &:global(.hidden) {
-        display: none;
-    }
-}
-.filesDropdown {
-    margin-left: 12px;
-    &:global(.hidden) {
-        display: none;
-    }
-}
-.dropdownButton {
-    position: relative;
-    padding: 0 !important;
-    white-space: nowrap;
-    font-size: 14px;
-    line-height: 17px;
-    text-decoration: dotted;
-    outline: none;
-    &::before {
-        content: "";
-        position: absolute;
-        top: calc(50% + 9px);
-        left: 0;
-        right: 0;
-        border-top: 1px dotted;
-    }
-}
-.dropdownItem {
-
-}
 .file {
     max-width: 100%;
     position: relative;
     margin-right: 12px;
-    :not(.files) > & {
-        padding: 3px 12px;
-        &:nth-child(n+2) {
-            margin-top: 4px;
-        }
-    }
 }
 .fileTop {
     display: flex;
@@ -234,6 +188,9 @@
 
         color: var(--color-light-gray);
         transition: colro .3s ease-out;
+        &[disabled] {
+            opacity: .5;
+        }
         &:hover {
             color: var(--color-light-gray-hover);
         }
