@@ -138,7 +138,7 @@ const Details = ({
         };
 
         if (apply && hasApplyButton) {
-            params.apply = true;
+            params.event = {type: 'apply'};
         }
 
         executeStack(params)
