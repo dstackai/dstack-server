@@ -30,18 +30,6 @@ class TestControls(TestCase):
         v1 = ty.cast(ctrl.CheckboxView, self.get_by_id(c1.get_id(), views))
         self.assertEqual(False, v1.selected)
 
-    def test_callable_check_box(self):
-        def get_selected():
-            return True
-
-        app = ds.app()
-
-        c1 = app.checkbox(selected=get_selected)
-        controller = Controller(app.controls, [])
-        views = controller.list()
-        v1 = ty.cast(ctrl.CheckboxView, self.get_by_id(c1.get_id(), views))
-        self.assertEqual(True, v1.selected)
-
     def test_dependant_check_box(self):
         def get_selected(self: ctrl.Checkbox, c2: ctrl.Input):
             self.selected = int(c2.value()) > 5
@@ -222,15 +210,7 @@ class TestControls(TestCase):
 
     def test_markdown(self):
         app = ds.app()
-        m1 = app.markdown(text="Hello, **this** is Markdown")
-        controller = Controller(app.controls, [])
-        views = controller.list()
-        self.assertTrue(isinstance(views[0].data, md.Markdown))
-        self.assertEquals("Hello, **this** is Markdown", views[0].data.text)
-
-        app = ds.app()
-
-        m2 = app.markdown(text=lambda: "Hello, **this** is Markdown")
+        app.markdown(text="Hello, **this** is Markdown")
         controller = Controller(app.controls, [])
         views = controller.list()
         self.assertTrue(isinstance(views[0].data, md.Markdown))
@@ -253,7 +233,6 @@ class TestControls(TestCase):
         def update(control: ctrl.Select, parent: ctrl.Select):
             selected = [parent.items[s] for s in parent.selected]
             control.items = [f"{selected} 1", f"{selected} 2"]
-
 
         app = ds.app()
 
@@ -301,7 +280,7 @@ class TestControls(TestCase):
         views = controller.list()
         self.assertEqual(views[0].text, "Some initial data")
 
-    def test_combo_box_callable_model(self):
+    def test_combo_box_model(self):
         class City:
             def __init__(self, id, title):
                 self.id = id
@@ -324,8 +303,8 @@ class TestControls(TestCase):
         def list_cities_from_db_by_code(country: Country) -> ty.List[City]:
             return data[country.code]
 
-        def list_countries_from_db() -> ty.List[Country]:
-            return [Country("US", "United States"), Country("DE", "German")]
+        def list_countries_from_db(self):
+            self.items = [Country("US", "United States"), Country("DE", "German")]
 
         def update_cities(control: ctrl.Select, parent: ctrl.Select):
             country = ty.cast(Country, parent.get_model().element(parent.selected))
@@ -333,8 +312,7 @@ class TestControls(TestCase):
 
         app = ds.app()
 
-        countries = app.select(list_countries_from_db)
-        self.assertTrue(isinstance(countries._derive_model(), ctrl.CallableListModel))
+        countries = app.select(handler=list_countries_from_db)
 
         cities = app.select(handler=update_cities, depends=countries)
         controller = Controller(app.controls, [])
@@ -366,7 +344,7 @@ class TestControls(TestCase):
         def test():
             return 30
 
-        o1 = app.output(data=test)
+        o1 = app.output(data=test())
 
         controller = Controller(app.controls, [])
         views = controller.list(apply=True)
