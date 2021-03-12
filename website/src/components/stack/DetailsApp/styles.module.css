@@ -3,7 +3,6 @@
 :root {
     --sidebar-width: 250px;
 }
-
 .details {
     position: relative;
     flex: 1 1 0;
@@ -13,15 +12,19 @@
         padding-bottom: 20px;
     }
 }
+.backButton {
+    max-width: fit-content;
+}
 .header {
+    position: sticky;
+    top: 0;
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    position: relative;
-}
-.backButton {
-    margin-bottom: 4px;
-    max-width: fit-content;
+    padding-top: 4px;
+    padding-bottom: 10px;
+    background-color: var(--color-white);
+    z-index: 1;
 }
 .title {
     overflow: hidden;
@@ -94,69 +97,6 @@
         text-align: left;
     }
 }
-.label {
-    display: inline-block;
-    position: relative;
-    padding-left: 8px;
-    padding-right: 8px;
-    border-radius: 20px;
-    font-size: 12px;
-    line-height: 20px;
-    color: rgba(180, 184, 199, .7);
-    background-color: rgba(80, 124, 208, .06);
-    text-transform: lowercase;
-    user-select: none;
-    &:not(:hover) {
-        & .label-tooltip {
-            opacity: 0;
-        }
-    }
-    &:hover {
-
-    }
-    &-tooltip {
-        width: 270px;
-        position: absolute;
-        z-index: var(--dropdown-z-index);
-        top: 60%;
-        left: 80%;
-        padding: 12px 19px 12px 10px;
-        text-transform: none;
-        font-size: 13px;
-        line-height: 150%;
-        color: var(--color-dark-gray);
-        background: var(--color-white);
-        box-sizing: border-box;
-        box-shadow: 0 8px 24px rgba(31, 42, 81, .12);
-        border-radius: 4px;
-        pointer-events: none;
-        transition: opacity .2s;
-    }
-}
-.actions {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    min-width: fit-content;
-    margin-left: 20px;
-    font-size: 13px;
-    line-height: 20px;
-    color: var(--color-dark-gray);
-    & > * {
-        margin-left: 2px;
-        margin-right: 2px;
-    }
-    & a {
-        transition: color .2s;
-    }
-    & .size {
-        color: var(--color-light-gray);
-    }
-}
-.revisions {
-    margin-top: 8px;
-    flex-shrink: 0;
-}
 .refreshMessage {
     margin-top: 10px;
 }
@@ -177,7 +117,7 @@
 }
 .container {
     flex-shrink: 0;
-    margin-top: 20px;
+    margin-top: 10px;
     @media (--mobile) {
         &.withSidebar {
             & .views {
