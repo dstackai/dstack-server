@@ -65,7 +65,7 @@
     "rc-tooltip": "^5.0.2",
     "react": "17.0.1",
     "react-app-polyfill": "1.0.5",
-    "react-dev-utils": "10.0.0",
+    "react-dev-utils": "11.0.4",
     "react-dom": "17.0.1",
     "react-helmet": "^5.2.1",
     "react-i18next": "11.7.3",
