@@ -23,8 +23,6 @@ const UploaderView = ({className, view, disabled, onChange: onChangeProp}: Props
     const onChange = newFiles => {
         setFiles(newFiles);
 
-        console.log('onChange', newFiles);
-
         if (onChangeProp)
             onChangeProp(
                 {

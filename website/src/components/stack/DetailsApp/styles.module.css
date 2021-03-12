@@ -59,6 +59,12 @@
 .progress {
     margin-right: 6px;
 }
+.progressStatus {
+    margin-right: 6px;
+    font-size: 14px;
+    line-height: 15px;
+    color: var(--color-light-gray);
+}
 .run {
 
 }

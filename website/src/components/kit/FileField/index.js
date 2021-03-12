@@ -97,15 +97,6 @@ const FileField = ({
     }, [files]);
 
     useEffect(() => {
-        // if (!isEqual(value, files)
-        //     && onChange
-        //     && uploadedFiles.length === 0
-        //     && isDidMount.current
-        // )
-        //     onChange(value);
-    }, [value]);
-
-    useEffect(() => {
         if (isDidMount.current) {
             if (selectedFiles?.length) {
                 Promise.all(selectedFiles.map(submit))
@@ -117,6 +108,7 @@ const FileField = ({
                     });
 
                 setSelectedFiles([]);
+                inputRef.current.value = null;
             }
         } else
             isDidMount.current = true;
@@ -336,7 +328,7 @@ const FileField = ({
                 </div>
 
                 {Boolean(allFiles.length) && (
-                    <Fragment className={css.files}>
+                    <Fragment>
                         {allFiles.map(renderItem)}
                     </Fragment>
                 )}

@@ -1,6 +1,6 @@
 // @flow
 
-import React, {useEffect, useState, useRef, useMemo} from 'react';
+import React, {useEffect, useState, useRef, useMemo, Fragment} from 'react';
 import cx from 'classnames';
 import get from 'lodash/get';
 import isEqual from 'lodash/isEqual';
@@ -399,14 +399,26 @@ const Details = ({
 
                 <div className={css.sideHeader}>
                     {calculating && (
-                        <Progress
-                            className={css.progress}
+                        <Fragment>
+                            <Progress
+                                className={css.progress}
 
-                            progress={executeData?.tqdm
-                                ? executeData.tqdm.n / executeData.tqdm.total * 100
-                                : undefined
-                            }
-                        />
+                                progress={executeData?.tqdm
+                                    ? executeData.tqdm.n / executeData.tqdm.total * 100
+                                    : undefined
+                                }
+                            />
+
+                            {executeData?.tqdm?.desc && (
+                                <div className={css.progressStatus}>
+                                    {executeData?.tqdm?.desc}
+                                    {' '}
+                                    {executeData.tqdm.unit && (
+                                        `${executeData.tqdm.n} / ${executeData.tqdm.total} ${executeData.tqdm.unit}`
+                                    )}
+                                </div>
+                            )}
+                        </Fragment>
                     )}
 
                     {hasApplyButton && (
