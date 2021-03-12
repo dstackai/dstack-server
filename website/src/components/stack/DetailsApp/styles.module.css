@@ -166,15 +166,19 @@
 }
 .tabs + .container {
     margin-top: -1px;
-    border-top-left-radius: 0;
+    border-radius: 4px 4px 4px 0;
+    border: 1px solid rgb(233, 234, 238);
+    @media (--mobile) {
+        padding: 10px;
+    }
+    @media (--desktop) {
+        padding: 20px;
+    }
 }
 .container {
     flex-shrink: 0;
     margin-top: 20px;
-    border-radius: 4px;
-    border: 1px solid rgb(233, 234, 238);
     @media (--mobile) {
-        padding: 10px;
         &.withSidebar {
             & .views {
                 margin-top: 20px;
@@ -182,7 +186,6 @@
         }
     }
     @media (--desktop) {
-        padding: 20px;
         &.withSidebar {
             display: grid;
             grid-template-areas:
