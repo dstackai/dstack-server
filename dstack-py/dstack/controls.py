@@ -80,6 +80,23 @@ class View(ABC):
 V = ty.TypeVar("V", bound=View)
 
 
+class Event(ABC):
+    def __init__(self, type: str,
+                 source: ty.Optional[str]):
+        self.type = type
+        self.source = source
+
+    def pack(self):
+        _dict = {"type": self.type}
+        if self.source:
+            _dict["source"] = self.source
+        return _dict
+
+
+def unpack_event(source: ty.Dict) -> Event:
+    return Event(source["type"], source.get("source"))
+
+
 # TODO: Remove ty.Optional for the attributes where it's not needed
 class Control(ABC, ty.Generic[V]):
     def __init__(self,
@@ -103,11 +120,11 @@ class Control(ABC, ty.Generic[V]):
 
         self._id = id or str(uuid4())
         self._parents = depends or []
+        self._children: ty.List[Control] = []
         self._handler = handler
         self._require_apply = require_apply
         self.optional = optional
-        self._pending_view: ty.Optional[V] = None
-        self._dirty = True
+        self._dirty = not self._require_apply
 
         if not isinstance(self._parents, list):
             self._parents = [self._parents]
@@ -119,39 +136,37 @@ class Control(ABC, ty.Generic[V]):
         return self._id
 
     def _update(self):
-        if self._pending_view:
-            self._apply(self._pending_view)
-            self._pending_view = None
-            self._dirty = True
+        if self._dirty:
+            if self._handler:
+                for p in self._parents:
+                    p._update()
 
-        if self._handler:
-            for p in self._parents:
-                p._update()
-
-            if self._dirty:
                 try:
                     self._handler(self, *self._parents)
                     self._check_after_update()
-                    self._dirty = False
                 except Exception as e:
                     raise UpdateError(e, self._id)
+
+            self._dirty = False
 
     def is_dependent(self) -> bool:
         return len(self._parents) > 0
 
     def is_apply_required(self) -> bool:
-        # return self.is_dependent() or self._require_apply
         return self._require_apply
 
-    def view(self, apply: bool = False) -> V:
-        if not self._require_apply or apply:
-            self._update()
+    def view(self) -> V:
+        self._update()
         return self._view()
 
-    def apply(self, view: V):
-        self._pending_view = view
+    def _invalidate(self, event: ty.Optional[Event]):
+        if event is not None and event.type == "apply" and self._require_apply is True \
+                or event is None and not self._require_apply \
+                or event.source == self._id:
+            self._dirty = True
+            for child in self._children:
+                child._invalidate(event)
 
-    # TODO: Make it a property
     def value(self) -> ty.Any:
         self._update()
         return self._value()
@@ -723,7 +738,6 @@ class Controller(object):
     def __init__(self, controls: ty.List[Control],
                  containers: ty.List[Container]):
         self.controls_by_id: ty.Dict[str, Control] = {}
-        self.copy_of_controls_by_id = None
         # TODO: Validate controls and container (container IDs are valid and that there are no containers
         #  without controls)
         self.containers = containers
@@ -738,7 +752,9 @@ class Controller(object):
 
         self._ids = [x.get_id() for x in controls]
 
-    def copy_controls_by_id(self) -> ty.Dict:
+        self.init()
+
+    def _copy_controls_by_id(self) -> ty.Dict[str, Control]:
         map_copy = dict(self.controls_by_id)
 
         for c_id in self._ids:
@@ -750,18 +766,32 @@ class Controller(object):
 
         return map_copy
 
-    def list(self, views: ty.Optional[ty.List[View]] = None, apply: bool = False) -> ty.List[View]:
-        views = views or []
+    def list(self, views: ty.Optional[ty.List[View]] = None,
+             event: ty.Optional[Event] = None) -> ty.List[View]:
+        # Copy the original controls
+        controls = self._copy_controls_by_id().values()
 
-        self.copy_of_controls_by_id = self.copy_controls_by_id()
+        # TODO: Pass the previous state of the views based on the previous execution ID
+        views_by_id = self._group_by_id(views)
+        for control in controls:
+            view = views_by_id.get(control.get_id())
+            if view is not None:
+                control._apply(view)
 
-        for view in views:
-            self.copy_of_controls_by_id[view.id].apply(view)
-        values = [c.view(apply or not self.require_apply) for c in self.copy_of_controls_by_id.values()]
+        views_by_id = self._group_by_id(views)
+        for control in controls:
+            view = views_by_id.get(control.get_id())
+            if view is not None:
+                control._invalidate(event)
 
-        self.copy_of_controls_by_id = None
+        return [control.view() for control in controls]
 
-        return values
+    @staticmethod
+    def _group_by_id(views):
+        views_by_id = {}
+        for view in (views or []):
+            views_by_id[view.id] = view
+        return views_by_id
 
     def _check_pickle(self):
         pass
@@ -769,7 +799,12 @@ class Controller(object):
     def init(self):
         self._check_pickle()
 
-        for c in self.controls_by_id.values():
-            c._check_pickle()
-            for i in range(len(c._parents)):
-                c._parents[i] = self.controls_by_id[c._parents[i]._id]
+        for control in self.controls_by_id.values():
+            control._check_pickle()
+            control._children = []
+            for i in range(len(control._parents)):
+                control._parents[i] = self.controls_by_id[control._parents[i]._id]
+
+        for control in self.controls_by_id.values():
+            for parent in control._parents:
+                parent._children.append(control)
