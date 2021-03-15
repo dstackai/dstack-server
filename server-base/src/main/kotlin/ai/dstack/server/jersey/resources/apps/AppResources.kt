@@ -130,7 +130,7 @@ class AppResources {
                                     executionService.create(Execution(id, stack.path, null))
                                     val status = executorService.execute(
                                             id, stackUser, frame, attachment,
-                                            payload.views, payload.event
+                                            payload.views, payload.event, payload.previousExecutionId
                                     )
                                     ok(status)
                                 } else {
