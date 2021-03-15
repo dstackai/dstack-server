@@ -45,7 +45,7 @@ class TestControls(TestCase):
         self.assertEqual("10", v1.text)
         self.assertEqual(True, v2.selected)
         v1.text = "5"
-        views = controller.list(views, apply=True)
+        views = controller.list(views)
         v1 = ty.cast(ctrl.InputView, self.get_by_id(c1.get_id(), views))
         v2 = ty.cast(ctrl.CheckboxView, self.get_by_id(c2.get_id(), views))
         self.assertEqual("5", v1.text)
@@ -60,7 +60,7 @@ class TestControls(TestCase):
         c1 = app.input(text="10")
         c2 = app.input(handler=update, depends=c1)
         controller = Controller(app.controls, [])
-        views = controller.list(apply=True)
+        views = controller.list()
         self.assertEqual(2, len(views))
         ids = [v.id for v in views]
         self.assertIn(c1.get_id(), ids)
@@ -79,7 +79,7 @@ class TestControls(TestCase):
         else:
             self.fail()
 
-        views = controller.list(views, apply=True)
+        views = controller.list(views)
         v1 = self.get_by_id(c1.get_id(), views)
         v2 = self.get_by_id(c2.get_id(), views)
 
@@ -103,7 +103,7 @@ class TestControls(TestCase):
         controller = Controller(app.controls, [])
 
         try:
-            controller.list(controller.list(apply=True), apply=True)
+            controller.list(controller.list())
             self.fail()
         except ctrl.UpdateError as e:
             self.assertEqual(c2.get_id(), e.id)
@@ -132,7 +132,7 @@ class TestControls(TestCase):
         c4 = app.input(handler=update_c3_c4, depends=c2)
 
         controller = Controller(app.controls, [])
-        views = controller.list(apply=True)
+        views = controller.list()
         self.assertEqual(1, count)
         v2 = ty.cast(ctrl.InputView, self.get_by_id(c2.get_id(), views))
         v3 = ty.cast(ctrl.InputView, self.get_by_id(c3.get_id(), views))
@@ -161,7 +161,7 @@ class TestControls(TestCase):
                 {"id": "some_file_id", "file_name": "some_file_name", "length": 123,
                  "created_date": today.strftime("%Y-%m-%d")}]}
         self.assertEqual(packed_view, file_uploader_view.pack())
-        file_uploader.apply(file_uploader_view)
+        file_uploader._apply(file_uploader_view)  # TODO: Clean me
         value = file_uploader.value()
         self.assertTrue(isinstance(value, list))
         self.assertEqual(len(value), 1)
@@ -225,7 +225,7 @@ class TestControls(TestCase):
 
         app.markdown(handler=m_handler, depends=[t1])
         controller = Controller(app.controls, [])
-        views = controller.list(apply=True)
+        views = controller.list()
         self.assertTrue(isinstance(views[1].data, md.Markdown))
         self.assertEquals("Hello, **this** is Markdown", views[1].data.text)
 
@@ -272,10 +272,10 @@ class TestControls(TestCase):
         app = ds.app()
         app.input(text="Some initial data")
         controller = Controller(app.controls, [])
-        views = controller.list(apply=True)
+        views = controller.list()
         self.assertEqual(views[0].text, "Some initial data")
         views[0].text = "Some other data"
-        updated_views = controller.list(views, apply=True)
+        updated_views = controller.list(views)
         self.assertEqual(updated_views[0].text, "Some other data")
         views = controller.list()
         self.assertEqual(views[0].text, "Some initial data")
@@ -347,8 +347,47 @@ class TestControls(TestCase):
         o1 = app.output(data=test())
 
         controller = Controller(app.controls, [])
-        views = controller.list(apply=True)
+        views = controller.list()
         self.assertEqual(30, views[2].data)
+
+    def test_controller_event(self):
+        app = ds.app()
+
+        def i1_handler(self):
+            print("i1_handler")
+            if self.text is None:
+                self.text = "Andrey"
+
+        i1 = app.input(handler=i1_handler)
+
+        def i2_handler(self, i1):
+            print("i2_handler")
+            self.text = i1.text.upper()
+
+        i2 = app.input(handler=i2_handler, depends=[i1])
+
+        cb1 = app.checkbox()
+
+        def m1_handler(self, i2, cb1):
+            print("m1_handler")
+            self.text = i2.text.upper() if cb1.selected else i2.text.lower()
+
+        app.markdown(handler=m1_handler, depends=[i2, cb1], require_apply=True)
+
+        controller = Controller(app.controls, [])
+        print("Event: empty")
+        views = controller.list()
+        for view in views:
+            print(str(view.pack()))
+        print("Event: apply")
+        views = controller.list(views, event=ctrl.Event(type="apply", source=None))
+        for view in views:
+            print(str(view.pack()))
+        print("Event: change i1")
+        views[0].text = 'Sergey'
+        views = controller.list(views, event=ctrl.Event(type="change", source=i1.get_id()))
+        for view in views:
+            print(str(view.pack()))
 
     def test_tqdm(self):
         tqdm_state = {}
@@ -376,7 +415,7 @@ class TestControls(TestCase):
         views = controller.list()
 
         def apply():
-            controller.list(views, True)
+            controller.list(views)
 
         apply()
 

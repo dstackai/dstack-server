@@ -104,17 +104,15 @@ def execute(id, views, event):
     executions = Path(executions_home) / "finished"
     executions.mkdir(exist_ok=True)
     execution_file = executions / (id + '.json')
-    if parse_version(dstack_version) >= parse_version("0.6.3.dev6"):
+    if parse_version(dstack_version) >= parse_version("0.6.5.dev7"):
         logs_handler = StringIO()
         with redirect_stdout(logs_handler):
             _views = [v.pack() for v in (views or []) if not isinstance(v, ctrl.OutputView)]
             _outputs = []
             status = "FINISHED"
             try:
-                apply = event is not None and event.get("type") == "apply"
-
                 def list_func():
-                    return controller.list(views, apply)
+                    return controller.list(views, event)
 
                 views = handle_tqdm(id, list_func, token, server)
                 _views = [v.pack() for v in views]
@@ -131,10 +129,12 @@ def execute(id, views, event):
         logs = logs_handler.getvalue()
     else:
         status = 'FAILED'
-        logs = "Please update the client version of dstack and re-deploy the application: pip install dstack>=0.6.3"
+        logs = "Please update the client version of dstack and re-deploy the application: pip install dstack>=0.6.5"
 
     _containers = [_c.pack() for _c in controller.containers]
-    execution = {"id": id, "status": status, "containers": _containers, "event": event}
+    execution = {"id": id, "status": status, "containers": _containers}
+    if event is not None:
+        execution["event"] = event.pack()
     if len(logs) > 0:
         execution["logs"] = logs
     if views is not None:
@@ -149,7 +149,8 @@ def parse_command(command):
     id = command_json.get("id")
     _views = command_json.get("views")
     views = [ctrl.unpack_view(v) for v in _views] if _views is not None else None
-    event = command_json.get("event")
+    _event = command_json.get("event")
+    event = ctrl.unpack_event(_event) if _event else None
     return id, views, event
 
 

@@ -54,7 +54,7 @@ class TestApp(TestCase):
         with open("controller.pickle", "rb") as f:
             controller = cloudpickle.load(f)
 
-        views = controller.list(apply=True)
+        views = controller.list()
         print(views[2].data)
         """
         test_file = Path(app_dir) / "test_script.py"
@@ -102,7 +102,7 @@ class TestApp(TestCase):
         with open("controller.pickle", "rb") as f:
             controller = cloudpickle.load(f)
 
-        views = controller.list(apply = True)
+        views = controller.list()
         print(views[3].data)
         """
         test_file = Path(app_dir) / "test_script.py"
