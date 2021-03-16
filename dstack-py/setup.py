@@ -32,7 +32,8 @@ setup(
         "packaging",
         "tqdm",
         "cloudpickle",
-        "joblib"
+        "joblib",
+        "expiringdict"
     ],
     classifiers=[
         "Development Status :: 4 - Beta",

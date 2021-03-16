@@ -2,6 +2,7 @@ package ai.dstack.server.local.services
 
 import ai.dstack.server.model.*
 import ai.dstack.server.services.*
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import mu.KLogging
@@ -30,7 +31,8 @@ class LocalExecutorService @Autowired constructor(
     private val executionHome = File(config.executionDirectory).absolutePath
 
     override fun execute(id: String, stackUser: User, frame: Frame, attachment: Attachment,
-                         views: List<Map<String, Any?>>?, event: Map<String, Any?>?): ExecutionResult {
+                         views: List<Map<String, Any?>>?, event: Map<String, Any?>?,
+                         previousExecutionId: String?): ExecutionResult {
         val minorPythonVersion = frame.minorPythonVersion
         val clientVersion = frame.clientVersion
         return if (minorPythonVersion != null) {
@@ -38,25 +40,27 @@ class LocalExecutorService @Autowired constructor(
                 val pythonExecutable = config.pythonExecutables[minorPythonVersion]
                 if (pythonExecutable != null) {
                     init(stackUser, frame, attachment)
-                    queue(attachment, ExecutionRequest(id, views, event))
+                    queue(attachment, ExecutionRequest(id, views, event, previousExecutionId))
                     return poll(id)!!
                 } else {
-                    failed(id, views, event, "The required Python version is not supported: $minorPythonVersion")
+                    failed(id, views, event, previousExecutionId,
+                            "The required Python version is not supported: $minorPythonVersion")
                 }
             } else {
-                failed(id, views, event, "Please update the client version of dstack and re-deploy " +
+                failed(id, views, event, previousExecutionId, "Please update the client version of dstack and re-deploy " +
                         "the application: pip install dstack>=0.6.3")
             }
         } else {
-            failed(id, views, event, "The Python version is missing in the application. " +
+            failed(id, views, event, previousExecutionId, "The Python version is missing in the application. " +
                     "Make sure you use the latest client to push the application.")
         }
     }
 
     private fun failed(id: String, views: List<Map<String, Any?>>?,
-                       event: Map<String, Any?>?, logs: String): ExecutionResult {
+                       event: Map<String, Any?>?, previousExecutionId: String?, logs: String): ExecutionResult {
         val failedExecution = failedExecution(id, logs).toByteArray()
-        writeExecutionFile(EXECUTION_STAGE_FINAL, id, views, event, "FAILED", logs)
+        writeExecutionFile(EXECUTION_STAGE_FINAL, id, views, event,
+                previousExecutionId, "FAILED", logs)
         return executionFileObjectMapper.readValue(failedExecution, Map::class.java)
     }
 
@@ -66,7 +70,8 @@ class LocalExecutorService @Autowired constructor(
     }
 
     private fun queue(attachment: Attachment, request: ExecutionRequest) {
-        writeExecutionFile(EXECUTION_STAGE_ORIGINAL, request.id, request.views, request.event, "RUNNING", null)
+        writeExecutionFile(EXECUTION_STAGE_ORIGINAL, request.id, request.views, request.event,
+                request.previousExecutionId, "RUNNING", null)
         val queue = executionRequestQueues[attachment.filePath]
         queue!!.put(request)
     }
@@ -115,7 +120,9 @@ class LocalExecutorService @Autowired constructor(
     private data class ExecutionRequest(
             val id: String,
             val views: List<Map<String, Any?>>?,
-            val event: Map<String, Any?>?
+            val event: Map<String, Any?>?,
+            @JsonProperty("previous_execution_id")
+            val previousExecutionId: String?
     )
 
     private val executionRequestQueues = mutableMapOf<String, BlockingQueue<ExecutionRequest>>()
@@ -210,11 +217,6 @@ class LocalExecutorService @Autowired constructor(
         }
     }
 
-    private fun getExecutionStackPath(id: String): String? {
-        val executionMetaFile = executionMetaFile(id)
-        return if (executionMetaFile.exists()) executionMetaFile.readText() else null
-    }
-
     private fun executionFileIfExists(id: String, stage: String): File? {
         val executionFile = executionFile(id, stage)
         return if (executionFile.exists() && executionFile.length() > 0) {
@@ -230,7 +232,8 @@ class LocalExecutorService @Autowired constructor(
             .registerModule(KotlinModule())
 
     private fun writeExecutionFile(stage: String, id: String, views: List<Map<String, Any?>>?,
-                                   event: Map<String, Any?>?, status: String, logs: String?) {
+                                   event: Map<String, Any?>?, previousExecutionId: String?,
+                                   status: String, logs: String?) {
         val executionFile = executionFile(id, stage)
         executionFile.parentFile.mkdirs()
         val execution = mutableMapOf<String, Any?>("id" to id, "status" to status)
@@ -239,6 +242,9 @@ class LocalExecutorService @Autowired constructor(
         }
         event?.let {
             execution["event"] = it
+        }
+        previousExecutionId?.let {
+            execution["previous_execution_id"] = it
         }
         logs?.let {
             execution["logs"] = it
@@ -288,13 +294,11 @@ class LocalExecutorService @Autowired constructor(
     private fun destDir(attachment: Attachment) =
             File(config.appDirectory + "/" + attachment.filePath)
 
-    private val executorVersion = 26
+    private val executorVersion = 27
 
     private fun executorFile(attachment: Attachment) = File(destDir(attachment), "execute_v${executorVersion}.py")
 
     private fun executionFile(id: String, stage: String) = File(File(File(config.executionDirectory), stage), "$id.json")
-
-    private fun executionMetaFile(id: String) = File(File(File(config.executionDirectory), "meta"), "$id.txt")
 
     private fun writeExecutorFile(executorFile: File) {
         ClassPathResource("executor.py", this.javaClass.classLoader).inputStream.copyTo(FileOutputStream(executorFile))

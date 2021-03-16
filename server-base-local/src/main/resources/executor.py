@@ -17,6 +17,8 @@ from dstack.version import __version__ as dstack_version
 from packaging.version import parse as parse_version
 from dstack.tqdm import tqdm, TqdmHandler, set_tqdm_handler
 
+from expiringdict import ExpiringDict
+
 # TODO: Refactor qnd cover this functionality with tests
 
 from queue import Queue, Empty
@@ -37,6 +39,22 @@ else:
 in_place_config = InPlaceConfig()
 in_place_config.add_or_replace_profile(Profile("default", user, token, server, verify=True))
 dstack_config.configure(in_place_config)
+
+encoder = AutoHandler()
+
+cached_executions = ExpiringDict(max_len=30, max_age_seconds=60 * 5)
+
+
+def find_cached_execution(previous_execution_id):
+    return cached_executions.get(previous_execution_id)
+
+
+def cache_execution(execution):
+    previous_execution_id = execution.get("previous_execution_id")
+    if previous_execution_id is not None:
+        cached_executions.pop(previous_execution_id)
+    cached_executions[execution["id"]] = execution
+
 
 # TODO: Handle errors and communicate it via a special app initialization log file
 with open("controller.pickle", "rb") as f:
@@ -100,7 +118,7 @@ def handle_tqdm(id, func, token, server):
     return result
 
 
-def execute(id, views, event):
+def execute(id, views, event, previous_execution_id):
     executions = Path(executions_home) / "finished"
     executions.mkdir(exist_ok=True)
     execution_file = executions / (id + '.json')
@@ -117,12 +135,25 @@ def execute(id, views, event):
                 views = handle_tqdm(id, list_func, token, server)
                 _views = [v.pack() for v in views]
                 for _view in _views:
-                    if _view["type"] == "OutputView" and _view["data"] is not None:
-                        encoder = AutoHandler()
-                        frame_data = encoder.encode(_view["data"], None, None)
-                        _view["application"] = frame_data.application
-                        _view["content_type"] = frame_data.content_type
-                        _view["data"] = frame_data.data.base64value()
+                    if _view["type"] == "OutputView":
+                        if _view["data"] is not None:
+                            frame_data = encoder.encode(_view["data"], None, None)
+                            _view["application"] = frame_data.application
+                            _view["content_type"] = frame_data.content_type
+                            _view["data"] = frame_data.data.base64value()
+                        else:
+                            if _view["data"] is None and _view["require_apply"] is True \
+                                    and previous_execution_id is not None:
+                                previous_execution = find_cached_execution(previous_execution_id)
+                                if previous_execution is not None:
+                                    previous_views = previous_execution.get("views") or []
+                                    previous_view = list(filter(lambda v: v["id"] == _view["id"], previous_views))
+                                    if len(previous_view) > 0:
+                                        _view["application"] = previous_view[0].get("application")
+                                        _view["content_type"] = previous_view[0].get("content_type")
+                                        _view["data"] = previous_view[0].get("data")
+                                        _view['outdated'] = True
+
             except Exception:
                 status = 'FAILED'
                 print(str(traceback.format_exc()))
@@ -135,6 +166,8 @@ def execute(id, views, event):
     execution = {"id": id, "status": status, "containers": _containers}
     if event is not None:
         execution["event"] = event.pack()
+    if previous_execution_id is not None:
+        execution["previous_execution_id"] = previous_execution_id
     if len(logs) > 0:
         execution["logs"] = logs
     if views is not None:
@@ -142,6 +175,7 @@ def execute(id, views, event):
     if hasattr(controller, "require_apply") and controller.require_apply:
         execution["require_apply"] = True
     execution_file.write_text(json.dumps(execution))
+    cache_execution(execution)
 
 
 def parse_command(command):
@@ -151,11 +185,12 @@ def parse_command(command):
     views = [ctrl.unpack_view(v) for v in _views] if _views is not None else None
     _event = command_json.get("event")
     event = ctrl.unpack_event(_event) if _event else None
-    return id, views, event
+    previous_execution_id = command_json.get("previous_execution_id")
+    return id, views, event, previous_execution_id
 
 
 while True:
     command = sys.stdin.readline().strip()
-    id, views, event = parse_command(command)
+    id, views, event, previous_execution_id = parse_command(command)
     # TODO: Support timeout in future
-    execute(id, views, event)
+    execute(id, views, event, previous_execution_id)
