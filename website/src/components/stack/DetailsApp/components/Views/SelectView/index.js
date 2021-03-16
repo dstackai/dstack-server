@@ -49,7 +49,7 @@ const SelectView = ({className, disabled, view, onChange: onChangeProp}: Props) 
 
     return (
         <SelectField
-            appearance={view.rowspan > 2 && view.colspan >= 2 ? 'autocomplete' : 'default'}
+            appearance={view.multiple && view.colspan > 2 ? 'autocomplete' : 'default'}
             size="small"
             align="bottom"
             className={className}
