@@ -6,7 +6,7 @@ from functools import wraps
 
 from deprecation import deprecated
 
-from dstack import md
+from dstack.md import Markdown as _Markdown
 from dstack.auto import AutoHandler
 from dstack.config import Config, ConfigFactory, YamlConfigFactory, \
     from_yaml_file, ConfigurationError, get_config, Profile, _get_config_path
@@ -27,8 +27,8 @@ from dstack.application.dependencies import Dependency, RequirementsDependency, 
 
 from dstack.version import __version__
 
-__all__ = ['__version__', 'Control', 'Output', 'Input', 'Select', 'Slider', 'Markdown', 'Uploader', 'Checkbox', 'Upload', 'tqdm',
-           'trange']
+__all__ = ['__version__', 'Control', 'Output', 'Input', 'Select', 'Slider', 'Markdown', 'Uploader', 'Checkbox',
+           'Upload', 'tqdm', 'trange']
 
 
 def push(stack: str, obj, description: ty.Optional[str] = None,
@@ -305,20 +305,6 @@ def tab(title: ty.Optional[str] = None) -> DecoratedValue:
     return Tab(title)
 
 
-def markdown(text: str):
-    return md.Markdown(text)
-
-
-def app(description: ty.Optional[str] = None,
-        controls: ty.Optional[ty.List[Control]] = None,
-        depends: ty.Optional[ty.Union[str, ty.List[str]]] = None,
-        requirements: ty.Optional[str] = None,
-        project: bool = False,
-        layout: ty.Optional[str] = "grid",
-        columns: ty.Optional[int] = 12):
-    return Application(description, controls, depends, requirements, project, None, layout, columns)
-
-
 def default_hash_func(*args, **kwargs):
     if len(kwargs) > 0 or len(args) > 0:
         return args, frozenset(kwargs.items())
@@ -404,8 +390,8 @@ class ApplicationContainer:
               colspan: ty.Optional[int] = None,
               rowspan: ty.Optional[int] = None) -> Input:
         input = Input(text, handler, placeholder, label, depends, require_apply, optional, self.id, visible,
-                     self.validate_colspan(colspan, minimum=2, default=2),
-                     self.validate_rowspan(rowspan, minimum=1, default=1))
+                      self.validate_colspan(colspan, minimum=2, default=2),
+                      self.validate_rowspan(rowspan, minimum=1, default=1))
         self.controls.append(input)
         return input
 
@@ -591,3 +577,13 @@ class Application(ApplicationBase):
             _controls.extend(self._sidebar.controls)
         _controls.extend(self.controls)
         self.controls = _controls
+
+
+def app(description: ty.Optional[str] = None,
+        controls: ty.Optional[ty.List[Control]] = None,
+        depends: ty.Optional[ty.Union[str, ty.List[str]]] = None,
+        requirements: ty.Optional[str] = None,
+        project: bool = False,
+        layout: ty.Optional[str] = "grid",
+        columns: ty.Optional[int] = 12) -> Application:
+    return Application(description, controls, depends, requirements, project, None, layout, columns)
