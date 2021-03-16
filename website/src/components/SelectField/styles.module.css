@@ -11,56 +11,166 @@
         opacity: .5;
         pointer-events: none;
     }
-    &:global(.bottom) {
-        flex-direction: column;
-        & :global(.select-field) {
-            order: 2;
+    &:global(.align) {
+        &-bottom {
+            flex-direction: column;
+            & :global(.select-field) {
+                order: 2;
+            }
+            .label {
+                order: 1;
+                margin-bottom: 4px;
+            }
         }
-        .label {
-            order: 1;
-            margin-bottom: 4px;
+        &-left,
+        &-right {
+            align-items: center;
         }
-    }
-    &:global(.left),
-    &:global(.right) {
-        align-items: center;
-    }
-    &:global(.left) {
-        & :global(.select-field) {
-            order: 1;
+        &-left {
+            & :global(.select-field) {
+                order: 1;
+            }
+            .label {
+                order: 2;
+                margin-left: 6px;
+            }
         }
-        .label {
-            order: 2;
-            margin-left: 6px;
-        }
-    }
-    &:global(.right) {
-        & :global(.select-field) {
-            order: 2;
-        }
-        .label {
-            order: 1;
-            margin-right: 6px;
-        }
-    }
-    &:global(.small) {
-        & :global(.select-field) {
-            & :global(.select-field-selector) {
-                height: 32px;
+        &-right {
+            & :global(.select-field) {
+                order: 2;
+            }
+            .label {
+                order: 1;
+                margin-right: 6px;
             }
         }
     }
-    &:global(.middle) {
-        & :global(.select-field) {
+    &:global(.appearance) {
+        &-default {
+            &:global(.size) {
+                &-small {
+                    & :global(.select-field) {
+                        & :global(.select-field-selector) {
+                            height: 32px;
+                        }
+                    }
+                }
+                &-middle {
+                    & :global(.select-field) {
+                        & :global(.select-field-selector) {
+                            height: 40px;
+                        }
+                    }
+                }
+                &-normal {
+                    & :global(.select-field) {
+                        & :global(.select-field-selector) {
+                            height: 50px;
+                        }
+                    }
+                }
+            }
             & :global(.select-field-selector) {
-                height: 40px;
+                height: auto !important;
+                padding: 8px 10px 6px 12px;
+                & :global(.select-field-selection-item) {
+                    & :global(.select-field-item-option-checkbox),
+                    & :global(.select-field-selection-item-remove) {
+                        display: none;
+                    }
+                    & + :global(.select-field-selection-item) {
+                        &::before {
+                            content: ', '
+                        }
+                    }
+                }
+            }
+            & :global(.select-field) {
+                &-single {
+                    &:global(.select-field-show-search) {
+                        :global(.select-field-selection-item),
+                        :global(.select-field-selection-placeholder) {
+                            position: absolute;
+                            top: calc(50% - 8px);
+                            left: 12px;
+                            right: 10px;
+                        }
+                    }
+                }
             }
         }
-    }
-    &:global(.normal) {
-        & :global(.select-field) {
+        &-autocomplete {
+            &:global(.size) {
+                &-small {
+                    & :global(.select-field) {
+                        & :global(.select-field-selector) {
+                            min-height: 32px;
+                        }
+                    }
+                }
+                &-middle {
+                    & :global(.select-field) {
+                        & :global(.select-field-selector) {
+                            min-height: 40px;
+                        }
+                    }
+                }
+                &-normal {
+                    & :global(.select-field) {
+                        & :global(.select-field-selector) {
+                            min-height: 50px;
+                        }
+                    }
+                }
+            }
+
+            & :global(.select-field) {
+                &-single {
+                    &:global(.select-field-show-search) {
+                        :global(.select-field-selection-item),
+                        :global(.select-field-selection-placeholder) {
+                            position: absolute;
+                            top: 3px;
+                            left: 3px;
+                            right: 3px;
+                        }
+                    }
+                }
+                &-multiple {
+                    & :global(.select-field-selector) {
+                        flex-wrap: wrap;
+                    }
+                }
+            }
             & :global(.select-field-selector) {
-                height: 50px;
+                padding: 2px;
+                & :global(.select-field-selection-search) {
+                    margin: 2px;
+                }
+                & :global(.select-field-selection-item) {
+                    display: flex;
+                    align-items: center;
+                    padding: 2px 6px;
+                    font-size: 13px;
+                    line-height: 18px;
+                    background-color: var(--color-light-blue);
+                    border-radius: 2px;
+                    color: var(--color-white);
+                    margin: 2px;
+                    & :global(.select-field-item-option-checkbox) {
+                        display: none;
+                    }
+                    & :global(.select-field-selection-item-remove) {
+                        margin-left: 4px;
+                        opacity: 0.5;
+                        height: 16px;
+                        transition: opacity .2s ease;
+                        cursor: pointer;
+                        &:hover {
+                            opacity: 1;
+                        }
+                    }
+                }
             }
         }
     }
@@ -126,16 +236,27 @@ body :global {
         & .select-field-selection-placeholder {
             opacity: 0.4;
         }
-        &-single {
-            .select-field-selector {
+        &-single,
+        &-multiple {
+            & .select-field-selector {
                 display: flex;
                 align-items: center;
                 overflow-x: auto;
-                padding: 8px 10px 6px 12px;
-                border: 1px solid rgba(180, 184, 199, 0.5);
                 box-sizing: border-box;
                 border-radius: 4px;
+                border: 1px solid rgba(180, 184, 199, 0.5);
                 transition: border-color .2s;
+                & .select-field-selection-item {
+                    flex: none;
+                    &-disabled {
+                        cursor: not-allowed;
+                        opacity: 0.5;
+                    }
+                }
+            }
+        }
+        &-single {
+            .select-field-selector {
                 .select-field-selection-search {
                     width: 100%;
                     &-input {
@@ -150,22 +271,6 @@ body :global {
                         height: 16px;
                     }
                 }
-                & .select-field-selection-item {
-                    flex: none;
-                    &-disabled {
-                        cursor: not-allowed;
-                        opacity: 0.5;
-                    }
-                    & .select-field-item-option-checkbox,
-                    & .select-field-selection-item-remove {
-                        display: none;
-                    }
-                    & + .select-field-selection-item {
-                        &::before {
-                            content: ', '
-                        }
-                    }
-                }
             }
             &:not(.select-field-show-search) {
                 .select-field-selection-search {
@@ -176,9 +281,6 @@ body :global {
                 .select-field-selection-item,
                 .select-field-selection-placeholder {
                     position: absolute;
-                    top: calc(50% - 8px);
-                    left: 12px;
-                    right: 10px;
                     pointer-events: none;
                     transition: opacity .2s;
                     white-space: nowrap;
@@ -188,7 +290,7 @@ body :global {
                 &.select-field-show-arrow {
                     .select-field-selection-item,
                     .select-field-selection-placeholder {
-                        right: 24px;
+                        right: 24px !important;
                     }
                 }
                 &.select-field-open {
@@ -199,51 +301,30 @@ body :global {
                 }
             }
         }
-        &-multiple .select-field-selector {
-            display: flex;
-            align-items: center;
-            overflow-x: auto;
-            padding: 8px 10px 6px 12px;
-            border: 1px solid var(--color-light-blue);
-            box-sizing: border-box;
-            border-radius: 4px;
-            & .select-field-selection-item {
-                flex: none;
-                &-disabled {
-                    cursor: not-allowed;
-                    opacity: 0.5;
-                }
-                & .select-field-item-option-checkbox,
-                & .select-field-selection-item-remove {
-                    display: none;
-                }
-                & + .select-field-selection-item {
-                    &::before {
-                        content: ', '
+        &-multiple {
+            & .select-field-selector {
+                & .select-field-selection-search {
+                    position: relative;
+                    &-input,
+                    &-mirror {
+                        padding: 1px;
+                        font-family: system-ui, sans-serif;
+                    }
+                    &-mirror {
+                        position: absolute;
+                        z-index: 999;
+                        white-space: nowrap;
+                        left: 0;
+                        top: 0;
+                        visibility: hidden;
                     }
                 }
-            }
-            & .select-field-selection-search {
-                position: relative;
-                &-input,
-                &-mirror {
-                    padding: 1px;
-                    font-family: system-ui, sans-serif;
+                & .select-field-selection-search-input {
+                    border: none;
+                    outline: none;
+                    background: transparent;
+                    width: 100%;
                 }
-                &-mirror {
-                    position: absolute;
-                    z-index: 999;
-                    white-space: nowrap;
-                    left: 0;
-                    top: 0;
-                    visibility: hidden;
-                }
-            }
-            & .select-field-selection-search-input {
-                border: none;
-                outline: none;
-                background: transparent;
-                width: 100%;
             }
         }
         &-allow-clear {
@@ -307,9 +388,6 @@ body :global {
             line-height: 16px;
             padding: 6px 16px;
             cursor: pointer;
-            &:nth-child(n+2) {
-                //margin-top: 13px;
-            }
             &-group:nth-child(n+2) {
                 padding: 0;
                 height: 1px;

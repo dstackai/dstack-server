@@ -49,6 +49,7 @@ const SelectView = ({className, disabled, view, onChange: onChangeProp}: Props) 
 
     return (
         <SelectField
+            appearance={view.rowspan > 2 && view.colspan >= 2 ? 'autocomplete' : 'default'}
             size="small"
             align="bottom"
             className={className}
@@ -60,6 +61,7 @@ const SelectView = ({className, disabled, view, onChange: onChangeProp}: Props) 
             disabled={disabled || !view.enabled}
             placeholder={view.placeholder}
             mode={view.multiple ? 'multiple' : null}
+            removeIcon={<span className="mdi mdi-close" />}
         />
     );
 };

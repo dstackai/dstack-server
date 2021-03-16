@@ -219,6 +219,7 @@ export default {
     'sendInvite': 'Send invite',
     'seeHowToGuide': 'Check out the docs on how to publish stacks',
     'selectStacks': 'Select stacks',
+    'selectAll': 'Select all',
     'settings': 'Settings',
     'share': 'Share',
     'shareStack': 'Share stack',
