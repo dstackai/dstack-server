@@ -4,7 +4,7 @@ from unittest import TestCase
 from datetime import date
 
 import dstack as ds
-from dstack import md
+from dstack.md import Markdown as _Markdown
 from dstack.tqdm import tqdm, set_tqdm_handler
 
 import dstack.controls as ctrl
@@ -213,7 +213,7 @@ class TestControls(TestCase):
         app.markdown(text="Hello, **this** is Markdown")
         controller = Controller(app.controls, [])
         views = controller.list()
-        self.assertTrue(isinstance(views[0].data, md.Markdown))
+        self.assertTrue(isinstance(views[0].data, _Markdown))
         self.assertEquals("Hello, **this** is Markdown", views[0].data.text)
 
         app = ds.app()
@@ -226,7 +226,7 @@ class TestControls(TestCase):
         app.markdown(handler=m_handler, depends=[t1])
         controller = Controller(app.controls, [])
         views = controller.list()
-        self.assertTrue(isinstance(views[1].data, md.Markdown))
+        self.assertTrue(isinstance(views[1].data, _Markdown))
         self.assertEquals("Hello, **this** is Markdown", views[1].data.text)
 
     def test_multiple_combo_box(self):

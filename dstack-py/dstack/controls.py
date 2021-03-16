@@ -5,7 +5,7 @@ from pathlib import Path
 from uuid import uuid4
 from copy import copy
 
-from dstack import md
+from dstack.md import Markdown as _Markdown
 
 
 class ValidationError(ValueError):
@@ -552,6 +552,10 @@ class Upload:
              encoding: ty.Optional[str] = None, errors: ty.Optional[str] = None,
              newline: ty.Optional[str] = None, closefd: bool = True) -> ty.IO:
         # TODO: Implement reading files by ID
+        # TODO: Store the application uploads under the application folder
+        #  (e.g. "<dstack_home>/<stack_path>/<frame>/<attach_id>/.uploads/<unique_id>"
+        #  and use <server_url>/apps/<stack_path>/<frame>/<attach_id>/upload?id=<unique_id> to download the file
+        #  ^-- This is a more secure approach.
         path = Path.home() / ".dstack" / "files" / "uploads" / str(self.created_date) / self.id
         if buffering is not None:
             return open(path, mode, buffering=buffering, encoding=encoding, errors=errors, newline=newline,
@@ -707,13 +711,13 @@ class Markdown(Output, ty.Generic[T]):
                  rowspan: ty.Optional[int],
                  require_apply: bool):
         super().__init__(
-            md.Markdown(text) if text is not None else None, handler, label, depends, container, visible,
+            _Markdown(text) if text is not None else None, handler, label, depends, container, visible,
             colspan, rowspan, require_apply)
         self.text = text
 
     def _check_after_update(self):
         if isinstance(self.text, str):
-            self.data = md.Markdown(self.text)
+            self.data = _Markdown(self.text)
         else:
             self.data = None
 
